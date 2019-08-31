@@ -600,7 +600,7 @@ class BoundedRational {
          * return *null* to the caller. Otherwise we initialize our variable *quotAndRem* to the
          * array of [BigInteger] returned by the *divideAndRemainder* method of the numerator of [r]
          * when it divides itself by the denominator of [r] (index 0 will contain the quotient, and
-         * index 1 will contain the remainder). If the remainder is 0 we return th quotient to the
+         * index 1 will contain the remainder). If the remainder is 0 we return the quotient to the
          * caller, otherwise we return *null*.
          *
          * @param r the [BoundedRational] we want to convert to a [BigInteger].

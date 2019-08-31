@@ -539,19 +539,31 @@ class UnifiedReal private constructor(
     /**
      * Can this number be determined to be definitely nonzero without performing approximate
      * evaluation?
+     *
+     * @return *true* if our [mCrFactor] field points to a well known [CR] and the `signum` method
+     * of our [mRatFactor] field determines that it is not 0.
      */
     @Suppress("unused")
     fun definitelyNonZero(): Boolean {
         return isNamed(mCrFactor) && mRatFactor.signum() != 0
     }
 
+    /**
+     * Is this number 1.00000...?
+     *
+     * @return *true* is our [mCrFactor] field points to the constant [CR_ONE] and our [mRatFactor]
+     * field is equal to the constant [BoundedRational.ONE].
+     */
     @Suppress("unused")
     fun definitelyOne(): Boolean {
         return mCrFactor === CR_ONE && mRatFactor == BoundedRational.ONE
     }
 
     /**
-     * Return equivalent BoundedRational, if known to exist, null otherwise
+     * Return equivalent [BoundedRational], if known to exist, null otherwise.
+     *
+     * @return our [mRatFactor] field iff our [mCrFactor] field points to the constant [CR_ONE] and
+     * the `signum` method indicates that our [mRatFactor] field is 0, otherwise we return *null*.
      */
     fun boundedRationalValue(): BoundedRational? {
         return if (mCrFactor === CR_ONE || mRatFactor.signum() == 0) {
@@ -560,7 +572,13 @@ class UnifiedReal private constructor(
     }
 
     /**
-     * Returns equivalent BigInteger result if it exists, null if not.
+     * Returns equivalent [BigInteger] result if it exists, null if not. We initialize our `val r`
+     * to the [BoundedRational] that our [boundedRationalValue] method calculates for *this* (this
+     * is *null* unless our [mCrFactor] field points to the constant [CR_ONE] or our [mRatFactor]
+     * field is 0). Then we return the [BigInteger] that the [BoundedRational.asBigInteger] method
+     * calculates from `r`.
+     *
+     * @return our value as a [BigInteger] or *null*.
      */
     fun bigIntegerValue(): BigInteger? {
         val r = boundedRationalValue()
