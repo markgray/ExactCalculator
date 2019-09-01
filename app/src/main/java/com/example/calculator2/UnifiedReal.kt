@@ -585,6 +585,20 @@ class UnifiedReal private constructor(
         return BoundedRational.asBigInteger(r)
     }
 
+    /**
+     * Adds its argument and *this* then returns the result. If our [mCrFactor] field points to the
+     * same [CR] as the [mCrFactor] field of [u] we initialize our `val nRatFactor` to the
+     * [BoundedRational] that the [BoundedRational.add] method returns when it adds our [mRatFactor]
+     * field to the [mRatFactor] field of [u]. If `nRatFactor` is not equal to *null* we return a
+     * [UnifiedReal] constructed from `nRatFactor` and our [mCrFactor] field. If our [definitelyZero]
+     * method returns *true* indicating that *this* is definitely 0 we just return [u]. If the
+     * [definitelyZero] method of [u] returns *true* indicating that [u] is 0 we return *this*,
+     * otherwise we return a [UnifiedReal] constructed from our value as a [CR] added to the value
+     * of [u] as a [CR].
+     *
+     * @param u The [UnifiedReal] we are to add with *this*
+     * @return The [UnifiedReal] that result from adding our parameter [u] and *this*
+     */
     fun add(u: UnifiedReal): UnifiedReal {
         if (mCrFactor === u.mCrFactor) {
             val nRatFactor = BoundedRational.add(mRatFactor, u.mRatFactor)
@@ -601,14 +615,56 @@ class UnifiedReal private constructor(
         } else UnifiedReal(crValue().add(u.crValue()))
     }
 
+    /**
+     * Returns the negative of *this*, which is a [UnifiedReal] constructed from the negation of our
+     * [mRatFactor] and our current [mCrFactor] field.
+     *
+     * @return the [UnifiedReal] that results from negating *this*
+     */
     fun negate(): UnifiedReal {
         return UnifiedReal(BoundedRational.negate(mRatFactor), mCrFactor)
     }
 
+    /**
+     * Subtracts its argument from *this* then returns the result. We just return the [UnifiedReal]
+     * that our [add] method returns after adding *this* with the negation of [u].
+     *
+     * @param u the [UnifiedReal] we are to subtract from *this*
+     * @return the [UnifiedReal] that results from subtracting [u] from *this*.
+     */
     fun subtract(u: UnifiedReal): UnifiedReal {
         return add(u.negate())
     }
 
+    /**
+     * Multiplies its argument and *this* then returns the result. If our [mCrFactor] field points
+     * to the constant [CR_ONE] we initialize our `val nRatFactor` with the [BoundedRational] that
+     * results when the [BoundedRational.multiply] method multiplies our [mRatFactor] field and
+     * the [mRatFactor] field of our parameter [u]. If `nRatFactor` is not *null* we return a
+     * [UnifiedReal] constructed from `nRatFactor` and the [mCrFactor] field of [u]. If the
+     * [mCrFactor] field of [u] points to the constant [CR_ONE] we initialize our `val nRatFactor`
+     * with the [BoundedRational] that results when the [BoundedRational.multiply] method multiplies
+     * our [mRatFactor] field and the [mRatFactor] field of our parameter [u]. If `nRatFactor` is
+     * not *null* we return a [UnifiedReal] constructed from `nRatFactor` and our [mCrFactor] field.
+     * If our [definitelyZero] method indicates that *this* is definitely 0, or the [definitelyZero]
+     * method of [u] indicates that [u] is definitely 0 we return the constant [ZERO]. If our
+     * [mCrFactor] field points to the same [CR] that the [mCrFactor] field or [u] points to we
+     * initialize our `val square` to the small integer [BoundedRational] that our [getSquare]
+     * method determines we are the square root of (or *null* if we are not the square root of a
+     * small integer). If `square` is not *null* we initialize our `val nRatFactor` to the
+     * [BoundedRational] that results when the [BoundedRational.multiply] method multiplies the
+     * result of multiplying `square` by our [mRatFactor] field by the [mRatFactor] field of [u].
+     * If `nRatFactor` is not *null* we return a [UnifiedReal] constructed from `nRatFactor`.
+     * Otherwise we initialize our `val nRatFactor` to the [BoundedRational] that results when the
+     * [BoundedRational.multiply] method multiplies our [mRatFactor] field by the [mRatFactor] field
+     * of [u]. If `nRatFactor` is not *null* we return a [UnifiedReal] constructed from `nRatFactor`
+     * and the result of multiplying our [mCrFactor] field by the [mCrFactor] field of [u], otherwise
+     * we return a [UnifiedReal] constructed from the result of multiplying our value as a [CR] by
+     * the value of [u] as a [CR].
+     *
+     * @param u the [UnifiedReal] we are to multiply *this* by.
+     * @return the [UnifiedReal] that results from multiplying [u] and *this*.
+     */
     fun multiply(u: UnifiedReal): UnifiedReal {
         // Preserve a preexisting mCrFactor when we can.
         if (mCrFactor === CR_ONE) {
@@ -644,6 +700,10 @@ class UnifiedReal private constructor(
         } else UnifiedReal(crValue().multiply(u.crValue()))
     }
 
+    /**
+     * The [Exception] we throw when our [divide] method is asked to divide by 0, or our [inverse]
+     * method is asked to return the reciprocal of 0.
+     */
     class ZeroDivisionException : ArithmeticException("Division by zero")
 
     /**
