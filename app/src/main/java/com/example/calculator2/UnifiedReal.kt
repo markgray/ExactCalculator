@@ -707,7 +707,18 @@ class UnifiedReal private constructor(
     class ZeroDivisionException : ArithmeticException("Division by zero")
 
     /**
-     * Return the reciprocal.
+     * Return the reciprocal. If our [definitelyZero] method returns *true* indicating that *this*
+     * is definitely 0 we throw a new instance of [ZeroDivisionException]. Otherwise we initialize
+     * our `val square` with the small integer [BoundedRational] that our [getSquare] method finds
+     * that our [mCrFactor] field is the square root of. If `square` is not *null* we can calculate
+     * the reciprocal to be the square root of that small integer divided by that integer so we
+     * initialize our `val nRatFactor` to be the [BoundedRational] returned by the method
+     * [BoundedRational.inverse] when inverting the product of our [mRatFactor] field and `square`,
+     * and if `nRatFactor` is not *null* we return a [UnifiedReal] constructed from `nRatFactor`
+     * and our [mCrFactor] field. If `square` is *null* we return a [UnifiedReal] constructed from
+     * the inverse of our [mRatFactor] field and the inverse of our [mCrFactor] field.
+     *
+     * @return a [UnifiedReal] which is the reciprocal of *this*.
      */
     fun inverse(): UnifiedReal {
         if (definitelyZero()) {
@@ -725,6 +736,20 @@ class UnifiedReal private constructor(
         return UnifiedReal(BoundedRational.inverse(mRatFactor)!!, mCrFactor.inverse())
     }
 
+    /**
+     * Returns a [UnifiedReal] which is the result of dividing *this* by our parameter [u]. If our
+     * [mCrFactor] field points to the same [CR] that the [mCrFactor] field of [u] points to we
+     * check if [u] is 0 and throw a new instance of [ZeroDivisionException] if it is, and if it is
+     * not we initialize our `val nRatFactor` to the [BoundedRational] that the method
+     * [BoundedRational.divide] returns when it divides our [mRatFactor] field by the [mRatFactor]
+     * field of [u]. If `nRatFactor` is not *null* we return a [UnifiedReal] constructed from
+     * `nRatFactor` and the constant [CR_ONE]. If on the other hand [mCrFactor] is not equal to
+     * the [mCrFactor] field of [u] we return the [UnifiedReal] that our [multiply] method returns
+     * when it multiplies *this* by the inverse of [u].
+     *
+     * @param u The [UnifiedReal] we are to divide *this* by
+     * @return A [UnifiedReal] which is the result of dividing *this* by our parameter [u].
+     */
     fun divide(u: UnifiedReal): UnifiedReal {
         if (mCrFactor === u.mCrFactor) {
             if (u.definitelyZero()) {
@@ -739,8 +764,21 @@ class UnifiedReal private constructor(
     }
 
     /**
-     * Return the square root.
-     * This may fail to return a known rational value, even when the result is rational.
+     * Return the square root. This may fail to return a known rational value, even when the result
+     * is rational. If our [definitelyZero] determines that we are definitely equal to 0 we return
+     * the constant [ZERO] to the caller. If our [mCrFactor] field points to the same [CR] as the
+     * constant [CR_ONE] we declare `var ratSqrt` to be a [BoundedRational] then loop over the [Int]
+     * `divisor` from 1 until the size of our [sSqrts] array of [CR] of the square root of small
+     * integers setting `ratSqrt` to the [BoundedRational] returned by the [BoundedRational.sqrt]
+     * method when it takes the square root of our [mRatFactor] field divided by the [BoundedRational]
+     * constructed from `divisor`. If `ratSqrt` is not *null* we return the [UnifiedReal] constructed
+     * from `ratSqrt` and the `divisor` entry in the [sSqrts] array, and if it is *null* we loop
+     * around to try the next entry in [sSqrts].
+     *
+     * If none of the entries in [sSqrts] worked we return a [UnifiedReal] constructed from the
+     * square root of our value as a [CR].
+     *
+     * @return a [UnifiedReal] which is the square root of *this*
      */
     fun sqrt(): UnifiedReal {
         if (definitelyZero()) {
@@ -763,6 +801,11 @@ class UnifiedReal private constructor(
         return UnifiedReal(crValue().sqrt())
     }
 
+    /**
+     * Returns the trigonometric sine of *this*.
+     *
+     * @return The trigonometric sine of *this*
+     */
     fun sin(): UnifiedReal {
         val piTwelfths = piTwelfths
         if (piTwelfths != null) {
