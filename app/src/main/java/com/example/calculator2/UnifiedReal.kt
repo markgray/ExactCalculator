@@ -802,7 +802,13 @@ class UnifiedReal private constructor(
     }
 
     /**
-     * Returns the trigonometric sine of *this*.
+     * Returns the trigonometric sine of *this*. First we initialize our `val piTwelfths` to the
+     * [BigInteger] of (*this* mod 2pi)/(pi/6) iff our [mCrFactor] points to the constant [CR_PI]
+     * (ie. we are a rational multiple of pi). If `piTwelfths` is not *null* we initialize our
+     * `val result` to the [UnifiedReal] that our [sinPiTwelfths] method finds when it looks up
+     * `piTwelfths` in the list of known results of the sine of integer multiples of pi/12, and if
+     * `result` is not *null* we return `result`. Otherwise we return a [UnifiedReal] constructed
+     * from the sine of our value as a [CR].
      *
      * @return The trigonometric sine of *this*
      */
@@ -817,6 +823,17 @@ class UnifiedReal private constructor(
         return UnifiedReal(crValue().sin())
     }
 
+    /**
+     *  Returns the trigonometric cosine of *this*. First we initialize our `val piTwelfths` to the
+     * [BigInteger] of (*this* mod 2pi)/(pi/6) iff our [mCrFactor] points to the constant [CR_PI]
+     * (ie. we are a rational multiple of pi). If `piTwelfths` is not *null* we initialize our
+     * `val result` to the [UnifiedReal] that our [cosPiTwelfths] method finds when it looks up
+     * `piTwelfths` in the list of known results of the cosine of integer multiples of pi/12, and if
+     * `result` is not *null* we return `result`. Otherwise we return a [UnifiedReal] constructed
+     * from the cosine of our value as a [CR].
+     *
+     * @return The trigonometric cosine of *this*
+     */
     fun cos(): UnifiedReal {
         val piTwelfths = piTwelfths
         if (piTwelfths != null) {
@@ -828,6 +845,19 @@ class UnifiedReal private constructor(
         return UnifiedReal(crValue().cos())
     }
 
+    /**
+     * Returns the trigonometric tangent of *this*. First we initialize our `val piTwelfths` to the
+     * [BigInteger] of (*this* mod 2pi)/(pi/6) iff our [mCrFactor] points to the constant [CR_PI]
+     * (ie. we are a rational multiple of pi). If `piTwelfths` is not *null* we initialize our
+     * `val i` to the [Int] value of `piTwelfths`. If `i` is equal to 6 or equal to 18 we throw an
+     * [ArithmeticException] ("Tangent undefined"). Otherwise we initialize our `val top` to the
+     * [UnifiedReal] sine value that our [sinPiTwelfths] method finds for `i` and our `val bottom`
+     * to the [UnifiedReal] cosine value that our [cosPiTwelfths] method finds for `i`. If `top`
+     * is not *null* and `bottom` is not *null* we return `top` divided by `bottom`. If we are not
+     * a rational multiple of pi we return the [sin] of *this* divided by the [cos] of *this*.
+     *
+     * @return The trigonometric tangent of *this*
+     */
     @Suppress("unused")
     fun tan(): UnifiedReal {
         val piTwelfths = piTwelfths
@@ -845,7 +875,12 @@ class UnifiedReal private constructor(
         return sin().divide(cos())
     }
 
-    // Throw an exception if the argument is definitely out of bounds for asin or acos.
+    /**
+     * Throw an exception if *this* is definitely out of bounds for arcsine or arccosine. If our
+     * [isComparable] method determines that we can be exactly compared to the [UnifiedReal] constant
+     * [ONE] we check whether *this* is greater than [ONE] or less than [ONE] and if so we throw an
+     * [ArithmeticException] "inverse trig argument out of range".
+     */
     private fun checkAsinDomain() {
         if (isComparable(ONE) && (compareTo(ONE) > 0 || compareTo(MINUS_ONE) < 0)) {
             throw ArithmeticException("inverse trig argument out of range")
@@ -853,7 +888,9 @@ class UnifiedReal private constructor(
     }
 
     /**
-     * Return asin of this, assuming this is not an integral multiple of a half.
+     * Return arcsine of *this*, assuming *this* is not an integral multiple of a half.
+     *
+     * @return a [UnifiedReal] which is the asine of *this*
      */
     fun asinNonHalves(): UnifiedReal {
         if (compareTo(ZERO, -10) < 0) {
