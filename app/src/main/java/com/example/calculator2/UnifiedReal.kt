@@ -888,9 +888,17 @@ class UnifiedReal private constructor(
     }
 
     /**
-     * Return arcsine of *this*, assuming *this* is not an integral multiple of a half.
+     * Return arcsine of *this*, assuming *this* is not an integral multiple of a half. If our
+     * [compareTo] method determines we are less than 0 to a tolerance of 10 bits we return the
+     * negation of the result returned by this method for the negative of *this*. If we are found
+     * to be definitely equal to the constant [HALF_SQRT2] by our [definitelyEquals] method we
+     * return a [UnifiedReal] constructed from the constant [BoundedRational.QUARTER] and the
+     * constant [CR_PI] (one fourth of pi). If we are found to be definitely equal to the constant
+     * [HALF_SQRT3] by our [definitelyEquals] method we return a [UnifiedReal] constructed from the
+     * constant [BoundedRational.THIRD] and the constant [CR_PI] (one third of pi). Otherwise we
+     * return a [UnifiedReal] constructed from the arcsine of our value as a [CR].
      *
-     * @return a [UnifiedReal] which is the asine of *this*
+     * @return a [UnifiedReal] which is the arcsine of *this*
      */
     fun asinNonHalves(): UnifiedReal {
         if (compareTo(ZERO, -10) < 0) {
@@ -904,6 +912,20 @@ class UnifiedReal private constructor(
         } else UnifiedReal(crValue().asin())
     }
 
+    /**
+     * Return arcsine of *this*. First we call our method [checkAsinDomain] to make sure *this* is
+     * with the domain of the arcine function (which throws an [ArithmeticException] "inverse trig
+     * argument out of range" if *this* is greater than 1 or less than -1). Then we initialize our
+     * `val halves` to the [BigInteger] that results from multiplying *this* by the constant [TWO]
+     * and then trying to convert *this* to a [BigInteger]. If `halves` is not *null* we return the
+     * [UnifiedReal] that our [asinHalves] method returns for the [Int] value of `halves`. If our
+     * [mCrFactor] field points to the constant [CR.ONE] or does not point to the constant [CR_SQRT2]
+     * or does not point to the constant [CR_SQRT3] we return the [UnifiedReal] returned by our
+     * [asinNonHalves] method, otherwise we return a [UnifiedReal] constructed from the arcsine of
+     * our value as a [CR].
+     *
+     * @return a [UnifiedReal] which is the arcsine of *this*
+     */
     fun asin(): UnifiedReal {
         checkAsinDomain()
         val halves = multiply(TWO).bigIntegerValue()
@@ -915,10 +937,30 @@ class UnifiedReal private constructor(
         } else UnifiedReal(crValue().asin())
     }
 
+    /**
+     * Return the arccosine of *this*. We just return the arcsine of *this* that our [asin] method
+     * calculates subtracted from the constant [PI_OVER_2].
+     *
+     * @return a [UnifiedReal] which is the arccosine of *this*.
+     */
     fun acos(): UnifiedReal {
         return PI_OVER_2.subtract(asin())
     }
 
+    /**
+     * Return the arctangent of *this*. If our [compareTo] method determines we are less than 0 to
+     * a tolerance of 10 bits we return the negation of the result returned by this method for the
+     * negative of *this*. Otherwise we intialize our `val asBI` to the [BigInteger] value of *this*
+     * if it exists. If `asBI` is not *null* and it is less than or equal to the constant
+     * [BigInteger.ONE] we return the constant [ZERO] if the value of `asBI` as an [Int] is 0, the
+     * constant [PI_OVER_4] if it is 1, or else throw an [AssertionError] "Impossible r_int". If
+     * *this* is not 0 or 1 we check if *this* is definitely equal to the constant [THIRD_SQRT3] and
+     * if so return the constant [PI_OVER_6]. If *this* is definitely equal to the constant [SQRT3]
+     * we return the constant [PI_OVER_3]. Otherwise we return a [UnifiedReal] constructed from the
+     * [CR] that the `execute` method of the [AtanUnaryCRFunction] returns for our value as a [CR].
+     *
+     * @return a [UnifiedReal] which is the arctangent of *this*.
+     */
     fun atan(): UnifiedReal {
         if (compareTo(ZERO, -10) < 0) {
             return negate().atan().negate()
@@ -942,8 +984,28 @@ class UnifiedReal private constructor(
     }
 
     /**
-     * Compute an integral power of a constructive real, using the exp function when
-     * we safely can. Use recursivePow when we can't. exp is known to be nozero.
+     * Compute an integral power of our value as a constructive real, using the `exp()` function
+     * when we safely can, and using [recursivePow] when we can't. [exp] is known to be nonzero.
+     * First we intialize our `val sign` with the value returned by our [signum] method for the bit
+     * tolerance of [DEFAULT_COMPARE_TOLERANCE] (which is -1 if *this* is less than 0, +1 if *this*
+     * is greater than 0, and 0 if *this* is 0 within [DEFAULT_COMPARE_TOLERANCE] bits of tolerance).
+     * We then branch on the value of `sign`:
+     *  - Greater than 0, we return a [UnifiedReal] constructed from the [CR] that results from
+     *  applying the exponential function `exp` to the natural log of our value as a [CR] multiplied
+     *  by the value of [exp] as a [CR].
+     *  - Less than 0, we initialize our `var result` to the [CR] created by taking our value as a
+     *  [CR], negating it, taking the natural log of that value and multiplying it by the value of
+     *  [exp] as a [CR] then applying the exponential function `exp` to that result. If [exp] is an
+     *  odd number we then negate `result`. Finally we return a [UnifiedReal] constructed from
+     *  `result`.
+     *  - Equal to 0 (within the tolerance of [DEFAULT_COMPARE_TOLERANCE]), if [exp] is negative we
+     *  return a [UnifiedReal] constructed from the [CR] that results when we take the [CR] that our
+     *  [recursivePow] method calculates for our value as a [CR] raised to minus [exp] and inverting
+     *  it. If [exp] is positive (or zero) we return a [UnifiedReal] constructed from the [CR] that
+     *  our [recursivePow] method calculates for our value as a [CR] raised to [exp].
+     *
+     * @param exp the [BigInteger] power we are to raise *this* to.
+     * @return a [UnifiedReal] which is *this* raised to the [exp] power.
      */
     private fun expLnPow(exp: BigInteger): UnifiedReal {
         val sign = signum(DEFAULT_COMPARE_TOLERANCE)
@@ -971,11 +1033,12 @@ class UnifiedReal private constructor(
         }
     }
 
-
     /**
-     * Compute an integral power of this.
-     * This recurses roughly as deeply as the number of bits in the exponent, and can, in
-     * ridiculous cases, result in a stack overflow.
+     * Compute an integral power of this. This recurses roughly as deeply as the number of bits in
+     * the exponent, and can, in ridiculous cases, result in a stack overflow.
+     *
+     * @param exp the [BigInteger] power we are to raise *this* to.
+     * @return a [UnifiedReal] which is *this* raised to the [exp] power.
      */
     private fun pow(exp: BigInteger): UnifiedReal {
         if (exp == BigInteger.ONE) {
