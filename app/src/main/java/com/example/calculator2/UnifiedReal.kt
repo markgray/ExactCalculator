@@ -1035,7 +1035,25 @@ class UnifiedReal private constructor(
 
     /**
      * Compute an integral power of this. This recurses roughly as deeply as the number of bits in
-     * the exponent, and can, in ridiculous cases, result in a stack overflow.
+     * the exponent, and can, in ridiculous cases, result in a stack overflow. If [exp] is the
+     * constant [BigInteger.ONE] we just return *this*. If [exp] is 0 (as determined by its [signum]
+     * method) we return the constant [ONE]. Otherwise we initialize our `val absExp` to the absolute
+     * value of [exp], and then if our [mCrFactor] points to the constant [CR_ONE] and `absExp` is
+     * less than [HARD_RECURSIVE_POW_LIMIT] (as determined by the `compareTo` method of `absExp`) we
+     * initialize our `val ratPow` to the [BoundedRational] returned by the `pow` method of our
+     * field [mRatFactor] when it raises [mRatFactor] to the [exp] power. If `ratPow` is not *null*
+     * we return a [UnifiedReal] constructed from it. If the above shortcuts fail to do the work we
+     * first check if `absExp` is greater than [RECURSIVE_POW_LIMIT] and if it is we return the
+     * [UnifiedReal] returned by our [expLnPow] when it raises *this* to the [exp] power. Otherwise
+     * `absExp` is less than or equal to [RECURSIVE_POW_LIMIT] so we initialize our `val square` to
+     * the [BoundedRational] returned by our [getSquare] method when it tries to find a small integer
+     * which our [mCrFactor] field is the square root of. If `square` is not *null* we initialize our
+     * `val nRatFactor` to the [BoundedRational] that results when we multiply our [mRatFactor] raised
+     * to the power [exp] and `square` raised to half of [exp]. If `nRatFactor` is not *null* we
+     * return a [UnifiedReal] constructed from `nRatFactor` and our [mCrFactor] field if [exp] is
+     * odd, and if it is even we return a [UnifiedReal] constructed from `nRatFactor`. If `square`
+     * is *null* we return the [UnifiedReal] returned by our [expLnPow] method when it raises *this*
+     * to the [exp] power.
      *
      * @param exp the [BigInteger] power we are to raise *this* to.
      * @return a [UnifiedReal] which is *this* raised to the [exp] power.
@@ -1065,7 +1083,6 @@ class UnifiedReal private constructor(
         }
         val square = getSquare(mCrFactor)
         if (square != null) {
-
             val nRatFactor = BoundedRational.multiply(mRatFactor.pow(exp)!!, square.pow(exp.shiftRight(1)))
             if (nRatFactor != null) {
                 return if (exp.and(BigInteger.ONE).toInt() == 1) {
@@ -1080,10 +1097,39 @@ class UnifiedReal private constructor(
     }
 
     /**
-     * Return this ^ expon.
-     * This is really only well-defined for a positive base, particularly since
-     * 0^x is not continuous at zero. (0^0 = 1 (as is epsilon^0), but 0^epsilon is 0.
-     * We nonetheless try to do reasonable things at zero, when we recognize that case.
+     * Return this ^ expon. This is really only well-defined for a positive base, particularly since
+     * 0^x is not continuous at zero. (0^0 = 1 (as is epsilon^0), but 0^epsilon is 0. We nonetheless
+     * try to do reasonable things at zero, when we recognize that case. If our [mCrFactor] field
+     * points the constant [CR_E] we return the result of the `exp` method of [expon] when it raises
+     * the mathematical constant _e_ to the [expon] power if our [mRatFactor] field is equal to
+     * [BoundedRational.ONE], and if it is not equal to that we initialize our `val ratPart` to a
+     * [UnifiedReal] which is the result of raising a [UnifiedReal] constructed from our [mRatFactor]
+     * field to the power [expon], then return the result of multiplying `ratPart` by the result of
+     * the `exp` method of [expon] when it raises the mathematical constant _e_ to the [expon] power.
+     *
+     * If our [mCrFactor] field is not [CR_E] we initialize our `val expAsBR` to the [BoundedRational]
+     * returned by the `boundedRationalValue` method of [expon] and if this is not *null* we
+     * initialize our `var expAsBI` to the [BigInteger] that the [BoundedRational.asBigInteger] method
+     * returns for `expAsBR`, and if `expAsBI` is not *null* we return the [UnifiedReal] that our
+     * [pow] method returns when it raises *this* to the `expAsBI` power. If `expAsBI` is *null* we
+     * set `expAsBI` to the [BoundedRational] we set it to the [BoundedRational] that our method
+     * [BoundedRational.asBigInteger] for the result of multiplying `expAsBR` by the constant
+     * [BoundedRational.TWO] (just in case [expon] is a multiple of a half) and if `expAsBI` is not
+     * *null* we return the square root of the [UnifiedReal] that our [pow] method returns when it
+     * raises *this* to the `expAsBI` power.
+     *
+     * Having reached this point without a simple way to calculate our result we double check whether
+     * our [definitelyZero] method determines that we are definitely equal to 0, and if so return
+     * the constant [ZERO]. If not we initialize our `val sign` to the [Int] returned by our [signum]
+     * method when it compares *this* to 0 to the bit tolerance [DEFAULT_COMPARE_TOLERANCE]. If `sign`
+     * is less than 0 (we are negative) we throw an [ArithmeticException] "Negative base for pow()
+     * with non-integer exponent". Otherwise we return a [UnifiedReal] that is constructed from the
+     * [CR] that results when we take the natural log of our value as a [CR], multiply it by the value
+     * of [expon] as a [CR] and then raise the mathematical constant _e_ to the resulting [CR] power
+     * (the inverse natural log).
+     *
+     * @param expon the [UnifiedReal] power that we are to raise *this* to.
+     * @return a [UnifiedReal] which is the result of raising *this* to the power [expon].
      */
     fun pow(expon: UnifiedReal): UnifiedReal {
         if (mCrFactor === CR_E) {
@@ -1119,6 +1165,11 @@ class UnifiedReal private constructor(
         return UnifiedReal(crValue().ln().multiply(expon.crValue()).exp())
     }
 
+    /**
+     * Returns the natural log of *this*.
+     *
+     * @return a [UnifiedReal] which is the natural log of *this*
+     */
     fun ln(): UnifiedReal {
         if (mCrFactor === CR_E) {
             return UnifiedReal(mRatFactor, CR_ONE).ln().add(ONE)
