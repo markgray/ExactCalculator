@@ -1166,7 +1166,36 @@ class UnifiedReal private constructor(
     }
 
     /**
-     * Returns the natural log of *this*.
+     * Returns the natural log of *this*. If our [mCrFactor] field points to the constant [CR_E] we
+     * return the result of adding the constant [ONE] to the natual log of a [UnifiedReal] constructed
+     * from our [mRatFactor] field and the constant [CR_ONE]. Otherwise we first check if we are
+     * comparable to the constant [ZERO], and if we are we check whether we are less than or equal
+     * to 0, and if so we throw an [ArithmeticException] "log(non-positive)". If we are greater than
+     * 0 we initialize our `val compare1` to the [Int] returned by our [compareTo] method when it
+     * compares *this* to the constant [ONE] with [DEFAULT_COMPARE_TOLERANCE] bits of tolerance. If
+     * `compare1` is equal to 0 we check if we definitely equal to [ONE] and if so we return the
+     * constant [ZERO]. And if `compare1` is less than 0 we return the negation of the natural log
+     * of our inverse. If the above special cases fail to return a value we initialize our `val bi`
+     * to the [BigInteger] version of our [mRatFactor] field (if one exists) and if `bi` is not
+     * *null* we check if our [mCrFactor] field points to the constant [CR_ONE] and if so we loop
+     * over `i` for all the [CR] values in our [sLogs] array of powers of small integers, and if
+     * the `i`th entry in `sLogs` is not *null* we initialize our `val intLog` to the [Long] returned
+     * by our [getIntLog] method when it attempts to find an integral log for `bi` with respect to
+     * the base `i` (it returns 0 if it can't find one). If `intLog` is not 0 we return a [UnifiedReal]
+     * constructed from a [BoundedRational] constructed from `intLog` and the `i`th entry in [sLogs].
+     * If [mCrFactor] does not point to the constant [CR_ONE] we want to check for n^k * sqrt(n), so
+     * we initialize our `val square` to the [BoundedRational] that our [getSquare] method finds for
+     * our [mCrFactor] field when it searches our [sSqrts] array of the square root of small integers
+     * (if any exists). If `square` is not *null* we initialize our `val intSquare` to the [Int] that
+     * the `intValue` method of `square` returns as the [Int] value of `square`. Then if the `intSquare`
+     * entry in our [sLogs] array of the natural logs of small integers is not *null* we initialize
+     * our `val intLog` to the integral log of `bi` for the base of `intSquare` that our [getIntLog]
+     * method returns (it returns 0 if this does not exist). If `intLog` is not 0 we initialize our
+     * `val nRatFactor` to the [BoundedRational] created by adding the [BoundedRational] constructed
+     * from `intLog` to the constant [BoundedRational.HALF], and then if `nRatFactor` is not *null*
+     * we return a [UnifiedReal] constructed from `nRatFactor` and the `intSquare` entry in [sLogs].
+     * If none of the above attempt to find a more useful answer succeeds we return the natural log
+     * of a [UnifiedReal] constructed from our value as a [CR].
      *
      * @return a [UnifiedReal] which is the natural log of *this*
      */
@@ -1221,6 +1250,26 @@ class UnifiedReal private constructor(
         return UnifiedReal(crValue().ln())
     }
 
+    /**
+     * Raises the mathematical constant _e_ (base of the natural logarithm) to the power *this* and
+     * returns the result. If our [definitelyEquals] method determines that we are definitely equal
+     * to the constant [ZERO] we return the constant [ONE]. If our [definitelyEquals] method determines
+     * that we are definitely equal to the constant [ONE] we return the constant [E]. Otherwise we
+     * initialize our `val crExp` to the [BoundedRational] our [getExp] method returns for our field
+     * [mCrFactor] after it searches the [sLogs] array of the logs of small integers (if any). Then
+     * if `crExp` is not *null* we initialize our `var needSqrt` to *false*, our `var ratExponent`
+     * to our [mRatFactor] field and our `val asBI` the the [BigInteger] value of `ratExponent`.
+     * If `asBI` is *null* we might still be a multiple of one half so we set `needSqrt` to *true*
+     * and double `ratExponent`. In either case we set our `val nRatFactor` to the [BoundedRational]
+     * that results after the [BoundedRational.pow] method raises `crExp` to the integral power
+     * `ratExponent`. If `nRatFactor` is not *null* we initialize our `var result` to a [UnifiedReal]
+     * constructed from `nRatFactor` then setting `result` to the square root of `result` if `needSqrt`
+     * is *true*, then returning `result` to the caller. If none of the above short cuts click we
+     * return a [UnifiedReal] constructed from the value returned by the `exp` method of our value
+     * as a [CR].
+     *
+     * @return the mathematical constant _e_ raised to *this*.
+     */
     fun exp(): UnifiedReal {
         if (definitelyEquals(ZERO)) {
             return ONE
