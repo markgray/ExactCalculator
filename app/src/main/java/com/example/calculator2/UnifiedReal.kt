@@ -1302,9 +1302,22 @@ class UnifiedReal private constructor(
 
 
     /**
-     * Factorial function.
-     * Fails if argument is clearly not an integer.
-     * May round to nearest integer if value is close.
+     * Factorial function. Fails if argument is clearly not an integer. May round to nearest integer
+     * if value is close. First we initialize our `var asBI` to our value as a [BigInteger] if it
+     * exists. If `asBI` is *null* we set `asBI` to the approximate integer value of our value as a
+     * [CR] that the [CR.approxGet] method returns for a precision of 0. If a [UnifiedReal] constructed
+     * from `asBI` is not approximately equal to *this* to a precision of [DEFAULT_COMPARE_TOLERANCE]
+     * bits we throw an [ArithmeticException] "Non-integral factorial argument". `asBI` is not now
+     * *null* in any case so we check if `asBI` is less than 0 and throw an [ArithmeticException]
+     * "Negative factorial argument" if it is. Next we check if the bit length of `asBI` is greater
+     * than 20 and if so we throw an [ArithmeticException] "Factorial argument too big". If we got
+     * this far we are pretty sure we calculate the factorial of *this*, so we initialize our
+     * `val biResult` to the [BigInteger] that our [genFactorial] method calculates for the [Long]
+     * value of `asBI` using a step size of 1. We then initialize our `val nRatFactor` to a
+     * [BoundedRational] constructed from `biResult` and return a [UnifiedReal] constructed from
+     * `nRatFactor`.
+     *
+     * @return a [UnifiedReal] which is the factorial of *this*
      */
     fun fact(): UnifiedReal {
         var asBI = bigIntegerValue()
@@ -1328,9 +1341,14 @@ class UnifiedReal private constructor(
 
     /**
      * Return the number of decimal digits to the right of the decimal point required to represent
-     * the argument exactly.
-     * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
-     * if r is a power of ten.
+     * the argument exactly. Return [Integer.MAX_VALUE] if that's not possible. Never returns a value
+     * less than zero, even if r is a power of ten. If our [mCrFactor] field points to the constant
+     * [CR_ONE] or our [mRatFactor] field is 0 we return the number of digits required to exactly
+     * display our field [mRatFactor] that is returned by our [BoundedRational.digitsRequired] method.
+     * Otherwise we return [Integer.MAX_VALUE].
+     *
+     * @return the number of decimal digits to the right of the decimal point required to represent
+     * the argument exactly, or [Integer.MAX_VALUE] if that is not possible.
      */
     fun digitsRequired(): Int {
         return if (mCrFactor === CR_ONE || mRatFactor.signum() == 0) {
@@ -1341,10 +1359,17 @@ class UnifiedReal private constructor(
     }
 
     /**
-     * Return an upper bound on the number of leading zero bits.
-     * These are the number of 0 bits
-     * to the right of the binary point and to the left of the most significant digit.
-     * Return Integer.MAX_VALUE if we cannot bound it.
+     * Return an upper bound on the number of leading zero bits. These are the number of 0 bits to
+     * the right of the binary point and to the left of the most significant digit. Returns
+     * [Integer.MAX_VALUE] if we cannot bound it. If our [mCrFactor] field points to one of the
+     * well known [CR] constants we have a chance to place a bound on the number of leading zero
+     * bits and if so we initialize our `val wholeBits` to the approximate number of bits to left of
+     * the binary point of our [mRatFactor] field. If `wholeBits` is equal to [Integer.MIN_VALUE]
+     * (the field is 0) we return [Integer.MAX_VALUE], otherwise if `wholeBits` is greater than or
+     * equal to 3 we return 0, and if it is less then 3 we return 3 minus `wholeBits`. On the other
+     * hand if our [mCrFactor] is not a well known [CR] we return [Integer.MAX_VALUE].
+     *
+     * @return an upper bound on the number of leading zero bits in *this*
      */
     fun leadingBinaryZeroes(): Int {
         if (isNamed(mCrFactor)) {
@@ -1364,8 +1389,16 @@ class UnifiedReal private constructor(
     }
 
     /**
-     * Is the number of bits to the left of the decimal point greater than bound?
-     * The result is inexact: We roughly approximate the whole number bits.
+     * Is the number of bits to the left of the decimal point greater than bound? The result is
+     * inexact: We roughly approximate the whole number bits. If our [mCrFactor] field points to one
+     * of the well know [CR] constants we return *true* if the number of bits to the left of the
+     * decimal point in our [mRatFactor] field is greater than [bound]. Otherwise we return *true*
+     * if the bit length of the approximate value or our value as a [CR] to a precision of [bound]
+     * minus 2 is greater than 2.
+     *
+     * @param bound the number of bits we wish to compare with the number of bits to the left of the
+     * decimal point of *this*.
+     * @return *true* if there are more bits to the left of the decimal point in *this* than [bound]
      */
     fun approxWholeNumberBitsGreaterThan(bound: Int): Boolean {
         return if (isNamed(mCrFactor)) {
@@ -1375,6 +1408,9 @@ class UnifiedReal private constructor(
         }
     }
 
+    /**
+     * Our static constants and methods.
+     */
     companion object {
         // TODO: It would be helpful to add flags to indicate whether the result is known
         // irrational, etc.  This sometimes happens even if mCrFactor is not one of the known ones.
@@ -1386,12 +1422,26 @@ class UnifiedReal private constructor(
         @Suppress("unused")
         var enableChecks = true
 
+        /**
+         * Throws an [AssertionError] if the argument is *false*
+         *
+         * @param b if *false* we throw an [AssertionError].
+         */
         private fun check(b: Boolean) {
             if (!b) {
                 throw AssertionError()
             }
         }
 
+        /**
+         * Returns a [UnifiedReal] constructed to be equal to its [Double] argument [x]. If [x] is
+         * equal to 0.0 or to 1.0 we return the value returned by our overloaded [valueOf] brother
+         * method for the [Long] value of [x], otherwise we return a [UnifiedReal] constructed from
+         * the [BoundedRational] value of [x] returned by the [BoundedRational.valueOf] method.
+         *
+         * @param x the [Double] whose value the [UnifiedReal] we return will hold.
+         * @return a [UnifiedReal] which is equal to our [Double] argument [x].
+         */
         @Suppress("unused")
         fun valueOf(x: Double): UnifiedReal {
             return if (x == 0.0 || x == 1.0) {
@@ -1399,6 +1449,15 @@ class UnifiedReal private constructor(
             } else UnifiedReal(BoundedRational.valueOf(x))
         }
 
+        /**
+         * Returns a [UnifiedReal] constructed to be equal to its [Long] argument [x]. If [x] is
+         * equal to 0L we return the constant [ZERO], if it is equal to 1L return the constant [ONE]
+         * otherwise we return a [UnifiedReal] constructed from the [BoundedRational] value of [x]
+         * returned by the [BoundedRational.valueOf] method.
+         *
+         * @param x the [Long] whose value the [UnifiedReal] we return will hold.
+         * @return a [UnifiedReal] which is equal to our [Long] argument [x].
+         */
         fun valueOf(x: Long): UnifiedReal {
             return when (x) {
                 0L -> ZERO
@@ -1408,10 +1467,18 @@ class UnifiedReal private constructor(
         }
 
         // Various helpful constants
+
+        /**
+         * The [BigInteger] of the integer 24, used by our [piTwelfths] method.
+         */
         private val BIG_24 = BigInteger.valueOf(24)
+        /**
+         * The number of bits of precision tolerance we use for comparing some values.
+         */
         private const val DEFAULT_COMPARE_TOLERANCE = -1000
 
         // Well-known CR constants we try to use in the mCrFactor position:
+
         private val CR_ONE = CR.ONE
         private val CR_PI = CR.PI
         private val CR_E = CR.ONE.exp()
