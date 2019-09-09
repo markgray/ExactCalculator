@@ -1479,22 +1479,56 @@ class UnifiedReal private constructor(
 
         // Well-known CR constants we try to use in the mCrFactor position:
 
+        /**
+         * The [CR] constant 1.0
+         */
         private val CR_ONE = CR.ONE
+        /**
+         * The [CR] constant pi
+         */
         private val CR_PI = CR.PI
+        /**
+         * The [CR] constant for _e_, the base of the natural logarithm
+         */
         private val CR_E = CR.ONE.exp()
+        /**
+         * The [CR] constant for the square root of 2.0
+         */
         private val CR_SQRT2 = CR.valueOf(2).sqrt()
+        /**
+         * The [CR] constant for the square root of 3.0
+         */
         private val CR_SQRT3 = CR.valueOf(3).sqrt()
+        /**
+         * The [CR] constant for the natural log of 2.0
+         */
         private val CR_LN2 = CR.valueOf(2).ln()
+        /**
+         * The [CR] constant for the natural log of 3.0
+         */
         private val CR_LN3 = CR.valueOf(3).ln()
+        /**
+         * The [CR] constant for the natural log of 5.0
+         */
         private val CR_LN5 = CR.valueOf(5).ln()
+        /**
+         * The [CR] constant for the natural log of 6.0
+         */
         private val CR_LN6 = CR.valueOf(6).ln()
+        /**
+         * The [CR] constant for the natural log of 7.0
+         */
         private val CR_LN7 = CR.valueOf(7).ln()
+        /**
+         * The [CR] constant for the natural log of 10.0
+         */
         private val CR_LN10 = CR.valueOf(10).ln()
 
-        // Square roots that we try to recognize.
-        // We currently recognize only a small fixed collection, since the sqrt() function needs to
-        // identify numbers of the form <SQRT[i]>*n^2, and we don't otherwise know of a good
-        // algorithm for that.
+        /**
+         * Square roots that we try to recognize. We currently recognize only a small fixed
+         * collection, since the sqrt() function needs to identify numbers of the form:
+         * SQRT[ i ]*n^2, and we don't otherwise know of a good algorithm for that.
+         */
         @Suppress("RemoveExplicitTypeArguments")
         private val sSqrts = arrayOf<CR?>(
                 null, CR.ONE, CR_SQRT2, CR_SQRT3, null, CR.valueOf(5).sqrt(),
@@ -1502,45 +1536,115 @@ class UnifiedReal private constructor(
                 CR.valueOf(10).sqrt()
         )
 
-        // Natural logs of small integers that we try to recognize.
+        /**
+         * Natural logs of small integers that we try to recognize.
+         */
         @Suppress("RemoveExplicitTypeArguments")
         private val sLogs = arrayOf<CR?>(
                 null, null, CR_LN2, CR_LN3, null, CR_LN5,
                 CR_LN6, CR_LN7, null, null, CR_LN10
         )
 
-
         // Some convenient UnifiedReal constants.
+
+        /**
+         * The [UnifiedReal] for the constant pi.
+         */
         val PI = UnifiedReal(CR_PI)
+        /**
+         * The [UnifiedReal] for the mathematical constant _e_, base of the natural logarithms.
+         */
         val E = UnifiedReal(CR_E)
+        /**
+         * The [UnifiedReal] for the integer constant 0
+         */
         val ZERO = UnifiedReal(BoundedRational.ZERO)
+        /**
+         * The [UnifiedReal] for the integer constant 1
+         */
         val ONE = UnifiedReal(BoundedRational.ONE)
+        /**
+         * The [UnifiedReal] for the integer constant -1
+         */
         val MINUS_ONE = UnifiedReal(BoundedRational.MINUS_ONE)
+        /**
+         * The [UnifiedReal] for the integer constant 2
+         */
         val TWO = UnifiedReal(BoundedRational.TWO)
+        /**
+         * The [UnifiedReal] for the integer constant -2
+         */
         @Suppress("unused")
         val MINUS_TWO = UnifiedReal(BoundedRational.MINUS_TWO)
+        /**
+         * The [UnifiedReal] for the rational constant 1/2
+         */
         val HALF = UnifiedReal(BoundedRational.HALF)
+        /**
+         * The [UnifiedReal] for the rational constant -1/2
+         */
         @Suppress("unused")
         val MINUS_HALF = UnifiedReal(BoundedRational.MINUS_HALF)
+        /**
+         * The [UnifiedReal] for the integer constant 10
+         */
         val TEN = UnifiedReal(BoundedRational.TEN)
+        /**
+         * The multiplier for converting degrees to radians, used in the [CalculatorExpr.toRadians]
+         * method and the [CalculatorExpr.fromRadians] method.
+         */
         val RADIANS_PER_DEGREE = UnifiedReal(BoundedRational(1, 180), CR_PI)
+        /**
+         * The [UnifiedReal] for the integer constant 6
+         */
         @Suppress("unused")
         private val SIX = UnifiedReal(6)
+        /**
+         * The [UnifiedReal] for the constant one half of the square root of 2.0
+         */
         private val HALF_SQRT2 = UnifiedReal(BoundedRational.HALF, CR_SQRT2)
+        /**
+         * The [UnifiedReal] for the constant square root of 3.0
+         */
         private val SQRT3 = UnifiedReal(CR_SQRT3)
+        /**
+         * The [UnifiedReal] for the constant 1/2 of the square root of 3.0
+         */
         private val HALF_SQRT3 = UnifiedReal(BoundedRational.HALF, CR_SQRT3)
+        /**
+         * The [UnifiedReal] for the constant 1/3 of the square root of 3.0
+         */
         private val THIRD_SQRT3 = UnifiedReal(BoundedRational.THIRD, CR_SQRT3)
+        /**
+         * The [UnifiedReal] for the constant 1/2 of pi.
+         */
         private val PI_OVER_2 = UnifiedReal(BoundedRational.HALF, CR_PI)
+        /**
+         * The [UnifiedReal] for the constant 1/3 of pi.
+         */
         private val PI_OVER_3 = UnifiedReal(BoundedRational.THIRD, CR_PI)
+        /**
+         * The [UnifiedReal] for the constant 1/4 of pi.
+         */
         private val PI_OVER_4 = UnifiedReal(BoundedRational.QUARTER, CR_PI)
+        /**
+         * The [UnifiedReal] for the constant 1/6 of pi.
+         */
         private val PI_OVER_6 = UnifiedReal(BoundedRational.SIXTH, CR_PI)
 
 
         /**
-         * Given a constructive real cr, try to determine whether cr is the square root of
-         * a small integer.  If so, return its square as a BoundedRational.  Otherwise return null.
-         * We make this determination by simple table lookup, so spurious null returns are
-         * entirely possible, or even likely.
+         * Given a constructive real [cr], try to determine whether [cr] is the square root of a
+         * small integer. If so, return its square as a [BoundedRational]. Otherwise return null.
+         * We make this determination by simple table lookup, so spurious *null* returns are
+         * entirely possible, or even likely. We loop over `i` for all of the indices into our
+         * array [sSqrts] and if [cr] points to the same [CR] as the `i`'th entry in [sSqrts] we
+         * return a [BoundedRational] constructed from `i` to the caller. If none of the entries
+         * match we return *null*.
+         *
+         * @param cr the [CR] we are to search for in our [sSqrts] array of known square roots.
+         * @return A [BoundedRational] constructed from the small integer that [cr] is the square
+         * root of, or *null* if we did not find it.
          */
         private fun getSquare(cr: CR): BoundedRational? {
             for (i in sSqrts.indices) {
@@ -1552,12 +1656,11 @@ class UnifiedReal private constructor(
         }
 
         /**
-         * If the argument is a well-known constructive real, return its name.
-         * The name of "CR_ONE" is the empty string.
-         * No named constructive reals are rational multiples of each other.
-         * Thus two UnifiedReals with different named mCrFactors can be equal only if both
-         * mRatFactors are zero or possibly if one is CR_PI and the other is CR_E.
-         * (The latter is apparently an open problem.)
+         * If the argument is a well-known constructive real, return its name. The name of [CR_ONE]
+         * is the empty string. No named constructive reals are rational multiples of each other.
+         * Thus two [UnifiedReal]'s with different named [mCrFactor]'s can be equal only if both
+         * [mRatFactor]'s are zero or possibly if one is [CR_PI] and the other is [CR_E] (the latter
+         * is apparently an open problem).
          */
         private fun crName(cr: CR): String? {
             if (cr === CR_ONE) {

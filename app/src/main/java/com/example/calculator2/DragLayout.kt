@@ -231,7 +231,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
                 c.onInstanceStateRestored(isOpen)
             }
 
-            stateLocal = bundle.getParcelable(KEY_SUPER_STATE)
+            stateLocal = bundle.getParcelable(KEY_SUPER_STATE)!!
         }
         super.onRestoreInstanceState(stateLocal)
     }
