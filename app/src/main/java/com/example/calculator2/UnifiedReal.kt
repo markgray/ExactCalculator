@@ -1656,11 +1656,25 @@ class UnifiedReal private constructor(
         }
 
         /**
-         * If the argument is a well-known constructive real, return its name. The name of [CR_ONE]
-         * is the empty string. No named constructive reals are rational multiples of each other.
-         * Thus two [UnifiedReal]'s with different named [mCrFactor]'s can be equal only if both
-         * [mRatFactor]'s are zero or possibly if one is [CR_PI] and the other is [CR_E] (the latter
-         * is apparently an open problem).
+         * If the argument is a well-known constructive real, return its name. No named constructive
+         * reals are rational multiples of each other. Thus two [UnifiedReal]'s with different named
+         * [mCrFactor]'s can be equal only if both [mRatFactor]'s are zero or possibly if one is
+         * [CR_PI] and the other is [CR_E] (the latter is apparently an open problem).
+         *
+         * If our parameter [cr] points to the constant [CR_ONE] we return the empty string. If our
+         * parameter [cr] points to the constant [CR_PI] we return the utf8 character for the Greek
+         * small letter pi. If our parameter [cr] points to the constant [CR_E] we return the string
+         * "e". Next we loop over `i` searching through all the [CR] constant entries in our array
+         * [sSqrts] and if we find an `i`'th entry which [cr] points to we return a string consisting
+         * of the utf8 character for the square root symbol concatenated to the string value of `i`.
+         * Next we loop over `i` searching through all the [CR] constant entries in our array [sLogs]
+         * and if we find an `i`'th entry which [cr] points to we return a string formed by surrounding
+         * the string value of `i` in a "ln()" function. If we have not found [cr] our lists of well
+         * known [CR] constants we return *null* to the caller.
+         *
+         * @param cr the [CR] we are attempting to find a well known name for.
+         * @return a [String] corresponding to the name of a well-known constructive real which [cr]
+         * points to, or *null* if there is none found.
          */
         private fun crName(cr: CR): String? {
             if (cr === CR_ONE) {
@@ -1686,7 +1700,13 @@ class UnifiedReal private constructor(
         }
 
         /**
-         * Would crName() return non-Null?
+         * Would our [crName] method return non-Null? If [cr] points to one of the constants [CR_ONE],
+         * [CR_PI], or [CR_E] we return *true*. If [cr] points to one of the entries in our array
+         * [sSqrts] we return *true*, and if [cr] points to one of the entries in our array [sLogs]
+         * we return *true*. Otherwise we return *false*.
+         *
+         * @param cr the [CR] we are attempting to find in our lists of well known [CR] constants.
+         * @return *true* if [cr] is one of our well known [CR] constants, otherwise *false*
          */
         private fun isNamed(cr: CR): Boolean {
             if (cr === CR_ONE || cr === CR_PI || cr === CR_E) {
@@ -1706,9 +1726,12 @@ class UnifiedReal private constructor(
         }
 
         /**
-         * Is cr known to be algebraic (as opposed to transcendental)?
-         * Currently only produces meaningful results for the above known special
-         * constructive reals.
+         * Is [cr] known to be algebraic (as opposed to transcendental)? Currently only produces
+         * meaningful results for the above known special constructive reals.
+         *
+         * @param cr the [CR] we are to test to see if it is algebraic.
+         * @return *true* if [cr] points to the constant [CR_ONE] or our [getSquare] method finds it
+         * amongst our list of the square roots of small integers.
          */
         private fun definitelyAlgebraic(cr: CR): Boolean {
             return cr === CR_ONE || getSquare(cr) != null
@@ -1716,11 +1739,20 @@ class UnifiedReal private constructor(
 
 
         /**
-         * Is it known that the two constructive reals differ by something other than a
-         * a rational factor, i.e. is it known that two UnifiedReals
-         * with those mCrFactors will compare unequal unless both mRatFactors are zero?
-         * If this returns true, then a comparison of two UnifiedReals using those two
-         * mCrFactors cannot diverge, though we don't know of a good runtime bound.
+         * Is it known that the two constructive reals differ by something other than a a rational
+         * factor, i.e. is it known that two [UnifiedReal]'s with those [mCrFactor]'s will compare
+         * unequal unless both [mRatFactor]'s are zero? If this returns *true*, then a comparison
+         * of two [UnifiedReal]'s using those two [mCrFactor]'s cannot diverge, though we don't know
+         * of a good runtime bound. If [r1] points to the same [CR] as [r2] we return *false*. If
+         * [r1] points to the constant [CR_E] or to the constant [CR_PI] we return the value returned
+         * by our [definitelyAlgebraic] method for [r2], and if [r2] points to the constant [CR_E] or
+         * to the constant [CR_PI] we return the value returned by our [definitelyAlgebraic] method
+         * for [r1]. And finally we return *true* if both [r1] and [r2] point to one of our well known
+         * [CR] constants.
+         *
+         * @param r1 the first [CR] we are to consider.
+         * @param r2 the first [CR] we are to consider.
+         * @return *false* if [r1] and [r2] are not independent, *true* if they are
          */
         private fun definitelyIndependent(r1: CR, r2: CR): Boolean {
             // The question here is whether r1 = x*r2, where x is rational, where r1 and r2
@@ -1746,7 +1778,8 @@ class UnifiedReal private constructor(
                 return false
             }
 
-            @Suppress("UNUSED_VARIABLE") val other: CR
+            @Suppress("UNUSED_VARIABLE")
+            val other: CR
             if (r1 === CR_E || r1 === CR_PI) {
                 return definitelyAlgebraic(r2)
             }
@@ -1755,13 +1788,17 @@ class UnifiedReal private constructor(
             } else isNamed(r1) && isNamed(r2)
         }
 
-        // Number of extra bits used in evaluation below to prefer truncation to rounding.
-        // Must be <= 30.
+        /**
+         * Number of extra bits used by our [toStringTruncated] method to decide whether to prefer
+         * truncation to rounding. Must be <= 30.
+         */
         private const val EXTRA_PREC = 10
 
         /**
          * Computer the sin() for an integer multiple n of pi/12, if easily representable.
+         *
          * @param n value between 0 and 23 inclusive.
+         * @return the sine of [n] times pi/12.
          */
         private fun sinPiTwelfths(n: Int): UnifiedReal? {
             if (n >= 12) {
