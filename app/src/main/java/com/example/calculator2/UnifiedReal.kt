@@ -1795,7 +1795,20 @@ class UnifiedReal private constructor(
         private const val EXTRA_PREC = 10
 
         /**
-         * Computer the sin() for an integer multiple n of pi/12, if easily representable.
+         * Compute the sin() for an integer multiple n of pi/12, if easily representable. If [n] is
+         * greater than or equal to 12 we initialize `val negResult` to the [UnifiedReal] returned
+         * by a recursive call to this method with [n] minus 12 and if `negResult` is not *null* we
+         * return the negative of `negResult` or *null* if `negResult` is *null*. If [n] is less
+         * than 12 we return for the following values of [n]:
+         *  - 0: [ZERO]
+         *  - 2: [HALF]
+         *  - 3: [HALF_SQRT2]
+         *  - 4: [HALF_SQRT3]
+         *  - 6: [ONE]
+         *  - 8: [HALF_SQRT3]
+         *  - 9: [HALF_SQRT2]
+         *  - 10: [HALF]
+         *  - any other value: *null*.
          *
          * @param n value between 0 and 23 inclusive.
          * @return the sine of [n] times pi/12.
@@ -1821,6 +1834,15 @@ class UnifiedReal private constructor(
             }
         }
 
+        /**
+         * Compute the cosine for an integer multiple [n] of pi/12, if easily representable. First we
+         * initialize our `var sinArg` to [n] plus 6. If `sinArg` is greater than or equal to 24 we
+         * subtract 24 from it. Finally we return the value returned by our [sinPiTwelfths] method
+         * for an `n` of `sinArg`.
+         *
+         * @param n value between 0 and 23 inclusive.
+         * @return the cosine of [n] times pi/12.
+         */
         private fun cosPiTwelfths(n: Int): UnifiedReal? {
             var sinArg = n + 6
             if (sinArg >= 24) {
@@ -1830,7 +1852,15 @@ class UnifiedReal private constructor(
         }
 
         /**
-         * Return asin(n/2).  n is between -2 and 2.
+         * Return arcsine of [n]`/2`. [n] is between -2 and 2. If [n] is less than 0 we return the
+         * negative of a recursive call to this method with minus [n] as the argument. Otherwise we
+         * return for the following values of [n]:
+         *  - 0: [ZERO]
+         *  - 1: A [UnifiedReal] constructed from the constants [BoundedRational.SIXTH] and [CR.PI]
+         *  - 2: A [UnifiedReal] constructed from the constants [BoundedRational.HALF] and [CR.PI]
+         *
+         * @param n the number of halves we are to take the arcsine of: -2, -1, 0, 1, or 2.
+         * @return the arcsine of [n]`/2`.
          */
         fun asinHalves(n: Int): UnifiedReal {
             if (n < 0) {
@@ -1844,20 +1874,37 @@ class UnifiedReal private constructor(
             throw AssertionError("asinHalves: Bad argument")
         }
 
+        /**
+         * A constant [BigInteger] holding the `long` value 2.
+         */
         @Suppress("unused")
         private val BIG_TWO = BigInteger.valueOf(2)
 
-        // The (in abs value) integral exponent for which we attempt to use a recursive
-        // algorithm for evaluating pow(). The recursive algorithm works independent of the sign of the
-        // base, and can produce rational results. But it can become slow for very large exponents.
+        /**
+         * The (in abs value) integral exponent for which we attempt to use a recursive algorithm
+         * for evaluating pow(). The recursive algorithm works independent of the sign of the base,
+         * and can produce rational results. But it can become slow for very large exponents.
+         */
         private val RECURSIVE_POW_LIMIT = BigInteger.valueOf(1000)
-        // The corresponding limit when we're using rational arithmetic. This should fail fast
-        // anyway, but we avoid ridiculously deep recursion.
+        /**
+         * The corresponding limit when we're using rational arithmetic. This should fail fast
+         * anyway, but we avoid ridiculously deep recursion.
+         */
         private val HARD_RECURSIVE_POW_LIMIT = BigInteger.ONE.shiftLeft(1000)
 
         /**
          * Compute an integral power of a constructive real, using the standard recursive algorithm.
-         * exp is known to be positive.
+         * [exp] is known to be positive. If [exp] is equal to the constant [BigInteger.ONE] we
+         * return [base] to the caller. If [exp] is odd we return [base] multiplied by a recursive
+         * call to this method that raises [base] to [exp] minus [BigInteger.ONE]. Otherwise we
+         * initialize our `val tmp` to the [CR] returned by a recursive call to this method that
+         * raises [base] to the power of [exp] right shifted by 1 bit (divided by 2). If our thread
+         * was interrupted during the recursive call we throw an [CR.AbortedException]. Otherwise we
+         * return `tmp` times `tmp` to the caller.
+         *
+         * @param base the [CR] we are to raise to the [exp] power.
+         * @param exp the power we are to raise [base] to.
+         * @return [base] raised to the [exp] power.
          */
         private fun recursivePow(base: CR, exp: BigInteger): CR {
             if (exp == BigInteger.ONE) {
@@ -1874,7 +1921,13 @@ class UnifiedReal private constructor(
         }
 
         /**
-         * Raise the argument to the 16th power.
+         * Raise the argument [n] to the 16th power. If [n] is greater than 10 we throw an
+         * [AssertionError] "Unexpected pow16 argument". Otherwise we initialize our `var result`
+         * with the [Long] value of [n] times [n], then multiply `result` by itself 3 times and
+         * return `result` to the caller.
+         *
+         * @param n the [Int] we are to raise to the 16th power.
+         * @return [n] raised to the 16th power.
          */
         private fun pow16(n: Int): Long {
             if (n > 10) {
