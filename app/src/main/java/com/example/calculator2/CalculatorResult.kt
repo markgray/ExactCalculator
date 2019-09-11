@@ -1667,7 +1667,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
     @Suppress("unused")
     private fun setPrimaryClip(clip: ClipData) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.primaryClip = clip
+        clipboard.setPrimaryClip(clip)
     }
 
     /**
@@ -1692,7 +1692,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
         val newItem = ClipData.Item(text, null, mEvaluator!!.capture(mIndex))
         val mimeTypes = arrayOf(ClipDescription.MIMETYPE_TEXT_PLAIN)
         val cd = ClipData("calculator result", mimeTypes, newItem)
-        clipboard.primaryClip = cd
+        clipboard.setPrimaryClip(cd)
         Toast.makeText(context, R.string.text_copied_toast, Toast.LENGTH_SHORT).show()
     }
 

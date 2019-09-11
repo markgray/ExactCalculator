@@ -1915,7 +1915,7 @@ class UnifiedReal private constructor(
                 if (base16th == null) {
                     base16th = BigInteger.valueOf(pow16(base))
                 }
-                while (nLocal.mod(base16th).signum() == 0) {
+                while (nLocal.mod(base16th!!).signum() == 0) {
                     nLocal = nLocal.divide(base16th)
                     result += 16
                 }
