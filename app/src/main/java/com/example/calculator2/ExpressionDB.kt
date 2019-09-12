@@ -49,13 +49,16 @@ import android.os.AsyncTask
 import android.provider.BaseColumns
 import android.util.Log
 
-// Note to markgray: use (foo as java.lang.Object).wait() and notifyAll?
 @Suppress("UNUSED_VARIABLE", "PLATFORM_CLASS_MAPPED_TO_KOTLIN", "MemberVisibilityCanBePrivate")
 class ExpressionDB(context: Context) {
-    private val CONTINUE_WITH_BAD_DB = false
-
+    /**
+     * The custom [SQLiteOpenHelper] we use to create, open, and/or manage our expression database.
+     */
     private val mExpressionDBHelper: ExpressionDBHelper
 
+    /**
+     * The [SQLiteDatabase] which contains our expression history data.
+     */
     private var mExpressionDB: SQLiteDatabase? = null  // Constant after initialization.
 
     // Expression indices between mMinAccessible and mMaxAccessible inclusive can be accessed.
@@ -67,29 +70,41 @@ class ExpressionDB(context: Context) {
     private var mMinAccessible = -10000000L
     private var mMaxAccessible = 10000000L
 
-    // Minimum index value in DB.
+    /**
+     * Minimum index value in DB.
+     */
     private var mMinIndex: Long = 0
-    // Maximum index value in DB.
+    /**
+     * Maximum index value in DB.
+     */
     private var mMaxIndex: Long = 0
 
-    // A cursor that refers to the whole table, in reverse order.
+    /**
+     * A cursor that refers to the whole table, in reverse order.
+     */
     private var mAllCursor: AbstractWindowedCursor? = null
 
-    // Expression index corresponding to a zero absolute offset for mAllCursor.
-    // This is the argument we passed to the query.
-    // We explicitly query only for entries that existed when we started, to avoid
-    // interference from updates as we're running. It's unclear whether or not this matters.
+    /**
+     * Expression index corresponding to a zero absolute offset for [mAllCursor]. This is the
+     * argument we passed to the query. We explicitly query only for entries that existed when
+     * we started, to avoid interference from updates as we're running. It's unclear whether or
+     * not this matters.
+     */
     private var mAllCursorBase: Int = 0
 
-    // Database has been opened, mMinIndex and mMaxIndex are correct, mAllCursorBase and
-    // mAllCursor have been set.
+    /**
+     * Database has been opened, [mMinIndex] and [mMaxIndex] are correct, [mAllCursorBase] and
+     * [mAllCursor] have been set.
+     */
     private var mDBInitialized: Boolean = false
 
-    // mLock protects mExpressionDB, mMinAccessible, and mMaxAccessible, mAllCursor,
-    // mAllCursorBase, mMinIndex, mMaxIndex, and mDBInitialized. We access mExpressionDB without
-    // synchronization after it's known to be initialized.  Used to wait for database
-    // initialization.
-    private val mLock = Any()
+    /**
+     * [mLock] protects [mExpressionDB], [mMinAccessible], and [mMaxAccessible], [mAllCursor],
+     * [mAllCursorBase], [mMinIndex], [mMaxIndex], and [mDBInitialized]. We access [mExpressionDB]
+     * without synchronization after it's known to be initialized. Used to wait for database
+     * initialization.
+     */
+    private val mLock = Object()
 
     // Is database completely unusable?
     private val isDBBad: Boolean
@@ -108,7 +123,7 @@ class ExpressionDB(context: Context) {
     // completing with in-flight database writes.
 
     private var mIncompleteWrites = 0
-    private val mWriteCountsLock = Any()  // Protects the preceding field.
+    private val mWriteCountsLock = Object()  // Protects the preceding field.
 
     /* Table contents */
     class ExpressionEntry : BaseColumns {
@@ -122,7 +137,10 @@ class ExpressionDB(context: Context) {
     }
 
     /* Data to be written to or read from a row in the table */
-    class RowData constructor(val mExpression: ByteArray, val mFlags: Int, var mTimeStamp: Long  // 0 ==> this and next field to be filled in when written.
+    class RowData constructor(
+            val mExpression: ByteArray,
+            val mFlags: Int,
+            var mTimeStamp: Long  // 0 ==> this and next field to be filled in when written.
     ) {
         private fun degreeModeFromFlags(flags: Int): Boolean {
             return flags and DEGREE_MODE != 0
@@ -137,7 +155,12 @@ class ExpressionDB(context: Context) {
          * utcOffset here is uncompressed, in milliseconds.
          * A zero timestamp will cause it to be automatically filled in.
          */
-        constructor(expr: ByteArray, degreeMode: Boolean, longTimeout: Boolean, timeStamp: Long) : this(expr, flagsFromDegreeAndTimeout(degreeMode, longTimeout), timeStamp) {}
+        constructor(
+                expr: ByteArray,
+                degreeMode: Boolean,
+                longTimeout: Boolean,
+                timeStamp: Long
+        ) : this(expr, flagsFromDegreeAndTimeout(degreeMode, longTimeout), timeStamp) {}
 
         fun degreeMode(): Boolean {
             return degreeModeFromFlags(mFlags)
@@ -173,7 +196,8 @@ class ExpressionDB(context: Context) {
         }
     }
 
-    private inner class ExpressionDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+    private inner class ExpressionDBHelper(context: Context)
+        : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
         override fun onCreate(db: SQLiteDatabase) {
             db.execSQL(SQL_CREATE_ENTRIES)
             db.execSQL(SQL_CREATE_TIMESTAMP_INDEX)
@@ -265,14 +289,14 @@ class ExpressionDB(context: Context) {
                     mDBInitialized = true
                     // We notify here, since there are unlikely cases in which the UI thread
                     // may be blocked on us, preventing onPostExecute from running.
-                    (mLock as Object).notifyAll()
+                    mLock.notifyAll()
                 }
                 return db
             } catch (e: SQLiteException) {
                 Log.e("Calculator", "Database initialization failed.\n", e)
                 synchronized(mLock) {
                     badDBset()
-                    (mLock as Object).notifyAll()
+                    mLock.notifyAll()
                 }
                 return null
             }
@@ -307,7 +331,7 @@ class ExpressionDB(context: Context) {
             var caught = false
             while (!mDBInitialized && !isDBBad) {
                 try {
-                    (mLock as Object).wait()
+                    mLock.wait()
                 } catch (e: InterruptedException) {
                     caught = true
                 }
@@ -350,7 +374,7 @@ class ExpressionDB(context: Context) {
                 mAllCursorBase = 0
                 mMaxIndex = mAllCursorBase.toLong()
                 mDBInitialized = true
-                (mLock as Object).notifyAll()
+                mLock.notifyAll()
             }
         }
         // On cancellation we do nothing;
@@ -374,7 +398,7 @@ class ExpressionDB(context: Context) {
     private fun writeCompleted() {
         synchronized(mWriteCountsLock) {
             if (--mIncompleteWrites == 0) {
-                (mWriteCountsLock as Object).notifyAll()
+                mWriteCountsLock.notifyAll()
             }
         }
     }
@@ -396,7 +420,7 @@ class ExpressionDB(context: Context) {
             var caught = false
             while (mIncompleteWrites != 0) {
                 try {
-                    (mWriteCountsLock as Object).wait()
+                    mWriteCountsLock.wait()
                 } catch (e: InterruptedException) {
                     caught = true
                 }
@@ -614,18 +638,19 @@ class ExpressionDB(context: Context) {
         private val SQL_CREATE_TIMESTAMP_INDEX = (
                 "CREATE INDEX timestamp_index ON " + ExpressionEntry.TABLE_NAME + "("
                         + ExpressionEntry.COLUMN_NAME_TIMESTAMP + ")")
-        private val SQL_DROP_TIMESTAMP_INDEX = "DROP INDEX IF EXISTS timestamp_index"
+        private const val SQL_DROP_TIMESTAMP_INDEX = "DROP INDEX IF EXISTS timestamp_index"
 
         // Never allocate new negative indices (row ids) >= MAXIMUM_MIN_INDEX.
-        val MAXIMUM_MIN_INDEX: Long = -10
+        const val MAXIMUM_MIN_INDEX: Long = -10
 
         // Gap between negative and positive row ids in the database.
         // Expressions with index [MAXIMUM_MIN_INDEX .. 0] are not stored.
-        private val GAP = -MAXIMUM_MIN_INDEX + 1
+        private const val GAP = -MAXIMUM_MIN_INDEX + 1
 
         // If you change the database schema, you must increment the database version.
-        val DATABASE_VERSION = 1
-        val DATABASE_NAME = "Expressions.db"
+        const val DATABASE_VERSION = 1
+        const val DATABASE_NAME = "Expressions.db"
+        const val CONTINUE_WITH_BAD_DB = false
     }
 
 }
