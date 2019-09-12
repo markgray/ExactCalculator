@@ -48,6 +48,8 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.os.AsyncTask
 import android.provider.BaseColumns
 import android.util.Log
+import kotlin.math.max
+import kotlin.math.min
 
 @Suppress("UNUSED_VARIABLE", "PLATFORM_CLASS_MAPPED_TO_KOTLIN", "MemberVisibilityCanBePrivate")
 class ExpressionDB(context: Context) {
@@ -107,6 +109,7 @@ class ExpressionDB(context: Context) {
     private val mLock = Object()
 
     // Is database completely unusable?
+    @Suppress("ConstantConditionIf")
     private val isDBBad: Boolean
         get() {
             if (!CONTINUE_WITH_BAD_DB) {
@@ -128,11 +131,11 @@ class ExpressionDB(context: Context) {
     /* Table contents */
     class ExpressionEntry : BaseColumns {
         companion object {
-            val TABLE_NAME = "expressions"
-            val COLUMN_NAME_EXPRESSION = "expression"
-            val COLUMN_NAME_FLAGS = "flags"
+            const val TABLE_NAME = "expressions"
+            const val COLUMN_NAME_EXPRESSION = "expression"
+            const val COLUMN_NAME_FLAGS = "flags"
             // Time stamp as returned by currentTimeMillis().
-            val COLUMN_NAME_TIMESTAMP = "timeStamp"
+            const val COLUMN_NAME_TIMESTAMP = "timeStamp"
         }
     }
 
@@ -160,7 +163,7 @@ class ExpressionDB(context: Context) {
                 degreeMode: Boolean,
                 longTimeout: Boolean,
                 timeStamp: Long
-        ) : this(expr, flagsFromDegreeAndTimeout(degreeMode, longTimeout), timeStamp) {}
+        ) : this(expr, flagsFromDegreeAndTimeout(degreeMode, longTimeout), timeStamp)
 
         fun degreeMode(): Boolean {
             return degreeModeFromFlags(mFlags)
@@ -185,8 +188,8 @@ class ExpressionDB(context: Context) {
         }
 
         companion object {
-            private val DEGREE_MODE = 2
-            private val LONG_TIMEOUT = 1
+            private const val DEGREE_MODE = 2
+            private const val LONG_TIMEOUT = 1
             private fun flagsFromDegreeAndTimeout(DegreeMode: Boolean?, LongTimeout: Boolean?): Int {
                 return (if (DegreeMode!!) DEGREE_MODE else 0) or if (LongTimeout!!) LONG_TIMEOUT else 0
             }
@@ -225,16 +228,18 @@ class ExpressionDB(context: Context) {
 
     // Is the index in the accessible range of the database?
     private fun inAccessibleRange(index: Long): Boolean {
+        @Suppress("ConstantConditionIf")
         if (!CONTINUE_WITH_BAD_DB) {
             return true
         }
         synchronized(mLock) {
-            return index >= mMinAccessible && index <= mMaxAccessible
+            return index in mMinAccessible..mMaxAccessible
         }
     }
 
 
     private fun badDBset() {
+        @Suppress("ConstantConditionIf")
         if (!CONTINUE_WITH_BAD_DB) {
             Log.e("Calculator", "Database access failed")
             throw RuntimeException("Database access failed")
@@ -258,19 +263,19 @@ class ExpressionDB(context: Context) {
                 synchronized(mLock) {
                     mExpressionDB = db
                     db.rawQuery(SQL_GET_MIN, null).use { minResult ->
-                        if (!minResult.moveToFirst()) {
+                        mMinIndex = if (!minResult.moveToFirst()) {
                             // Empty database.
-                            mMinIndex = MAXIMUM_MIN_INDEX
+                            MAXIMUM_MIN_INDEX
                         } else {
-                            mMinIndex = Math.min(minResult.getLong(0), MAXIMUM_MIN_INDEX)
+                            min(minResult.getLong(0), MAXIMUM_MIN_INDEX)
                         }
                     }
                     db.rawQuery(SQL_GET_MAX, null).use { maxResult ->
-                        if (!maxResult.moveToFirst()) {
+                        mMaxIndex = if (!maxResult.moveToFirst()) {
                             // Empty database.
-                            mMaxIndex = 0L
+                            0L
                         } else {
-                            mMaxIndex = Math.max(maxResult.getLong(0), 0L)
+                            max(maxResult.getLong(0), 0L)
                         }
                     }
                     if (mMaxIndex > Integer.MAX_VALUE) {
@@ -279,7 +284,7 @@ class ExpressionDB(context: Context) {
                     mAllCursorBase = mMaxIndex.toInt()
                     if (mMaxIndex != 0L || mMinIndex != MAXIMUM_MIN_INDEX) {
                         // Set up a cursor for reading the entire database.
-                        val args = arrayOf(java.lang.Long.toString(mAllCursorBase.toLong()), java.lang.Long.toString(mMinIndex))
+                        val args = arrayOf(mAllCursorBase.toLong().toString(), mMinIndex.toString())
                         mAllCursor = db.rawQuery(SQL_GET_ALL, args) as AbstractWindowedCursor
                         if (!mAllCursor!!.moveToFirst()) {
                             badDBset()
@@ -443,12 +448,10 @@ class ExpressionDB(context: Context) {
             val result = mExpressionDB!!.insert(ExpressionEntry.TABLE_NAME, null, cvs[0])
             writeCompleted()
             // Return 0 on success, row id on failure.
-            return if (result == -1L) {
-                index
-            } else if (result != index) {
-                throw AssertionError("Expected row id $index, got $result")
-            } else {
-                0L
+            return when {
+                result == -1L -> index
+                result != index -> throw AssertionError("Expected row id $index, got $result")
+                else -> 0L
             }
         }
 
@@ -514,7 +517,7 @@ class ExpressionDB(context: Context) {
         val badExpr = CalculatorExpr()
         badExpr.add(R.id.lparen)
         badExpr.add(R.id.rparen)
-        return RowData(badExpr.toBytes(), false, false, 0)
+        return RowData(badExpr.toBytes(), degreeMode = false, longTimeout = false, timeStamp = 0)
     }
 
     /**
@@ -524,15 +527,15 @@ class ExpressionDB(context: Context) {
      */
     private fun rowDirectGet(index: Long): RowData {
         var result: RowData
-        val args = arrayOf(java.lang.Long.toString(index))
+        val args = arrayOf(index.toString())
         mExpressionDB!!.rawQuery(SQL_GET_ROW, args).use { resultC ->
-            if (!resultC.moveToFirst()) {
+            return if (!resultC.moveToFirst()) {
                 badDBset()
-                return makeBadRow()
+                makeBadRow()
             } else {
                 result = RowData(resultC.getBlob(1), resultC.getInt(2) /* flags */,
                         resultC.getLong(3) /* timestamp */)
-                return result
+                result
             }
         }
 
@@ -618,24 +621,24 @@ class ExpressionDB(context: Context) {
 
     companion object {
 
-        private val SQL_CREATE_ENTRIES = (
+        private const val SQL_CREATE_ENTRIES = (
                 "CREATE TABLE " + ExpressionEntry.TABLE_NAME + " ("
                         + BaseColumns._ID + " INTEGER PRIMARY KEY,"
                         + ExpressionEntry.COLUMN_NAME_EXPRESSION + " BLOB,"
                         + ExpressionEntry.COLUMN_NAME_FLAGS + " INTEGER,"
                         + ExpressionEntry.COLUMN_NAME_TIMESTAMP + " INTEGER)")
-        private val SQL_DROP_TABLE = "DROP TABLE IF EXISTS " + ExpressionEntry.TABLE_NAME
-        private val SQL_GET_MIN = ("SELECT MIN(" + BaseColumns._ID
+        private const val SQL_DROP_TABLE = "DROP TABLE IF EXISTS " + ExpressionEntry.TABLE_NAME
+        private const val SQL_GET_MIN = ("SELECT MIN(" + BaseColumns._ID
                 + ") FROM " + ExpressionEntry.TABLE_NAME)
-        private val SQL_GET_MAX = ("SELECT MAX(" + BaseColumns._ID
+        private const val SQL_GET_MAX = ("SELECT MAX(" + BaseColumns._ID
                 + ") FROM " + ExpressionEntry.TABLE_NAME)
-        private val SQL_GET_ROW = ("SELECT * FROM " + ExpressionEntry.TABLE_NAME
+        private const val SQL_GET_ROW = ("SELECT * FROM " + ExpressionEntry.TABLE_NAME
                 + " WHERE " + BaseColumns._ID + " = ?")
-        private val SQL_GET_ALL = ("SELECT * FROM " + ExpressionEntry.TABLE_NAME
+        private const val SQL_GET_ALL = ("SELECT * FROM " + ExpressionEntry.TABLE_NAME
                 + " WHERE " + BaseColumns._ID + " <= ? AND " +
                 BaseColumns._ID + " >= ?" + " ORDER BY " + BaseColumns._ID + " DESC ")
         // We may eventually need an index by timestamp. We don't use it yet.
-        private val SQL_CREATE_TIMESTAMP_INDEX = (
+        private const val SQL_CREATE_TIMESTAMP_INDEX = (
                 "CREATE INDEX timestamp_index ON " + ExpressionEntry.TABLE_NAME + "("
                         + ExpressionEntry.COLUMN_NAME_TIMESTAMP + ")")
         private const val SQL_DROP_TIMESTAMP_INDEX = "DROP INDEX IF EXISTS timestamp_index"
