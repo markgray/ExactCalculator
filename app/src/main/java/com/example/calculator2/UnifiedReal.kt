@@ -1942,20 +1942,43 @@ class UnifiedReal private constructor(
 
         /**
          * Return the integral log with respect to the given base if it exists, 0 otherwise.
-         * n is presumed positive.
+         * [n] is presumed positive. We initialize our `var nLocal` to our parameter [n],
+         * initialize our `val nAsDouble` to the [Double] value of `nLocal` and initialize our
+         * `val approx` to the natural log of `nAsDouble` divided by the [Double] value of
+         * [base]. If `nAsDouble` is not infinite and the absolute value of `approx` minus the
+         * rounding of `approx` is greater than 1.0e-6 we return 0. Otherwise we initialize our
+         * `var result` to be a [Long] with the value 0, initialize our `val remaining` to
+         * `nLocal`, our `val bigBase` to the [BigInteger] with the value of [base], and our
+         * `var base16th` to a *null* [BigInteger].
+         *
+         * Now we loop while `nLocal` modulo `bigBase` is 0:
+         *  - If our thread has been interupted we throw an [CR.AbortedException].
+         *  - Otherwise we set `nLocal` to itself divided by `bigBase` and increment `result`
+         *  - If `base16th` is *null* we set it to a [BigInteger] constructed from the value
+         *  returned by our [pow16] method for [base].
+         *  - We then loop while `nLocal` modulo `base16th` is equal to 0 setting `nLocal` to
+         *  itself divided by `base16th` and adding 16 to `result`
+         *
+         *  When done with the above outer while loop we return `result` if `nLocal` is equal to
+         *  [BigInteger.ONE], otherwise we return 0.
+         *
+         * @param n the [BigInteger] whose log we are to calculate.
+         * @param base the base of the logarithm.
+         * @return the integral log of [n] with respect to base [base] if it exists, 0 otherwise.
          */
         private fun getIntLog(n: BigInteger, base: Int): Long {
             var nLocal = n
             val nAsDouble = nLocal.toDouble()
             val approx = ln(nAsDouble) / ln(base.toDouble())
             // A relatively quick test first.
-            // Unfortunately, this doesn't help for values to big to fit in a Double.
+            // Unfortunately, this doesn't help for values too big to fit in a Double.
             if (!java.lang.Double.isInfinite(nAsDouble) && abs(approx - round(approx)) > 1.0e-6) {
                 return 0
             }
             var result: Long = 0
 
-            @Suppress("UNUSED_VARIABLE") val remaining = nLocal
+            @Suppress("UNUSED_VARIABLE")
+            val remaining = nLocal
             val bigBase = BigInteger.valueOf(base.toLong())
             var base16th: BigInteger? = null  // base^16, computed lazily
             while (nLocal.mod(bigBase).signum() == 0) {
@@ -1978,11 +2001,25 @@ class UnifiedReal private constructor(
             } else 0
         }
 
-
         /**
-         * Generalized factorial.
-         * Compute n * (n - step) * (n - 2 * step) * etc.  This can be used to compute factorial a bit
-         * faster, especially if BigInteger uses sub-quadratic multiplication.
+         * Generalized factorial. Compute n * (n - step) * (n - 2 * step) * etc.  This can be used
+         * to compute factorial a bit faster, especially if [BigInteger] uses sub-quadratic
+         * multiplication. We branch on whether [n] is greater than 4 times [step]:
+         *  - [n] is greater than 4 times [step]: we initialize our `val prod1` to the [BigInteger]
+         *  that a recursive call to this method for [n] and a step size of 2 times [step]. If our
+         *  thread is interupted we throw an [CR.AbortedException]. Otherwise we initialize our
+         *  `val prod2` to the [BigInteger] that a recursive call to this method for [n] minus [step]
+         *  and a step size of 2 times [step]. Again if our thread is interupted we throw an
+         *  [CR.AbortedException], and if not we return `prod1` multiplied by `prod2`.
+         *  - [n] is less than or equal to 4 times [step]: If [n] is 0 we return [BigInteger.ONE],
+         *  otherwise we initialize our `var res` to a [BigInteger] with the value of [n], and
+         *  initialize our `var i` to [n] minus [step]. We then loop while `i` is greater than 1
+         *  setting `res` to `res` times the [BigInteger] value of `i` and subtracting [step] from
+         *  `i`. Then when the while loop finishes we return `res` to the caller.
+         *
+         * @param n the number we are to calculate the factorial of.
+         * @param step the step size we are to use to speed up our recursive calculations.
+         * @return the [BigInteger] that results from calculating the factorial of [n].
          */
         private fun genFactorial(n: Long, step: Long): BigInteger {
             if (n > 4 * step) {
