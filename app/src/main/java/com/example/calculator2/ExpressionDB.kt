@@ -104,11 +104,15 @@ class ExpressionDB(context: Context) {
      * [mLock] protects [mExpressionDB], [mMinAccessible], and [mMaxAccessible], [mAllCursor],
      * [mAllCursorBase], [mMinIndex], [mMaxIndex], and [mDBInitialized]. We access [mExpressionDB]
      * without synchronization after it's known to be initialized. Used to wait for database
-     * initialization.
+     * initialization. Needs to be an [Object] instead of an [Any] because or `wait` and `notifyAll`
      */
     private val mLock = Object()
 
-    // Is database completely unusable?
+    /**
+     * Is database completely unusable?
+     *
+     * @return *true if [mMinAccessible] is greater than [mMaxAccessible]
+     */
     @Suppress("ConstantConditionIf")
     private val isDBBad: Boolean
         get() {
@@ -120,43 +124,94 @@ class ExpressionDB(context: Context) {
             }
         }
 
+    /**
+     * This is set to *true* by our [displayDatabaseWarning] method so that only one database error
+     * is logged. [displayDatabaseWarning] is called when one of our database accessing [AsyncTask]'s
+     * detects an error in the database and decides the database is unusable.
+     */
     private var databaseWarningIssued: Boolean = false
 
-    // We track the number of outstanding writes to prevent onSaveInstanceState from
-    // completing with in-flight database writes.
-
+    /**
+     * We track the number of outstanding writes to prevent `onSaveInstanceState` from completing
+     * with in-flight database writes.
+     */
     private var mIncompleteWrites = 0
-    private val mWriteCountsLock = Object()  // Protects the preceding field.
+    /**
+     * Protects the [mIncompleteWrites] field. Needs to be an [Object] instead of an [Any] because
+     * of `wait` and `notifyAll`
+     */
+    private val mWriteCountsLock = Object()
 
-    /* Table contents */
+    /** Table contents */
     class ExpressionEntry : BaseColumns {
         companion object {
+            /**
+             * The name of our table in the database.
+             */
             const val TABLE_NAME = "expressions"
+            /**
+             * The name of the column for expressions in the [TABLE_NAME] table (holds a BLOB)
+             */
             const val COLUMN_NAME_EXPRESSION = "expression"
+            /**
+             * The name of the column for flags in the [TABLE_NAME] table (holds an INTEGER)
+             */
             const val COLUMN_NAME_FLAGS = "flags"
-            // Time stamp as returned by currentTimeMillis().
+            /**
+             * Time stamp as returned by [System.currentTimeMillis] in the [TABLE_NAME]
+             * table (holds an INTEGER)
+             */
             const val COLUMN_NAME_TIMESTAMP = "timeStamp"
         }
     }
 
-    /* Data to be written to or read from a row in the table */
+    /** Data to be written to or read from a row in the table */
     class RowData constructor(
+            /**
+             * The byte encoded [CalculatorExpr] expression to be stored in the row.
+             */
             val mExpression: ByteArray,
+            /**
+             * Contains the flags in effect for the expression: [DEGREE_MODE] and [LONG_TIMEOUT]
+             */
             val mFlags: Int,
-            var mTimeStamp: Long  // 0 ==> this and next field to be filled in when written.
+            /**
+             * Time stamp as returned by [System.currentTimeMillis] for the expression.
+             */
+            var mTimeStamp: Long  // 0 ==> this and next(?) field to be filled in when written.
     ) {
+
+        /**
+         * Returns *true* if the [DEGREE_MODE] bit in our parameter [flags] is set.
+         *
+         * @param flags the [Int] flags whose [DEGREE_MODE] bit we want to test.
+         * @return *true* if the [DEGREE_MODE] bit in [flags] is set.
+         */
         private fun degreeModeFromFlags(flags: Int): Boolean {
             return flags and DEGREE_MODE != 0
         }
 
+        /**
+         * Returns *true* if the [LONG_TIMEOUT] bit in our parameter [flags] is set.
+         *
+         * @param flags the [Int] flags whose [LONG_TIMEOUT] bit we want to test.
+         * @return *true* if the [LONG_TIMEOUT] bit in [flags] is set.
+         */
         private fun longTimeoutFromFlags(flags: Int): Boolean {
             return flags and LONG_TIMEOUT != 0
         }
 
         /**
-         * More client-friendly constructor that hides implementation ugliness.
-         * utcOffset here is uncompressed, in milliseconds.
-         * A zero timestamp will cause it to be automatically filled in.
+         * More client-friendly constructor that hides implementation ugliness. utcOffset here is
+         * uncompressed, in milliseconds. A zero timestamp will cause it to be automatically filled
+         * in. We just call our three parameter constructor with the `flags` argument set to the
+         * value returned by our [flagsFromDegreeAndTimeout] method when it's given our parameters
+         * [degreeMode] and [longTimeout].
+         *
+         * @param expr The byte encoded [CalculatorExpr] expression to be stored in the row.
+         * @param degreeMode The state of the degree mode flag that is in effect for the expression.
+         * @param longTimeout The state of the long timeout flag that is in effect for the expression.
+         * @param timeStamp Time stamp as returned by [System.currentTimeMillis] for the expression.
          */
         constructor(
                 expr: ByteArray,
@@ -165,16 +220,34 @@ class ExpressionDB(context: Context) {
                 timeStamp: Long
         ) : this(expr, flagsFromDegreeAndTimeout(degreeMode, longTimeout), timeStamp)
 
+        /**
+         * Returns *true* if the degree mode flag in our [mFlags] field is set.
+         *
+         * @return *true* if the degree mode flag in our [mFlags] field is set.
+         */
         fun degreeMode(): Boolean {
             return degreeModeFromFlags(mFlags)
         }
 
+        /**
+         * Returns *true* if the long timeout flag in our [mFlags] field is set.
+         *
+         * @return *true* if the long timeout flag in our [mFlags] field is set.
+         */
         fun longTimeout(): Boolean {
             return longTimeoutFromFlags(mFlags)
         }
 
         /**
-         * Return a ContentValues object representing the current data.
+         * Return a [ContentValues] object representing the current data. First we initialize our
+         * `val cvs` with a new instance of [ContentValues]. Then we call its `put` method to add
+         * [mExpression] to it under the key [ExpressionEntry.COLUMN_NAME_EXPRESSION], and then to
+         * add [mFlags] under the key [ExpressionEntry.COLUMN_NAME_FLAGS]. If our [mTimeStamp] field
+         * is 0L we initialize it with the current time in milliseconds, then add [mTimeStamp] to
+         * `cvs` under the key [ExpressionEntry.COLUMN_NAME_TIMESTAMP]. Finally we return `cvs` to
+         * the caller.
+         *
+         * @return a [ContentValues] object representing the current data.
          */
         fun toContentValues(): ContentValues {
             val cvs = ContentValues()
@@ -187,25 +260,82 @@ class ExpressionDB(context: Context) {
             return cvs
         }
 
+        /**
+         * Our static constants and methods.
+         */
         companion object {
+            /**
+             * The bit in our [mFlags] field which holds the degree mode state.
+             */
             private const val DEGREE_MODE = 2
+            /**
+             * The bit in our [mFlags] field which holds the long timeout state.
+             */
             private const val LONG_TIMEOUT = 1
-            private fun flagsFromDegreeAndTimeout(DegreeMode: Boolean?, LongTimeout: Boolean?): Int {
-                return (if (DegreeMode!!) DEGREE_MODE else 0) or if (LongTimeout!!) LONG_TIMEOUT else 0
+
+            /**
+             * Stores the boolean state of its parameters [degreeMode] and [longTimeout] as bit
+             * settings in an [Int] and returns that [Int]. We use a bit wise *or* to combine the
+             * [DEGREE_MODE] bit if [degreeMode] is *true* and the [LONG_TIMEOUT] bit if [longTimeout]
+             * is *true*, leaving the respective bits zero if their parameters are false, and return
+             * the resulting [Int] to the caller.
+             *
+             * @param degreeMode the degree mode state to be stored.
+             * @param longTimeout the long timeout state to be stored.
+             * @return an [Int] with the [DEGREE_MODE] bit set if [degreeMode] is *true* and with the
+             * [LONG_TIMEOUT] bit set if [longTimeout] is *true*.
+             */
+            private fun flagsFromDegreeAndTimeout(degreeMode: Boolean?, longTimeout: Boolean?): Int {
+                return (if (degreeMode!!) DEGREE_MODE else 0) or if (longTimeout!!) LONG_TIMEOUT else 0
             }
 
+            /**
+             * The number of milliseconds in 15 minutes. UNUSED
+             */
             @Suppress("unused")
             private const val MILLIS_IN_15_MINS = 15 * 60 * 1000
         }
     }
 
+    /**
+     * Our custom [SQLiteOpenHelper].
+     */
     private inner class ExpressionDBHelper(context: Context)
         : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+
+        /**
+         * Called when the database is created for the first time. This is where the creation of
+         * tables and the initial population of the tables should happen. We call the `execSQL`
+         * method of [db] to execute the SQL statement in [SQL_CREATE_ENTRIES] (which creates the
+         * table [ExpressionEntry.TABLE_NAME] with the columns [BaseColumns._ID] as the integer
+         * primary key, [ExpressionEntry.COLUMN_NAME_EXPRESSION] as the BLOB which holds the byte
+         * encoded expression, [ExpressionEntry.COLUMN_NAME_FLAGS] as the integer holding our flags,
+         * and [ExpressionEntry.COLUMN_NAME_TIMESTAMP] as the integer holding our timestamp). Then
+         * we call its `execSQL` method to execute the SQL statement in [SQL_CREATE_TIMESTAMP_INDEX]
+         * (which creates an INDEX with the index name "timestamp_index" on the table
+         * [ExpressionEntry.TABLE_NAME] for the column [ExpressionEntry.COLUMN_NAME_TIMESTAMP]).
+         *
+         * @param db The database.
+         */
         override fun onCreate(db: SQLiteDatabase) {
             db.execSQL(SQL_CREATE_ENTRIES)
             db.execSQL(SQL_CREATE_TIMESTAMP_INDEX)
         }
 
+        /**
+         * Called when the database needs to be upgraded. The implementation should use this method
+         * to drop tables, add tables, or do anything else it needs to upgrade to the new schema
+         * version. We just delete the old database by calling the `execSQL` method of [db] to
+         * execute the SQL statement in [SQL_DROP_TIMESTAMP_INDEX] (which drops the index with the
+         * name "timestamp_index" if it exists), and then call its `execSQL` method to execute the
+         * SQL statement in [SQL_DROP_TABLE] (which drops the [ExpressionEntry.TABLE_NAME] table if
+         * it exists). Then we call our override of the [onCreate] method to create a new empty table
+         * and timestamp index.
+         *
+         * @param db The database.
+         * @param oldVersion The old database version.
+         * @param newVersion The new database version.
+         */
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
             // For now just throw away history on database version upgrade/downgrade.
             db.execSQL(SQL_DROP_TIMESTAMP_INDEX)
@@ -213,11 +343,28 @@ class ExpressionDB(context: Context) {
             onCreate(db)
         }
 
+        /**
+         * Called when the database needs to be downgraded. We just call our override of the
+         * [onUpgrade] method.
+         *
+         * @param db The database.
+         * @param oldVersion The old database version.
+         * @param newVersion The new database version.
+         */
         override fun onDowngrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
             onUpgrade(db, oldVersion, newVersion)
         }
     }
 
+    /**
+     * The init block for the `ExpressionDB` constructor. We initialize our field `mExpressionDBHelper`
+     * with a new instance of `ExpressionDBHelper`, initialize our `val initializer` with a new
+     * instance of `AsyncInitializer` (the custom `AsyncTask` which initializes the database in the
+     * background), and call the `executeOnExecutor` method of `initializer` to have it execute on
+     * the `AsyncTask.SERIAL_EXECUTOR` (our UI uses the same executor so every operation on the
+     * database is done in order) with our field `mExpressionDBHelper` as the `ExpressionDBHelper`
+     * from which it acquires the writable `SQLiteDatabase` that it needs to initialize.
+     */
     init {
         mExpressionDBHelper = ExpressionDBHelper(context)
         val initializer = AsyncInitializer()
