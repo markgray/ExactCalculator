@@ -373,7 +373,16 @@ class ExpressionDB(context: Context) {
         initializer.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, mExpressionDBHelper)
     }
 
-    // Is the index in the accessible range of the database?
+    /**
+     * Is the index in the accessible range of the database? If our debug flag [CONTINUE_WITH_BAD_DB]
+     * is *false* we just return *true*. It is always *false* so this method always returns *true*
+     * without checking! I have no idea whether this is intentional or not. If [CONTINUE_WITH_BAD_DB]
+     * was *true* a block which is *synchronized* on our [mLock] field would return *true* only if
+     * the *in* function determines that [index] is in the range [mMinAccessible] to [mMaxAccessible].
+     *
+     * @param index the index into the database we want to check for validity.
+     * @return *true* if [index] is in the range [mMinAccessible] to [mMaxAccessible].
+     */
     private fun inAccessibleRange(index: Long): Boolean {
         @Suppress("ConstantConditionIf")
         if (!CONTINUE_WITH_BAD_DB) {
@@ -384,7 +393,15 @@ class ExpressionDB(context: Context) {
         }
     }
 
-
+    /**
+     * This is called when an error occurs while accessing the database. The [CONTINUE_WITH_BAD_DB]
+     * debugging flag is always *false* so this method just logs "Database access failed" and throws
+     * a [RuntimeException] "Database access failed". If the [CONTINUE_WITH_BAD_DB] is *true* though
+     * we would call our [displayDatabaseWarning] method to log the message "Calculator restarting
+     * due to database error" and set the [databaseWarningIssued] flag to *true* so only one warning
+     * will be logged, then in a block *synchronized* on our [mLock] field we would set our fields
+     * [mMinAccessible] to 1L and [mMaxAccessible] to -1L.
+     */
     private fun badDBset() {
         @Suppress("ConstantConditionIf")
         if (!CONTINUE_WITH_BAD_DB) {
@@ -403,7 +420,53 @@ class ExpressionDB(context: Context) {
      */
     @SuppressLint("StaticFieldLeak")
     private inner class AsyncInitializer : AsyncTask<ExpressionDBHelper, Void, SQLiteDatabase>() {
-        @SuppressLint("Recycle")
+
+        /**
+         * We override this method to perform a computation on a background thread. The
+         * [ExpressionDBHelper] parameter [helper] is the parameter passed to [execute]
+         * by the caller of this task. We initialize our `val db` to the [SQLiteDatabase]
+         * that our parameter [helper] opens or creates ([helper] is our custom [SQLiteOpenHelper]).
+         * Then wrapped in a *try* block intended to catch [SQLiteException] we synchronize a
+         * block on our field [mLock] wherein we:
+         *
+         *  - Set our field [mExpressionDB] to `db`
+         *  - Call the `rawQuery` method of `db` to run the SQL in [SQL_GET_MIN] which selects the
+         *  minimum [BaseColumns._ID] row in the table named [ExpressionEntry.TABLE_NAME] and returns
+         *  a `Cursor` `minResult` which is positioned before this row which we then *use* to try to
+         *  move to the first row in the cursor and if that fails we set our field [mMinIndex] to our
+         *  constant [MAXIMUM_MIN_INDEX] (it is an empty database), and if it succeeds we set [mMinIndex]
+         *  to the minimum of the [Long] in column 0 of the cursor and our constant [MAXIMUM_MIN_INDEX].
+         *  - We next call the `rawQuery` method of `db` to run the SQL in [SQL_GET_MAX] which selects
+         *  the maximum [BaseColumns._ID] row in the table named [ExpressionEntry.TABLE_NAME] and
+         *  returns a `Cursor` `maxResult` which is positioned before this row which we then *use* to
+         *  try to move to the first row in the cursor and if that fails we set our field [mMaxIndex]
+         *  to 0L (it is an empty database), and if it succeeds we set [mMaxIndex] to the maximum of
+         *  of the [Long] in column 0 of the cursor and 0L.
+         *  - If [mMaxIndex] is now greater than [Integer.MAX_VALUE] we throw an [AssertionError]
+         *  "Expression index absurdly large".
+         *  - Otherwise we set our field [mAllCursorBase] to the [Int] value of [mMaxIndex].
+         *  - If [mMaxIndex] is not equal to 0L or [mMinIndex] is not equal to [MAXIMUM_MIN_INDEX]
+         *  there is data in the database so we initialize our `val args` to an array containing
+         *  the string value of [mAllCursorBase] and the string value of [mMinIndex].
+         *  - We then initialize our field [mAllCursor] with the `Cursor` returned by the `rawQuery`
+         *  method of `db` when it executes the SQL command in [SQL_GET_ALL] using `args` as the
+         *  selection arguments (the command selects all of the entries in the table with the name
+         *  [ExpressionEntry.TABLE_NAME] where the [BaseColumns._ID] column is less than or equal
+         *  to [mAllCursorBase] and greater than or equal to [mMinIndex] ordered by the column
+         *  [BaseColumns._ID] in descending order).
+         *  - If we are not able to move to the first row in [mAllCursor] we call our [badDBset]
+         *  to register the fact that we have a bad database and then return *null* to the caller.
+         *  - Otherwise we set [mDBInitialized] to *true* (the database is initialized) and wake up
+         *  any threads waiting on [mLock] before exiting the *synchronized* block.
+         *
+         * Then we just return `db` to the caller (an open and initialized [SQLiteDatabase] ready
+         * for use).
+         *
+         * @param helper The [ExpressionDBHelper] (our custom [SQLiteOpenHelper]) which we use to
+         * open or create our [SQLiteDatabase].
+         * @return Our opened (or just created if it did not already exist) [SQLiteDatabase].
+         */
+        @SuppressLint("Recycle") // Our mAllCursor is never to be closed
         override fun doInBackground(vararg helper: ExpressionDBHelper): SQLiteDatabase? {
             try {
                 val db = helper[0].writableDatabase
@@ -431,7 +494,10 @@ class ExpressionDB(context: Context) {
                     mAllCursorBase = mMaxIndex.toInt()
                     if (mMaxIndex != 0L || mMinIndex != MAXIMUM_MIN_INDEX) {
                         // Set up a cursor for reading the entire database.
-                        val args = arrayOf(mAllCursorBase.toLong().toString(), mMinIndex.toString())
+                        val args = arrayOf(
+                                mAllCursorBase.toLong().toString(),
+                                mMinIndex.toString()
+                        )
                         mAllCursor = db.rawQuery(SQL_GET_ALL, args) as AbstractWindowedCursor
                         if (!mAllCursor!!.moveToFirst()) {
                             badDBset()
@@ -455,6 +521,9 @@ class ExpressionDB(context: Context) {
 
         }
 
+        /**
+         *
+         */
         override fun onPostExecute(result: SQLiteDatabase?) {
             if (result == null) {
                 displayDatabaseWarning()
