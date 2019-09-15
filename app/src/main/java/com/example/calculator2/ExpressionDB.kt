@@ -522,19 +522,24 @@ class ExpressionDB(context: Context) {
         }
 
         /**
+         * Runs on the UI thread after [doInBackground]. [result] is the [SQLiteDatabase] returned
+         * by [doInBackground]. If [result] is *null* we call our method [displayDatabaseWarning] to
+         * log the fact that there was a database error, otherwise we do nothing.
          *
+         * @param result The [SQLiteDatabase] opened or created by [doInBackground].
          */
         override fun onPostExecute(result: SQLiteDatabase?) {
             if (result == null) {
                 displayDatabaseWarning()
             } // else doInBackground already set expressionDB.
         }
-        // On cancellation we do nothing;
+
+        // On cancellation we do nothing, so we do not override onCanceled
     }
 
     /**
-     * Display a warning message that a database access failed.
-     * Do this only once. TODO: Replace with a real UI message.
+     * Display a warning message that a database access failed. We do this only once.
+     * TODO: Replace with a real UI message.
      */
     internal fun displayDatabaseWarning() {
         if (!databaseWarningIssued) {
@@ -544,7 +549,17 @@ class ExpressionDB(context: Context) {
     }
 
     /**
-     * Wait until the database and mAllCursor, etc. have been initialized.
+     * Wait until the database and [mAllCursor], etc. have been initialized. In a block synchronized
+     * on our field [mLock] we initialize our `var caught` to *false* (it is a flag which we set to
+     * *true* if we are interrupted while waiting in order to deal with it after the database is
+     * initialized). Then we loop while [mDBInitialized] is *false* (the database has not yet been
+     * initialized) and [isDBBad] is *false (the database has not been declared "bad"). In this loop,
+     * wrapped in a *try* block intended to catch [InterruptedException] in order to set `caught` to
+     * *true*, we call the `wait` method of [mLock] which releases the lock and waits until another
+     * thread invokes the `notify` or `notifyAll` method of [mLock]. When [mDBInitialized] or [isDBBad]
+     * is set to *true* we exit the *while* loop and if `caught` has been set to *true* because our
+     * `wait` was interrupted we call the `interrupt` method of the current thread to interrupt this
+     * thread, otherwise we just exit the *synchronized* block and return.
      */
     private fun waitForDBInitialized() {
         synchronized(mLock) {
@@ -565,12 +580,34 @@ class ExpressionDB(context: Context) {
     }
 
     /**
-     * Erase the entire database. Assumes no other accesses to the database are
-     * currently in progress
-     * These tasks must be executed on a serial executor to avoid reordering writes.
+     * Erase the entire database in the background. Assumes no other accesses to the database
+     * are currently in progress. These tasks must be executed on a serial executor to avoid
+     * reordering writes.
      */
     @SuppressLint("StaticFieldLeak")
     private inner class AsyncEraser : AsyncTask<Void, Void, Void>() {
+        /**
+         * We override this method to erase the database on a background thread. First we call the
+         * `execSQL` method of our [SQLiteDatabase] field [mExpressionDB] to execute the SQL command
+         * in [SQL_DROP_TIMESTAMP_INDEX] (which drops the "timestamp_index" index if it exists), then
+         * we call it to execute the SQL command in [SQL_DROP_TABLE] (which drops the table named
+         * [ExpressionEntry.TABLE_NAME] if it exists). Then wrapped in a *try* block intended to
+         * catch and log ant [Exception] ("Database VACUUM failed") we call the `execSQL` method of
+         * [mExpressionDB] to execute the SQL command "VACUUM" which rebuilds the database packing
+         * it into the minimum amount of space. After exiting the *try* block we then again call the
+         * `execSQL` method of [mExpressionDB] to execute the SQL command in [SQL_CREATE_ENTRIES]
+         * (which creates the table [ExpressionEntry.TABLE_NAME] with the columns [BaseColumns._ID]
+         * as the integer primary key, [ExpressionEntry.COLUMN_NAME_EXPRESSION] as the BLOB which
+         * holds the byte encoded expression, [ExpressionEntry.COLUMN_NAME_FLAGS] as the integer
+         * holding our flags, and [ExpressionEntry.COLUMN_NAME_TIMESTAMP] as the integer holding our
+         * timestamp), and then call it to execute the command in [SQL_CREATE_TIMESTAMP_INDEX] ((which
+         * creates an INDEX with the index name "timestamp_index" on the table [ExpressionEntry.TABLE_NAME]
+         * for the column [ExpressionEntry.COLUMN_NAME_TIMESTAMP]). Finally we return *null* to the
+         * caller.
+         *
+         * @param nothings The parameters of the task -- there are none.
+         * @return A *null* result always.
+         */
         override fun doInBackground(vararg nothings: Void): Void? {
             mExpressionDB!!.execSQL(SQL_DROP_TIMESTAMP_INDEX)
             mExpressionDB!!.execSQL(SQL_DROP_TABLE)
@@ -586,6 +623,17 @@ class ExpressionDB(context: Context) {
             return null
         }
 
+        /**
+         * Runs on the UI thread after [doInBackground]. The [nothing] result is the *null* value
+         * returned by [doInBackground]. In a block *synchronized* on our field [mLock] we set our
+         * field [mMinAccessible] to -10000000L, our field [mMaxAccessible] to 10000000L, our field
+         * [mMinIndex] to the constant [MAXIMUM_MIN_INDEX] (-10), our field [mAllCursorBase] to 0,
+         * our field [mMaxIndex] to the [Long] value of [mAllCursorBase] (0L), our [mDBInitialized]
+         * field to *true*, and then call the `notifyAll` method of [mLock] to wake up all threads
+         * that are waiting for [mLock].
+         *
+         * @param nothing Always *null* result of the operation computed by [doInBackground].
+         */
         override fun onPostExecute(nothing: Void) {
             synchronized(mLock) {
                 // Reinitialize everything to an empty and fully functional database.
@@ -598,13 +646,20 @@ class ExpressionDB(context: Context) {
                 mLock.notifyAll()
             }
         }
-        // On cancellation we do nothing;
+
+        // On cancellation we do nothing -- so we do not implement onCanceled
     }
 
     /**
-     * Erase ALL database entries.
-     * This is currently only safe if expressions that may refer to them are also erased.
-     * Should only be called when concurrent references to the database are impossible.
+     * Erase ALL database entries. This is currently only safe if expressions that may refer to them
+     * are also erased. Should only be called when concurrent references to the database are impossible.
+     * First we call our [waitForDBInitialized] method to wait until the database has been initialized,
+     * then in a block *synchronized* on [mLock] we set our field [mDBInitialized] to *false*. We then
+     * initialize our `val eraser` to a new instance of [AsyncEraser] and call its `executeOnExecutor`
+     * method to have it start running its `doInBackground` method on the [AsyncTask.SERIAL_EXECUTOR]
+     * executor (this is an `Executor` that executes tasks one at a time in serial order and this
+     * serialization is global to this process).
+     *
      * TODO: Look at ways to more selectively clear the database.
      */
     fun eraseAll() {
@@ -616,6 +671,15 @@ class ExpressionDB(context: Context) {
         eraser.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR)
     }
 
+    /**
+     * This is called from the `doInBackground` method of the [AsyncWriter] async task when it completes
+     * the insertion of a row into the database in order for us to decrement our [mIncompleteWrites]
+     * field (which records the number of in-flight writes outstanding). In a block *synchronized* on
+     * our field [mWriteCountsLock] we decrement our field [mIncompleteWrites] and if has gone down
+     * to 0 we call the `notifyAll` method of [mWriteCountsLock] to wake up all threads that are
+     * waiting for [mWriteCountsLock] before we exit the *synchronized* block and release the lock
+     * [mWriteCountsLock].
+     */
     private fun writeCompleted() {
         synchronized(mWriteCountsLock) {
             if (--mIncompleteWrites == 0) {
@@ -624,6 +688,12 @@ class ExpressionDB(context: Context) {
         }
     }
 
+    /**
+     * This is called from our [addRow] method just before it starts a background insertion of a
+     * row by an [AsyncWriter] in order for us to increment our [mIncompleteWrites] field (which
+     * records the number of in-flight writes outstanding). In a block *synchronized* on our field
+     * [mWriteCountsLock] we just increment our field [mIncompleteWrites].
+     */
     private fun writeStarted() {
         synchronized(mWriteCountsLock) {
             ++mIncompleteWrites
