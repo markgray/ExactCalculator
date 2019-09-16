@@ -701,10 +701,17 @@ class ExpressionDB(context: Context) {
     }
 
     /**
-     * Wait for in-flight writes to complete.
-     * This is not safe to call from one of our background tasks, since the writing
-     * tasks may be waiting for the same underlying thread that we're using, resulting
-     * in deadlock.
+     * Wait for in-flight writes to complete. This is not safe to call from one of our background
+     * tasks, since the writing tasks may be waiting for the same underlying thread that we're
+     * using, resulting in deadlock. In a block *synchronized* on our field [mWriteCountsLock] we
+     * first we our `var caught` to *false* (flag used to signal we have been interrupted)  then
+     * loop while our field [mIncompleteWrites] (which records the number of in-flight writes
+     * outstanding) is not equal to 0. In this loop we have a *try* block intended to catch
+     * [InterruptedException] in order to set our flag `caught` to *true* we call the `wait` method
+     * of [mWriteCountsLock] to release the lock and wait until another thread invokes the `notify`
+     * or `notifyAll` method of [mWriteCountsLock]. When [mIncompleteWrites] goes to 0 we exit the
+     * loop and if `caught` is *true* we interrupt the current thread before exiting the `synchronized`
+     * block and returning.
      */
     fun waitForWrites() {
         synchronized(mWriteCountsLock) {
@@ -729,9 +736,30 @@ class ExpressionDB(context: Context) {
      */
     @SuppressLint("StaticFieldLeak")
     private inner class AsyncWriter : AsyncTask<ContentValues, Void, Long>() {
+        /**
+         * We override this method in order to insert a row into the database on a background thread.
+         * The parameter [cvs] is the [ContentValues] for the row that is passed to the [execute]
+         * method of this [AsyncWriter] async task. We initialize our `val index` to the [Long] that
+         * is stored in the [BaseColumns._ID] column of the 0'th entry of our [ContentValues] parameter
+         * [cvs]. We then initialize our `val result` to the [Long] returned by a call to the `insert`
+         * method of [mExpressionDB] when we have it insert the 0'th entry of [cvs] into the database
+         * table [ExpressionEntry.TABLE_NAME]. We then call our [writeCompleted] method to have it
+         * decrement the number of writes in flight recorded in our [mIncompleteWrites] field. Then
+         * if `result` is -1L (an error occurred in our call to `insert`) we return `index` to the
+         * caller. If `result` is not equal to `index` we throw an [AssertionError] (the row was not
+         * inserted in the right place for some oddball reason). And if `result` did equal `index`
+         * (the only remaining option for the *else* to catch) we return 0 indicating success.
+         *
+         * @param cvs The [ContentValues] containing the data for the row to be inserted.
+         * @return 0L on success or the row ID number on failur.
+         */
         override fun doInBackground(vararg cvs: ContentValues): Long? {
             val index = cvs[0].getAsLong(BaseColumns._ID)!!
-            val result = mExpressionDB!!.insert(ExpressionEntry.TABLE_NAME, null, cvs[0])
+            val result = mExpressionDB!!.insert(
+                    ExpressionEntry.TABLE_NAME,
+                    null,
+                    cvs[0]
+            )
             writeCompleted()
             // Return 0 on success, row id on failure.
             return when {
@@ -741,6 +769,18 @@ class ExpressionDB(context: Context) {
             }
         }
 
+        /**
+         * Runs on the UI thread after [doInBackground]. [result] is the value returned by
+         * [doInBackground], and should be 0L for a successful completion of the insert, and
+         * is the row index for an unsuccessful insertion. If [result] is not equal to 0L (an
+         * unsuccessful insertion) we synchronize a block on our field [mLock] and if [result]
+         * is greater than 0L set our field [mMaxAccessible] to [result] minus 1, and if it is
+         * greater than 0L we set our field [mMaxAccessible] to [result] plus 1. We then call our
+         * method [displayDatabaseWarning] to log a warning message that a database access failed.
+         * If [result] was equal to 0L we do nothing.
+         *
+         * @param result The result of the operation computed by {@link #doInBackground}.
+         */
         override fun onPostExecute(result: Long?) {
             if (result != 0L) {
                 synchronized(mLock) {
@@ -753,15 +793,39 @@ class ExpressionDB(context: Context) {
                 displayDatabaseWarning()
             }
         }
-        // On cancellation we do nothing;
+
+        // On cancellation we do nothing, so do not implement onCancelled
     }
 
     /**
-     * Add a row with index outside existing range.
-     * The returned index will be just larger than any existing index unless negative_index is true.
-     * In that case it will be smaller than any existing index and smaller than MAXIMUM_MIN_INDEX.
-     * This ensures that prior additions have completed, but does not wait for this insertion
-     * to complete.
+     * Add a row with index outside existing range. The returned index will be just larger than any
+     * existing index unless [negativeIndex] is true. In that case it will be smaller than any
+     * existing index and smaller than [MAXIMUM_MIN_INDEX]. This ensures that prior additions have
+     * completed, but does not wait for this insertion to complete. We declare our `val result` and
+     * our `val newIndex` both as [Long], and then we call our [waitForDBInitialized] method to wait
+     * until the database has been initialized. When the database is declared to be initialized we
+     * do the following in a block *synchronized* on our field [mLock]:
+     *  - If [negativeIndex] is *true* we set `newIndex` to our field [mMinIndex] minus 1 then set
+     *  [mMinIndex] to `newIndex`, and if [negativeIndex] is *false* we set `newIndex` to our field
+     *  [mMaxIndex] plus 1 then set [mMaxIndex] to `newIndex`.
+     *  - If our [inAccessibleRange] method determines that `newIndex` is not within the accessible
+     *  range of our database indices we just return `newIndex` so that the index can be used for
+     *  the cache even though it won't be stored in the database.
+     *  - Otherwise we call our [writeStarted] method to have it increment the count of writes in
+     *  flight.
+     *  - Initialize our `val cvs` to the [ContentValues] object returned by the `toContentValues`
+     *  method of [data] when converts its contents to a [ContentValues].
+     *  - We then store `newIndex` in column [BaseColumns._ID].
+     *  - We initialize our `val awriter` with a new instance of [AsyncWriter] then call its
+     *  `executeOnExecutor` method to have it start running its `doInBackground` method on the
+     *  [AsyncTask.SERIAL_EXECUTOR] serial executor with `cvs` as its argument.
+     *
+     *  After exiting the *synchronized* block we return `newIndex` to the caller.
+     *
+     * @param negativeIndex If *true* the row index is negative (which means it will not appear in
+     * the expression history list.
+     * @param data the [RowData] containing the encoded expression to be added to the database.
+     * @return the index in the database of the row that was added.
      */
     fun addRow(negativeIndex: Boolean, data: RowData): Long {
 
@@ -795,9 +859,14 @@ class ExpressionDB(context: Context) {
     }
 
     /**
-     * Generate a fake database row that's good enough to hopefully prevent crashes,
-     * but bad enough to avoid confusion with real data. In particular, the result
-     * will fail to evaluate.
+     * Generate a fake database row that's good enough to hopefully prevent crashes, but bad enough
+     * to avoid confusion with real data. In particular, the result will fail to evaluate. We
+     * initialize our `val badExpr` with a new instance of [CalculatorExpr], then add a left paren
+     * followed by a right paren to it. Finally we return a [RowData] instance constructed from the
+     * byte encoded value of `badExpr` returned by its `toBytes` method, a degree mode of *false*,
+     * a long timeout mode of *false*, and a time stamp of 0.
+     *
+     * @return a fake [RowData] instance.
      */
     internal fun makeBadRow(): RowData {
         val badExpr = CalculatorExpr()
@@ -807,9 +876,22 @@ class ExpressionDB(context: Context) {
     }
 
     /**
-     * Retrieve the row with the given index using a direct query.
-     * Such a row must exist.
+     * Retrieve the row with the given index [index] using a direct query. Such a row must exist.
      * We assume that the database has been initialized, and the argument has been range checked.
+     * We declare our `var result` to be of type [RowData], and initialize our `val args` to be an
+     * array of strings whose sole entry is the string value of [index]. We then call the `rawQuery`
+     * method of [mExpressionDB] to have it execute the SQL command in [SQL_GET_ROW] using `args`
+     * as its selection arguments (the command selects all entries in the database in the table
+     * [ExpressionEntry.TABLE_NAME] whose [BaseColumns._ID] column is equal to `args`) and then use
+     * the `Cursor` `resultC` returned by first trying to move to its first row and if that fails
+     * call our [badDBset] to declare the database bad then return the fake [RowData] created by our
+     * [makeBadRow] method. If the move to the first row of `resultC` succeeds we set `result` to a
+     * [RowData] instance constructed from the blob encoding the expression in column 1, the *int*
+     * flags from column 2, and the [Long] timestamp in column 3. We then return `result`.
+     *
+     * @param index the index of the row we should retrieve.
+     * @return the [RowData] for the row with index [index] retrieved from the database or a fake
+     * [RowData] instance produced by our [makeBadRow] method if the retrieval fails.
      */
     private fun rowDirectGet(index: Long): RowData {
         var result: RowData
@@ -819,8 +901,11 @@ class ExpressionDB(context: Context) {
                 badDBset()
                 makeBadRow()
             } else {
-                result = RowData(resultC.getBlob(1), resultC.getInt(2) /* flags */,
-                        resultC.getLong(3) /* timestamp */)
+                result = RowData(
+                        resultC.getBlob(1),
+                        resultC.getInt(2) /* flags */,
+                        resultC.getLong(3) /* timestamp */
+                )
                 result
             }
         }
@@ -828,9 +913,21 @@ class ExpressionDB(context: Context) {
     }
 
     /**
-     * Retrieve the row at the given offset from mAllCursorBase.
-     * Note the argument is NOT an expression index!
-     * We assume that the database has been initialized, and the argument has been range checked.
+     * Retrieve the row at the given [offset] from [mAllCursorBase]. Note the argument is NOT an
+     * expression index! We assume that the database has been initialized, and the argument has
+     * been range checked. We declare our `var result` to be of type [RowData], then in a block
+     * *synchronized* on our field [mLock] we call the `moveToPosition` method of [mAllCursor] to
+     * have it try to move to position [offset] and if that fails we log the failure, call our
+     * [badDBset] method to declare the database bad and then return a fake [RowData] created by our
+     * [makeBadRow] method. If the move to row [offset] succeeds we return a [RowData] instance
+     * constructed using the blob in column 1 of [mAllCursor] for the byte encoded expression, the
+     * *int* in column 2 for the flags, and the [Long] in column 3 for the timestamp.
+     *
+     * @param offset zero based position in the [AbstractWindowedCursor] field [mAllCursor] at which
+     * the row we are to retrieve is believed to be located.
+     * @return a [RowData] instance of the data found in [mAllCursor] at the position [offset], or
+     * a fake [RowData] instance constructed by our [makeBadRow] method if we cannot move [mAllCursor]
+     * to that position.
      */
     private fun rowFromCursorGet(offset: Int): RowData {
 
@@ -841,15 +938,39 @@ class ExpressionDB(context: Context) {
                 badDBset()
                 return makeBadRow()
             }
-            return RowData(mAllCursor!!.getBlob(1), mAllCursor!!.getInt(2) /* flags */,
-                    mAllCursor!!.getLong(3) /* timestamp */)
+            return RowData(
+                    mAllCursor!!.getBlob(1),
+                    mAllCursor!!.getInt(2) /* flags */,
+                    mAllCursor!!.getLong(3) /* timestamp */
+            )
         }
     }
 
     /**
-     * Retrieve the database row at the given index.
-     * We currently assume that we never read data that we added since we initialized the database.
-     * This makes sense, since we cache it anyway. And we should always cache recently added data.
+     * Retrieve the database row at the given index. We currently assume that we never read data
+     * that we added since we initialized the database. This makes sense, since we cache it anyway.
+     * And we should always cache recently added data. First we call our [waitForDBInitialized]
+     * method to wait for the database to be initialized. Then if our [inAccessibleRange] method
+     * determines that [index] is outside of the accessible range of the database we call our method
+     * [displayDatabaseWarning] to log a warning message that a database access failed and return
+     * a fake [RowData] instance created by our [makeBadRow] method. Otherwise we initialize our
+     * `var position` to [mAllCursorBase] minus [index]. If [index] is less than 0 we then subtract
+     * [GAP] from `position` to account for the gap in expression indices around 0. If `position` is
+     * less than 0 we throw an [AssertionError] "Database access out of range". If `index` is less
+     * than 0 we want to avoid using [mAllCursor] if the data is far away from its current position
+     * and to decide whether this is so we declare `val endPosition` to be an [Int] and in a block
+     * *synchronized* on our field [mLock] we initialize our `val window` with the `CursorWindow`
+     * of [mAllCursor] then set `endPosition` to the start position of `window` plus the number of
+     * rows in `window`. Then if `position` is greater than or equal to `endPosition` we avoid moving
+     * [mAllCursor] by returning the [RowData] returned by our [rowDirectGet] method for [index].
+     * Otherwise it is better to use the data in [mAllCursor] (as it is also for a positive [index])
+     * so we just return the [RowData] instance returned from our method [rowFromCursorGet] for the
+     * position `position` in the [AbstractWindowedCursor] field [mAllCursor].
+     *
+     * @param index the index of the row whose [RowData] we are to retrieve.
+     * @return A [RowData] instance constructed from the database entry for the row at index [index]
+     * or a fake [RowData] instance constructed by our [makeBadRow] method if [index] is outside of
+     * the accessible range.
      */
     fun rowGet(index: Long): RowData {
         waitForDBInitialized()
@@ -894,6 +1015,13 @@ class ExpressionDB(context: Context) {
         }
     }
 
+    /**
+     * The getter for the [mMaxIndex] field. First we call our [waitForDBInitialized] method to wait
+     * for the database to be initialized. Then in a block *synchronized* on our field [mLock] we
+     * return the current value of our [mMaxIndex] field.
+     *
+     * @return the current value of our [mMaxIndex] field.
+     */
     fun maxIndexGet(): Long {
         waitForDBInitialized()
         synchronized(mLock) {
@@ -901,44 +1029,108 @@ class ExpressionDB(context: Context) {
         }
     }
 
+    /**
+     * Closes our expression database. We just call the `close` method of our [ExpressionDBHelper]
+     * field [mExpressionDBHelper].
+     */
     fun close() {
         mExpressionDBHelper.close()
     }
 
+    /**
+     * Our static constants.
+     */
     companion object {
 
+        /**
+         * The SQL command used to create our table of expressions.
+         */
         private const val SQL_CREATE_ENTRIES = (
                 "CREATE TABLE " + ExpressionEntry.TABLE_NAME + " ("
                         + BaseColumns._ID + " INTEGER PRIMARY KEY,"
                         + ExpressionEntry.COLUMN_NAME_EXPRESSION + " BLOB,"
                         + ExpressionEntry.COLUMN_NAME_FLAGS + " INTEGER,"
-                        + ExpressionEntry.COLUMN_NAME_TIMESTAMP + " INTEGER)")
+                        + ExpressionEntry.COLUMN_NAME_TIMESTAMP + " INTEGER)"
+                )
+
+        /**
+         * The SQL command used to drop our table of expressions.
+         */
         private const val SQL_DROP_TABLE = "DROP TABLE IF EXISTS " + ExpressionEntry.TABLE_NAME
-        private const val SQL_GET_MIN = ("SELECT MIN(" + BaseColumns._ID
-                + ") FROM " + ExpressionEntry.TABLE_NAME)
-        private const val SQL_GET_MAX = ("SELECT MAX(" + BaseColumns._ID
-                + ") FROM " + ExpressionEntry.TABLE_NAME)
-        private const val SQL_GET_ROW = ("SELECT * FROM " + ExpressionEntry.TABLE_NAME
-                + " WHERE " + BaseColumns._ID + " = ?")
-        private const val SQL_GET_ALL = ("SELECT * FROM " + ExpressionEntry.TABLE_NAME
-                + " WHERE " + BaseColumns._ID + " <= ? AND " +
-                BaseColumns._ID + " >= ?" + " ORDER BY " + BaseColumns._ID + " DESC ")
-        // We may eventually need an index by timestamp. We don't use it yet.
+
+        /**
+         * The SQL command used to retrieve the minimum value of the [BaseColumns._ID] column in our
+         * expression table.
+         */
+        private const val SQL_GET_MIN = (
+                "SELECT MIN(" + BaseColumns._ID
+                        + ") FROM " + ExpressionEntry.TABLE_NAME
+                )
+
+        /**
+         * The SQL command used to retrieve the maximum value of the [BaseColumns._ID] column in our
+         * expression table.
+         */
+        private const val SQL_GET_MAX = (
+                "SELECT MAX(" + BaseColumns._ID
+                        + ") FROM " + ExpressionEntry.TABLE_NAME
+                )
+        /**
+         * The SQL command used to retrieve the row whose [BaseColumns._ID] column is equal to the
+         * selection arguments used in the query.
+         */
+        private const val SQL_GET_ROW = (
+                "SELECT * FROM " + ExpressionEntry.TABLE_NAME
+                        + " WHERE " + BaseColumns._ID + " = ?"
+                )
+
+        /**
+         * The SQL command used to retrieve the row whose [BaseColumns._ID] column is less than or
+         * equal to the first selection argument used in the query and which is greater than or equal
+         * to the second selection argument used in the query. Sorted by the [BaseColumns._ID] column
+         * in descending order.
+         */
+        private const val SQL_GET_ALL = (
+                "SELECT * FROM " + ExpressionEntry.TABLE_NAME
+                        + " WHERE " + BaseColumns._ID + " <= ? AND "
+                        + BaseColumns._ID + " >= ?"
+                        + " ORDER BY " + BaseColumns._ID + " DESC "
+                )
+
+        /**
+         * We may eventually need an index by timestamp. We don't use it yet.
+         */
         private const val SQL_CREATE_TIMESTAMP_INDEX = (
-                "CREATE INDEX timestamp_index ON " + ExpressionEntry.TABLE_NAME + "("
-                        + ExpressionEntry.COLUMN_NAME_TIMESTAMP + ")")
+                "CREATE INDEX timestamp_index ON " + ExpressionEntry.TABLE_NAME
+                        + "(" + ExpressionEntry.COLUMN_NAME_TIMESTAMP + ")"
+                )
+
         private const val SQL_DROP_TIMESTAMP_INDEX = "DROP INDEX IF EXISTS timestamp_index"
 
-        // Never allocate new negative indices (row ids) >= MAXIMUM_MIN_INDEX.
+        /**
+         * Never allocate new negative indices (row ids) >= MAXIMUM_MIN_INDEX.
+         */
         const val MAXIMUM_MIN_INDEX: Long = -10
 
-        // Gap between negative and positive row ids in the database.
-        // Expressions with index [MAXIMUM_MIN_INDEX .. 0] are not stored.
+        /**
+         * Gap between negative and positive row ids in the database.
+         * Expressions with index [MAXIMUM_MIN_INDEX .. 0] are not stored.
+         */
         private const val GAP = -MAXIMUM_MIN_INDEX + 1
 
-        // If you change the database schema, you must increment the database version.
+        /**
+         * If you change the database schema, you must increment the database version.
+         */
         const val DATABASE_VERSION = 1
+
+        /**
+         * The name of our database.
+         */
         const val DATABASE_NAME = "Expressions.db"
+
+        /**
+         * Debugging flag which may cause odd things if set to *true*.
+         */
         const val CONTINUE_WITH_BAD_DB = false
     }
 

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("DEPRECATION")
+
 package com.example.calculator2
 
 import android.annotation.SuppressLint
@@ -730,8 +732,8 @@ class Evaluator internal constructor(
                 timeout = NON_MAIN_TIMEOUT
             }
             mTimeoutRunnable = Runnable { handleTimeout() }
-            mTimeoutHandler.removeCallbacks(mTimeoutRunnable)
-            mTimeoutHandler.postDelayed(mTimeoutRunnable, timeout)
+            mTimeoutHandler.removeCallbacks(mTimeoutRunnable!!)
+            mTimeoutHandler.postDelayed(mTimeoutRunnable!!, timeout)
         }
 
         /**
@@ -930,7 +932,7 @@ class Evaluator internal constructor(
          */
         override fun onPostExecute(result: InitialResult) {
             mExprInfo!!.mEvaluator = null
-            mTimeoutHandler.removeCallbacks(mTimeoutRunnable)
+            mTimeoutHandler.removeCallbacks(mTimeoutRunnable!!)
             if (result.isError) {
                 if (result.errorResourceId == R.string.timeout) {
                     // Emulating timeout due to large result.
@@ -983,7 +985,7 @@ class Evaluator internal constructor(
          */
         override fun onCancelled(result: InitialResult) {
             // Invoker resets mEvaluator.
-            mTimeoutHandler.removeCallbacks(mTimeoutRunnable)
+            mTimeoutHandler.removeCallbacks(mTimeoutRunnable!!)
             if (!mQuiet) {
                 displayCancelledMessage()
             } // Otherwise, if mRequired, timeout processing displayed message.
