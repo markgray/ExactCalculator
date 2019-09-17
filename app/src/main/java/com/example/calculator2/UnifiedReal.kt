@@ -301,7 +301,7 @@ class UnifiedReal private constructor(
         return if (mCrFactor === CR_ONE) {
             mRatFactor.doubleValue() // Hopefully correctly rounded
         } else {
-            crValue().toDouble() // Approximately correctly rounded
+            crValue().doubleValue() // Approximately correctly rounded
         }
     }
 
@@ -1327,7 +1327,7 @@ class UnifiedReal private constructor(
                 throw ArithmeticException("Non-integral factorial argument")
             }
         }
-        if (asBI!!.signum() < 0) {
+        if (asBI.signum() < 0) {
             throw ArithmeticException("Negative factorial argument")
         }
         if (asBI.bitLength() > 20) {
