@@ -1043,7 +1043,13 @@ class ExpressionDB(context: Context) {
     companion object {
 
         /**
-         * The SQL command used to create our table of expressions.
+         * The SQL command used to create our table of expressions. It creates a table with the name
+         * [ExpressionEntry.TABLE_NAME], with a column [BaseColumns._ID] which holds an integer that
+         * is the primary key of the table, a column with the name [ExpressionEntry.COLUMN_NAME_EXPRESSION]
+         * which holds a blob containing the byte encoded expression, a column named
+         * [ExpressionEntry.COLUMN_NAME_FLAGS] which holds an integer containing the expression's
+         * flags, and a column named [ExpressionEntry.COLUMN_NAME_TIMESTAMP] which contains the
+         * integer (actually [Long]) timestamp of the expression.
          */
         private const val SQL_CREATE_ENTRIES = (
                 "CREATE TABLE " + ExpressionEntry.TABLE_NAME + " ("
@@ -1054,13 +1060,14 @@ class ExpressionDB(context: Context) {
                 )
 
         /**
-         * The SQL command used to drop our table of expressions.
+         * The SQL command used to drop our [ExpressionEntry.TABLE_NAME] table of expressions if it
+         * exists.
          */
         private const val SQL_DROP_TABLE = "DROP TABLE IF EXISTS " + ExpressionEntry.TABLE_NAME
 
         /**
          * The SQL command used to retrieve the minimum value of the [BaseColumns._ID] column in our
-         * expression table.
+         * [ExpressionEntry.TABLE_NAME] expression table.
          */
         private const val SQL_GET_MIN = (
                 "SELECT MIN(" + BaseColumns._ID
@@ -1069,15 +1076,15 @@ class ExpressionDB(context: Context) {
 
         /**
          * The SQL command used to retrieve the maximum value of the [BaseColumns._ID] column in our
-         * expression table.
+         * [ExpressionEntry.TABLE_NAME] expression table.
          */
         private const val SQL_GET_MAX = (
                 "SELECT MAX(" + BaseColumns._ID
                         + ") FROM " + ExpressionEntry.TABLE_NAME
                 )
         /**
-         * The SQL command used to retrieve the row whose [BaseColumns._ID] column is equal to the
-         * selection arguments used in the query.
+         * The SQL command used to retrieve the row from our [ExpressionEntry.TABLE_NAME] table whose
+         * [BaseColumns._ID] column is equal to the selection argument used in the query.
          */
         private const val SQL_GET_ROW = (
                 "SELECT * FROM " + ExpressionEntry.TABLE_NAME
@@ -1085,10 +1092,10 @@ class ExpressionDB(context: Context) {
                 )
 
         /**
-         * The SQL command used to retrieve the row whose [BaseColumns._ID] column is less than or
-         * equal to the first selection argument used in the query and which is greater than or equal
-         * to the second selection argument used in the query. Sorted by the [BaseColumns._ID] column
-         * in descending order.
+         * The SQL command used to retrieve the row from our [ExpressionEntry.TABLE_NAME] table whose
+         * [BaseColumns._ID] column is less than or equal to the first selection argument used in the
+         * query and which is greater than or equal to the second selection argument used in the query.
+         * Sorted by the [BaseColumns._ID] column in descending order.
          */
         private const val SQL_GET_ALL = (
                 "SELECT * FROM " + ExpressionEntry.TABLE_NAME
@@ -1098,13 +1105,18 @@ class ExpressionDB(context: Context) {
                 )
 
         /**
-         * We may eventually need an index by timestamp. We don't use it yet.
+         * We may eventually need an index by timestamp. We don't use it yet. But if we do then this
+         * SQL command will create the index named "timestamp_index" for the [ExpressionEntry.TABLE_NAME]
+         * table from its entries in the [ExpressionEntry.COLUMN_NAME_TIMESTAMP] column.
          */
         private const val SQL_CREATE_TIMESTAMP_INDEX = (
                 "CREATE INDEX timestamp_index ON " + ExpressionEntry.TABLE_NAME
                         + "(" + ExpressionEntry.COLUMN_NAME_TIMESTAMP + ")"
                 )
 
+        /**
+         * SQL command which drops the index named "timestamp_index" if it exits.
+         */
         private const val SQL_DROP_TIMESTAMP_INDEX = "DROP INDEX IF EXISTS timestamp_index"
 
         /**
