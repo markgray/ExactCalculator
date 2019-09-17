@@ -30,6 +30,7 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.*
 import android.widget.TextView
+import kotlin.math.min
 
 /**
  * [TextView] adapted for displaying the formula and allowing pasting.The JvmOverloads annotation
@@ -339,7 +340,7 @@ class CalculatorFormula
         // Step through increasing text sizes until the text would no longer fit.
         var lastFitTextSize = minimumTextSize
         while (lastFitTextSize < maximumTextSize) {
-            mTempPaint.textSize = Math.min(lastFitTextSize + mStepTextSize, maximumTextSize)
+            mTempPaint.textSize = min(lastFitTextSize + mStepTextSize, maximumTextSize)
             if (Layout.getDesiredWidth(text, mTempPaint) > mWidthConstraint) {
                 break
             }

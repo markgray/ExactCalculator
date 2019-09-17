@@ -21,6 +21,8 @@ import android.graphics.Rect
 import android.util.AttributeSet
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
+import kotlin.math.ceil
+import kotlin.math.min
 
 /**
  * Extended [TextView] that supports ascent/baseline alignment.
@@ -85,10 +87,8 @@ open class AlignedTextView
         // Always align text to the default capital letter height.
         paint.getTextBounds(LATIN_CAPITAL_LETTER, 0, 1, mTempRect)
 
-        mTopPaddingOffset = Math.min(paddingTop,
-                Math.ceil((mTempRect.top - paint.ascent()).toDouble()).toInt())
-        mBottomPaddingOffset = Math.min(paddingBottom,
-                Math.ceil(paint.descent().toDouble()).toInt())
+        mTopPaddingOffset = min(paddingTop, ceil((mTempRect.top - paint.ascent()).toDouble()).toInt())
+        mBottomPaddingOffset = min(paddingBottom, ceil(paint.descent().toDouble()).toInt())
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }

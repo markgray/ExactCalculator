@@ -152,14 +152,14 @@ class DragController {
     fun initializeController(isResult: Boolean, oneLine: Boolean, isDisplayEmpty: Boolean) {
         mOneLine = oneLine
         mIsDisplayEmpty = isDisplayEmpty
-        when {
+        mAnimationController = when {
             mIsDisplayEmpty -> // Empty display
-                mAnimationController = EmptyAnimationController()
+                EmptyAnimationController()
             isResult -> // Result
-                mAnimationController = ResultAnimationController()
+                ResultAnimationController()
             else -> // There is something in the formula field. There may or may not be
                 // a quick result.
-                mAnimationController = AnimationController()
+                AnimationController()
         }
     }
 

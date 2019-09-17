@@ -24,6 +24,7 @@ import android.text.style.TtsSpan
 import java.io.*
 import java.math.BigInteger
 import java.util.*
+import kotlin.math.abs
 
 /**
  * A mathematical expression represented as a sequence of "tokens".
@@ -362,7 +363,7 @@ class CalculatorExpr {
             }
             val value = KeyMaps.digVal(id)
             if (mExponent != 0) {
-                return if (Math.abs(mExponent) <= 10_000) {
+                return if (abs(mExponent) <= 10_000) {
                     mExponent = if (mExponent > 0) {
                         10 * mExponent + value
                     } else {

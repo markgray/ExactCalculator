@@ -1152,6 +1152,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
             else -> {}
         }
 
+        @Suppress("ControlFlowWithEmptyBody")
         if (!mEvaluator.append(id)) {
             // TODO: Some user visible feedback?
         }

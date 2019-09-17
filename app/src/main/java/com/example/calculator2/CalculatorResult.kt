@@ -956,15 +956,15 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
         isScrollable = false
         val msg = context.getString(errorId)
         val measuredWidth = Layout.getDesiredWidth(msg, paint)
-        if (measuredWidth > mWidthConstraint) {
+        text = if (measuredWidth > mWidthConstraint) {
             // Multiply by .99 to avoid rounding effects.
             val scaleFactor = 0.99f * mWidthConstraint / measuredWidth
             val smallTextSpan = RelativeSizeSpan(scaleFactor)
             val scaledMsg = SpannableString(msg)
             scaledMsg.setSpan(smallTextSpan, 0, msg.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            text = scaledMsg
+            scaledMsg
         } else {
-            text = msg
+            msg
         }
     }
 
@@ -1332,15 +1332,15 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
                 mWholePartFits /* insertCommas */)
         val expIndex = result.indexOf('E')
         result = KeyMaps.translateResult(result)
-        if (expIndex > 0 && result.indexOf('.') == -1) {
+        text = if (expIndex > 0 && result.indexOf('.') == -1) {
             // Gray out exponent if used as position indicator
             val formattedResult = SpannableString(result)
             formattedResult.setSpan(mExponentColorSpan,
                     expIndex, result.length,
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            text = formattedResult
+            formattedResult
         } else {
-            text = result
+            result
         }
         mLastDisplayedOffset = lastDisplayedOffset[0]
         mValid = true

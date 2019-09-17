@@ -27,6 +27,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import kotlin.math.max
 
 /**
  * This custom [ViewPager] is used only in portrait mode to allow "swiping" in the advanced keypad
@@ -213,7 +214,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
         if (position < 0.0f) {
             // Pin the left page to the left side.
             view.translationX = width * -position
-            view.alpha = Math.max(1.0f + position, 0.0f)
+            view.alpha = max(1.0f + position, 0.0f)
         } else {
             // Use the default slide transition when moving to the next page.
             view.translationX = 0.0f

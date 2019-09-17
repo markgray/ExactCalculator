@@ -19,6 +19,9 @@ package com.example.calculator2
 import java.math.BigInteger
 import java.util.Objects
 import java.util.Random
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.roundToLong
 
 /**
  * Rational numbers that may turn to null if they get too big.
@@ -498,11 +501,11 @@ class BoundedRational {
          * @return a [BoundedRational] version of our parameter [x]
          */
         fun valueOf(x: Double): BoundedRational {
-            val longVal = Math.round(x)
-            if (longVal.toDouble() == x && Math.abs(longVal) <= 1000) {
+            val longVal = x.roundToLong()
+            if (longVal.toDouble() == x && abs(longVal) <= 1000) {
                 return valueOf(longVal)
             }
-            val allBits = java.lang.Double.doubleToRawLongBits(Math.abs(x))
+            val allBits = java.lang.Double.doubleToRawLongBits(abs(x))
             var mantissa = allBits and (1L shl 52) - 1
             val biasedExp = allBits.ushr(52).toInt()
             if (biasedExp and 0x7ff == 0x7ff) {
@@ -768,11 +771,11 @@ class BoundedRational {
             if (rTemp.mNum.signum() < 0) {
                 throw ArithmeticException("sqrt(negative)")
             }
-            val numSqrt = BigInteger.valueOf(Math.round(Math.sqrt(rTemp.mNum.toDouble())))
+            val numSqrt = BigInteger.valueOf(kotlin.math.sqrt(rTemp.mNum.toDouble()).roundToLong())
             if (numSqrt.multiply(numSqrt) != rTemp.mNum) {
                 return null
             }
-            val denSqrt = BigInteger.valueOf(Math.round(Math.sqrt(rTemp.mDen.toDouble())))
+            val denSqrt = BigInteger.valueOf(kotlin.math.sqrt(rTemp.mDen.toDouble()).roundToLong())
             return if (denSqrt.multiply(denSqrt) != rTemp.mDen) {
                 null
             } else BoundedRational(numSqrt, denSqrt)
@@ -947,7 +950,7 @@ class BoundedRational {
             // powersOfTwo and powersOfFive.
             return if (den != BigInteger.ONE && den != BIG_MINUS_ONE) {
                 Integer.MAX_VALUE
-            } else Math.max(powersOfTwo, powersOfFive)
+            } else max(powersOfTwo, powersOfFive)
         }
     }
 }
