@@ -140,8 +140,7 @@ import kotlin.math.sqrt
  * a description which describes the exact answer, and can be used to
  * later approximate it to arbitrary precision.
  *
- *
- * When approximations are generated, <I>e.g.</I> for output, they are
+ * When approximations are generated, *e.g.* for output, they are
  * accurate to the requested precision; no cumulative rounding errors
  * are visible.
  * In order to achieve this precision, the approximation function will often
@@ -155,34 +154,29 @@ import kotlin.math.sqrt
  * computed by a symbolic algebra system, for testing of accuracy claims
  * for floating point code on small inputs, or the like.
  *
- *
  * We expect that the vast majority of uses will ignore the particular
- * implementation, and the member functions <TT>approximate</TT>
- * and <TT>approxGet</TT>.  Such applications will treat <TT>CR</TT> as
+ * implementation, and the member functions `approximate`
+ * and `approxGet`.  Such applications will treat `CR` as
  * a conventional numerical type, with an interface modeled on
- * <TT>java.math.BigInteger</TT>.  No subclasses of <TT>CR</TT>
+ * `java.math.BigInteger`.  No subclasses of `CR`
  * will be explicitly mentioned by such a program.
- *
  *
  * All standard arithmetic operations, as well as a few algebraic
  * and transcendental functions are provided.  Constructive reals are
  * immutable; thus all of these operations return a new constructive real.
  *
- *
  * A few uses will require explicit construction of approximation functions.
- * The requires the construction of a subclass of <TT>CR</TT> with
- * an overridden <TT>approximate</TT> function.  Note that <TT>approximate</TT>
- * should only be defined, but never called.  <TT>approxGet</TT>
+ * The requires the construction of a subclass of `CR` with
+ * an overridden `approximate` function.  Note that `approximate`
+ * should only be defined, but never called.  `approxGet`
  * provides the same functionality, but adds the caching necessary to obtain
  * reasonable performance.
  *
+ * Any operation may throw `AbortedException` if the thread
+ * in which it is executing is interrupted.  (`InterruptedException`
+ * cannot be used for this purpose, since `CR` inherits from `Number`.)
  *
- * Any operation may throw <TT>com.hp.creals.AbortedException</TT> if the thread
- * in which it is executing is interrupted.  (<TT>InterruptedException</TT>
- * cannot be used for this purpose, since CR inherits from <TT>Number</TT>.)
- *
- *
- * Any operation may also throw <TT>com.hp.creals.PrecisionOverflowException</TT>
+ * Any operation may also throw `PrecisionOverflowException`
  * If the precision request generated during any sub-calculation overflows
  * a 28-bit integer.  (This should be extremely unlikely, except as an
  * outcome of a division by zero, or other erroneous computation.)
@@ -191,7 +185,7 @@ import kotlin.math.sqrt
 abstract class CR : java.lang.Number() {
 
     /**
-     * The smallest precision value with which the above has been called.
+     * The smallest precision value with which the method [approximate] has been called.
      */
     @Transient
     internal var minPrec: Int = 0
@@ -205,6 +199,7 @@ abstract class CR : java.lang.Number() {
      */
     @Transient
     internal var apprValid = false
+
     // CR is the basic representation of a number.
     // Abstractly this is a function for computing an approximation
     // plus the current best approximation.
@@ -227,9 +222,9 @@ abstract class CR : java.lang.Number() {
     /**
      * Indicates that the number of bits of precision requested by
      * a computation on constructive reals required more than 28 bits,
-     * and was thus in danger of overflowing an int.
+     * and was thus in danger of overflowing an `int`.
      * This is likely to be a symptom of a diverging computation,
-     * <I>e.g.</I> division by zero.
+     * *e.g.* division by zero.
      */
     class PrecisionOverflowException : RuntimeException {
         constructor() : super()
@@ -239,30 +234,37 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Must be defined in subclasses of <TT>CR</TT>.
-     * Most users can ignore the existence of this method, and will
-     * not ever need to define a <TT>CR</TT> subclass.
-     * Returns value / 2 ** precision rounded to an integer.
-     * The error in the result is strictly < 1.
-     * Informally, approximate(n) gives a scaled approximation
-     * accurate to 2**n.
-     * Implementations may safely assume that precision is
-     * at least a factor of 8 away from overflow.
-     * Called only with the lock on the <TT>CR</TT> object
+     * Must be defined in subclasses of [CR]. Most users can ignore the existence of this method,
+     * and will not ever need to define a [CR] subclass. Returns value / 2 ** precision rounded to
+     * an integer. The error in the result is strictly < 1. Informally, approximate(n) gives a
+     * scaled approximation accurate to 2**n. Implementations may safely assume that precision is
+     * at least a factor of 8 away from overflow. Called only with the lock on the [CR] object
      * already held.
+     *
+     * @param precision number of bits of precision required.
+     * @return A [BigInteger] which is an approximation of our value with [precision] bits of
+     * precision scaled by 2 ** [precision].
      */
     protected abstract fun approximate(precision: Int): BigInteger
 
-    // Identical to approximate(), but maintain and update cache.
-
     /**
-     * Returns value / 2 ** prec rounded to an integer.
-     * The error in the result is strictly < 1.
-     * Produces the same answer as <TT>approximate</TT>, but uses and
-     * maintains a cached approximation.
-     * Normally not overridden, and called only from <TT>approximate</TT>
-     * methods in subclasses.  Not needed if the provided operations
-     * on constructive reals suffice.
+     * Identical to approximate(), but maintain and update cache. Returns value / 2 ** prec rounded
+     * to an integer. The error in the result is strictly < 1. Produces the same answer as
+     * [approximate], but uses and maintains a cached approximation. Normally not overridden, and
+     * called only from [approximate] methods in subclasses. Not needed if the provided operations
+     * on constructive reals suffice. First we call our method [checkPrec] to check that [precision]
+     * is at least a factor of 8 away from overflowing the integer used to hold a precision spec (it
+     * throws [PrecisionOverflowException] if it is not). Then if our [apprValid] field is *true*
+     * (there is a valid cached approximation available) and [precision] is greater than or equal to
+     * our field [minPrec] (the precision of the cached value in [maxAppr] is better than needed) we
+     * return [maxAppr] scaled by our [scale] method by [minPrec] minus [precision]. Otherwise we
+     * initialize our `val result` to the [BigInteger] returned by our [approximate] method for
+     * precision [precision], set our [minPrec] field to [precision], set our [maxAppr] field to
+     * `result`, set our [apprValid] field to *true* and return result.
+     *
+     * @param precision number of bits of precision required.
+     * @return A [BigInteger] which is an approximation of our value with [precision] bits of
+     * precision scaled by 2 ** [precision].
      */
     @Synchronized
     open fun approxGet(precision: Int): BigInteger {
@@ -278,12 +280,16 @@ abstract class CR : java.lang.Number() {
         }
     }
 
-    // Return the position of the msd.
-    // If x.msd() == n then
-    // 2**(n-1) < abs(x) < 2**(n+1)
-    // This initial version assumes that maxAppr is valid
-    // and sufficiently removed from zero
-    // that the msd is determined.
+    /**
+     * Return the position of the most significant digit.
+     *
+     * If x.msd() == n then 2**(n-1) < abs(x) < 2**(n+1)
+     *
+     * This initial version assumes that [maxAppr] is valid and sufficiently removed from zero
+     * that the most significant digit is determinable.
+     *
+     * @return the position of the most significant digit.
+     */
     internal fun knownMsd(): Int {
         val firstDigit: Int
         val length: Int = if (maxAppr!!.signum() >= 0) {
@@ -1054,7 +1060,6 @@ abstract class CR : java.lang.Number() {
  * A specialization of CR for cases in which approximate() calls to increase evaluation precision
  * are somewhat expensive. If we need to (re)evaluate, we speculatively evaluate to slightly higher
  * precision, minimizing reevaluations.
- *
  *
  * Note that this requires any arguments to be evaluated to higher precision than absolutely
  * necessary. It can thus potentially result in lots of wasted effort, and should be used
