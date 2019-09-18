@@ -288,6 +288,11 @@ abstract class CR : java.lang.Number() {
      * This initial version assumes that [maxAppr] is valid and sufficiently removed from zero
      * that the most significant digit is determinable.
      *
+     * First we declare our `val firstDigit` to be an [Int], then we initialize our `val length` to
+     * the [Int] bit length of our field [maxAppr] if [maxAppr] is greater than or equal to 0, or to
+     * the bit length of the negative of [maxAppr] if it is negative. We then set `firstDigit` to
+     * [minPrec] plus `length` minus 1 and return `firstDigit` to the caller.
+     *
      * @return the position of the most significant digit.
      */
     internal fun knownMsd(): Int {
@@ -301,8 +306,21 @@ abstract class CR : java.lang.Number() {
         return firstDigit
     }
 
-    // This version may return Integer.MIN_VALUE if the correct
-    // answer is < n.
+    /**
+     * Return the position of the most significant digit. This version may return Integer.MIN_VALUE
+     * if the correct answer is < [n]. If our [apprValid] field is *false* (we do not have a valid
+     * cached approximation yet) or [maxAppr] is less than or equal to the constant [big1]
+     * ([BigInteger.ONE]) and greater than or equal to the constant [bigm1] (the [BigInteger] of -1)
+     * we call our [approxGet] method for a precision of [n] minus 1, and if the absolute value of
+     * cached value it calculates for our field [maxAppr] is less than or equal to the constant [big1]
+     * we return [Integer.MIN_VALUE] since the most significant digit could still be arbitrarily far
+     * to the right. Otherwise we now know we have a valid cached approximation so we return the
+     * value returned by our [knownMsd] method to the caller.
+     *
+     * @param n the precision of the approximation we are to use when we search for the most
+     * significant digit.
+     * @return the position of the most significant digit.
+     */
     internal fun msd(n: Int): Int {
         @Suppress("ReplaceCallWithBinaryOperator")
         if (!apprValid || maxAppr!!.compareTo(big1) <= 0 && maxAppr!!.compareTo(bigm1) >= 0) {
@@ -315,9 +333,28 @@ abstract class CR : java.lang.Number() {
         return knownMsd()
     }
 
-
-    // Functionally equivalent, but iteratively evaluates to higher
-    // precision.
+    /**
+     * Return the position of the most significant digit. Functionally equivalent to our [msd] method,
+     * but iteratively evaluates to higher precision. First we initialize our [Int] `var prec` to 0.
+     * Then we loop while `prec` is greater than [n] plus 30:
+     *  - We initialize our `val msd` to the [Int] returned by our method [msd] for a precision of
+     *  `prec`.
+     *  - If `msd` is not equal to [Integer.MIN_VALUE] we return `msd` to the caller.
+     *  - Otherwise we call our method [checkPrec] to have it check that `prec` is at least a factor
+     *  of 8 away from overflowing the integer used to hold a precision spec (it throws the exception
+     *  [PrecisionOverflowException] if it is not)
+     *  - We then check whether our thread has been interrupted or our [pleaseStop] field set to
+     *  *true* in which case we throw the exception [AbortedException].
+     *  - We now want to try with a higher precision so we multiply `prec` by three halves and
+     *  subtract 16 then loop around to try again.
+     *
+     * If our loop fails to find the most significant digit we return the value returned by our
+     * method [msd] for a precision of [n] to the caller.
+     *
+     * @param n the precision of the approximation we are to use when we iteratively search for the
+     * most significant digit.
+     * @return the position of the most significant digit.
+     */
     internal fun iterMsd(n: Int): Int {
         var prec = 0
 
@@ -333,15 +370,25 @@ abstract class CR : java.lang.Number() {
         return msd(n)
     }
 
-    // This version returns a correct answer eventually, except
-    // that it loops forever (or throws an exception when the
-    // requested precision overflows) if this constructive real is zero.
+    /**
+     * Return the position of the most significant digit. This version returns a correct answer
+     * eventually, except that it loops forever (or throws an exception when the requested
+     * precision used by [iterMsd] overflows) if this constructive real is zero. We just return
+     * the value returned by our our [iterMsd] method for a precision of [Integer.MIN_VALUE].
+     *
+     * @return the position of the most significant digit.
+     */
     internal fun msd(): Int {
         return iterMsd(Integer.MIN_VALUE)
     }
 
-    // Natural log of 2.  Needed for some pre-scaling below.
-    // ln(2) = 7ln(10/9) - 2ln(25/24) + 3ln(81/80)
+    /**
+     * Natural log of 2. Needed for some pre-scaling below.
+     *
+     * ln(2) = 7ln(10/9) - 2ln(25/24) + 3ln(81/80)
+     *
+     * @return a [PrescaledLnCR] instance constructed from *this* minus the [CR] constant [ONE].
+     */
     internal fun simpleLn(): CR {
         return PrescaledLnCR(this.subtract(ONE))
     }
@@ -349,16 +396,28 @@ abstract class CR : java.lang.Number() {
     // Public operations.
 
     /**
-     * Return 0 if x = y to within the indicated tolerance,
-     * -1 if x < y, and +1 if x > y.  If x and y are indeed
-     * equal, it is guaranteed that 0 will be returned.  If
-     * they differ by less than the tolerance, anything
-     * may happen.  The tolerance allowed is
-     * the maximum of (abs(this)+abs(x))*(2**r) and 2**a
+     * Return 0 if [x] = *this* to within the indicated tolerance, -1 if [x] < *this*, and +1 if
+     * [x] > *this*.  If [x] and *this* are indeed equal, it is guaranteed that 0 will be returned.
+     * If they differ by less than the tolerance, anything may happen. The tolerance allowed is the
+     * maximum of (abs(*this*)+abs([x]))*(2**[r]) and 2**[a]. We initialize our `val thisMsd` to the
+     * [Int] location of the most significant digit or *this* returned by our [iterMsd] method for a
+     * precision of [a]. We initialize our `val xMsd` to the [Int] location of the most significant
+     * digit or [x] returned by our [iterMsd] method for a precision of `thisMsd` is `thisMsd` is
+     * greater than [a] or a precision of [a] if it is not. We initialize our `val maxMsd` to the
+     * larger of `xMsd` and `thisMsd`. If `maxMsd` is equal to [Integer.MIN_VALUE] we return 0 ([x]
+     * and *this* are equal). Otherwise we call our method [checkPrec] to have it check that `r` is
+     * at least a factor of 8 away from overflowing the integer used to hold a precision spec (it
+     * throws the exception [PrecisionOverflowException] if it is not). If we pass this check we
+     * then initialize our `val rel` to `maxMsd` plus [r], and our `val absPrec` to `rel` if `rel`
+     * is greater than [a] or to [a] is it is not. Finally we return the value returned by our
+     * approximate [compareTo] method when it compares [x] to *this* for an absolute tolerance of
+     * `absPrec`,
      *
      * @param x The other constructive real
      * @param r Relative tolerance in bits
      * @param a Absolute tolerance in bits
+     * @return 0 if [x] = *this* to within the indicated tolerance, -1 if [x] < *this*, and +1 if
+     * [x] > *this*.
      */
     fun compareTo(x: CR, r: Int, a: Int): Int {
         val thisMsd = iterMsd(a)
@@ -374,14 +433,14 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Approximate comparison with only an absolute tolerance.
-     * Identical to the three argument version, but without a relative
-     * tolerance.
-     * Result is 0 if both constructive reals are equal, indeterminate
-     * if they differ by less than 2**a.
+     * Approximate comparison with only an absolute tolerance. Identical to the three argument
+     * version, but without a relative tolerance. Result is 0 if both constructive reals are equal,
+     * indeterminate if they differ by less than 2**[a].
      *
      * @param x The other constructive real
      * @param a Absolute tolerance in bits
+     * @return 0 if [x] = *this* to within the indicated tolerance, -1 if [x] < *this*, and +1 if
+     * [x] > *this*.
      */
     fun compareTo(x: CR, a: Int): Int {
         val neededPrec = a - 1
