@@ -396,13 +396,13 @@ abstract class CR : java.lang.Number() {
     // Public operations.
 
     /**
-     * Return 0 if [x] = *this* to within the indicated tolerance, -1 if [x] < *this*, and +1 if
-     * [x] > *this*.  If [x] and *this* are indeed equal, it is guaranteed that 0 will be returned.
+     * Return 0 if *this* = [x] to within the indicated tolerance, -1 if *this* < [x], and +1 if
+     * *this* > [x].  If [x] and *this* are indeed equal, it is guaranteed that 0 will be returned.
      * If they differ by less than the tolerance, anything may happen. The tolerance allowed is the
      * maximum of (abs(*this*)+abs([x]))*(2**[r]) and 2**[a]. We initialize our `val thisMsd` to the
      * [Int] location of the most significant digit or *this* returned by our [iterMsd] method for a
      * precision of [a]. We initialize our `val xMsd` to the [Int] location of the most significant
-     * digit or [x] returned by our [iterMsd] method for a precision of `thisMsd` is `thisMsd` is
+     * digit or [x] returned by our [iterMsd] method for a precision of `thisMsd` if `thisMsd` is
      * greater than [a] or a precision of [a] if it is not. We initialize our `val maxMsd` to the
      * larger of `xMsd` and `thisMsd`. If `maxMsd` is equal to [Integer.MIN_VALUE] we return 0 ([x]
      * and *this* are equal). Otherwise we call our method [checkPrec] to have it check that `r` is
@@ -416,8 +416,8 @@ abstract class CR : java.lang.Number() {
      * @param x The other constructive real
      * @param r Relative tolerance in bits
      * @param a Absolute tolerance in bits
-     * @return 0 if [x] = *this* to within the indicated tolerance, -1 if [x] < *this*, and +1 if
-     * [x] > *this*.
+     * @return 0 if *this* = [x] to within the indicated tolerance, -1 if *this* < [x], and +1 if
+     * *this* > [x].
      */
     fun compareTo(x: CR, r: Int, a: Int): Int {
         val thisMsd = iterMsd(a)
@@ -435,12 +435,20 @@ abstract class CR : java.lang.Number() {
     /**
      * Approximate comparison with only an absolute tolerance. Identical to the three argument
      * version, but without a relative tolerance. Result is 0 if both constructive reals are equal,
-     * indeterminate if they differ by less than 2**[a].
+     * indeterminate if they differ by less than 2**[a]. First we initialize our `val neededPrec` to
+     * [a] minus 1, initialize `val thisAppr` to the [BigInteger] returned by our [approxGet] method
+     * for a precision of `neededPrec`, and initialize `val xAppr` to the [BigInteger] returned by
+     * the [approxGet] method of [x]. We then initialize `val comp1` to the [Int] returned when the
+     * [compareTo] method of `thisAppr` compares itself to the quantity `xAppr` plus the constant
+     * [big1] (one). If `comp1` is greater than 0 we return 1. Otherwise we initialize our `val comp2`
+     * to the [Int] returned when the [compareTo] method of `thisAppr` compares itself to the quantity
+     * `xAppr` minus the constant [big1]. If `comp2` is less than 0 we return -1, otherwise we return
+     * 0.
      *
      * @param x The other constructive real
      * @param a Absolute tolerance in bits
-     * @return 0 if [x] = *this* to within the indicated tolerance, -1 if [x] < *this*, and +1 if
-     * [x] > *this*.
+     * @return 0 if *this* = [x] to within the indicated tolerance, -1 if *this* < [x], and +1 if
+     * *this* > [x].
      */
     fun compareTo(x: CR, a: Int): Int {
         val neededPrec = a - 1
@@ -453,12 +461,22 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Return -1 if <TT>this &lt; x</TT>, or +1 if <TT>this &gt; x</TT>.
-     * Should be called only if <TT>this != x</TT>.
-     * If <TT>this == x</TT>, this will not terminate correctly; typically it
-     * will run until it exhausts memory.
-     * If the two constructive reals may be equal, the two or 3 argument
-     * version of compareTo should be used.
+     * Return -1 if *this* < [x], or +1 if *this* > [x]. Should be called only if *this* != [x].
+     * If *this* == [x], this will not terminate correctly; typically it will run until it exhausts
+     * memory. If the two constructive reals may be equal, the two or 3 argument version of [compareTo]
+     * should be used. First we initialize our `var a` to -20. Then we loop "forever":
+     *  - We call our method [checkPrec] to have it check that `a` is at least a factor of 8 away
+     *  from overflowing the integer used to hold a precision spec (it throws the exception
+     *  [PrecisionOverflowException] if it is not).
+     *  - If we pass this check we initialize our `val result` to the [Int] returned by our two
+     *  argument [compareTo] method when it compares *this* to [x] for a tolerance of `a`.
+     *  - If `result` is not 0 we return `result` to the caller.
+     *  - Otherwise we check to see if our thread was interrupted or our [pleaseStop] variable was
+     *  set to *true* and if so we throw [AbortedException].
+     *  - If we are clear to keep running we multiply `a` by 2 and loop around to try again.
+     *
+     * @param x The other constructive real
+     * @return -1 if *this* < [x], and +1 if *this* > [x]. Loops until overflow is *this* = [x].
      */
     operator fun compareTo(x: CR): Int {
         var a = -20
@@ -474,7 +492,18 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Equivalent to <TT>compareTo(CR.valueOf(0), a)</TT>
+     * Equivalent to a call to the [compareTo] method to compare *this* to a [CR] constructed to hold
+     * 0 with a tolerance of [a]. If our [apprValid] field is *true* (indicating we have a valid
+     * cached approximation) we initialize our `val quickTry` to the [Int] returned by the `signum`
+     * method of our cached approximation [maxAppr]. If `quickTry` is not equal to 0 we return it to
+     * the caller. Otherwise we initialize our `val neededPrec` to [a] minus 1, and initialize our
+     * `val thisAppr` to the [BigInteger] approximation returned by our [approxGet] to a precision
+     * of `neededPrec`. Then we return the value returned by the `signum` method of `thisAppr` to
+     * the caller.
+     *
+     * @param a Absolute tolerance in bits
+     * @return 0 if *this* = 0 to within the indicated tolerance, -1 if *this* < 0, and +1 if
+     * *this* > 0.
      */
     fun signum(a: Int): Int {
         if (apprValid) {
@@ -487,12 +516,21 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Return -1 if negative, +1 if positive.
-     * Should be called only if <TT>this != 0</TT>.
-     * In the 0 case, this will not terminate correctly; typically it
-     * will run until it exhausts memory.
-     * If the two constructive reals may be equal, the one or two argument
-     * version of signum should be used.
+     * Return -1 if *this* is negative, +1 if it is positive. Should be called only if *this* != 0.
+     * In the 0 case, this will not terminate correctly; typically it will run until it exhausts
+     * memory. If the two constructive reals may be equal, the one or two argument version of `signum`
+     * should be used. First we initialize our `var a` to -20. Then we loop "forever":
+     *  - We call our method [checkPrec] to have it check that `a` is at least a factor of 8 away
+     *  from overflowing the integer used to hold a precision spec (it throws the exception
+     *  [PrecisionOverflowException] if it is not).
+     *  - If we pass this check we initialize our `val result` to the [Int] returned by our `signum`
+     *  method when it compares *this* to 0 for a tolerance of `a`.
+     *  - If `result` is not 0 we return `result` to the caller.
+     *  - Otherwise we check to see if our thread was interrupted or our [pleaseStop] variable was
+     *  set to *true* and if so we throw [AbortedException].
+     *  - If we are clear to keep running we multiply `a` by 2 and loop around to try again.
+     *
+     * @return -1 if *this* is negative, +1 if it is positive.
      */
     fun signum(): Int {
         var a = -20
@@ -508,11 +546,34 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Return a textual representation accurate to <TT>n</TT> places
-     * to the right of the decimal point.  <TT>n</TT> must be non-negative.
+     * Return a textual representation accurate to [n] places to the right of the decimal point.
+     * [n] must be non-negative. First we declare our `val scaledCR` to be a [CR]. Then if [radix]
+     * is equal to 16 we set `scaledCR` to a [CR] constructed from *this* shifted left by 4 times
+     * [n], if it is not equal to 16 we initialize our `val scaleFactor` to a [BigInteger] which
+     * is [radix] raised to the power [n] and set `scaledCR` to *this* times a [CR] constructed
+     * from `scaleFactor`.
+     *
+     * Having calculated a `scaledCR` from *this* we initialize our `val scaledInt` to the [BigInteger]
+     * approximation of `scaledCR` for a precision of 0, and initialize our `var scaledString` to
+     * the string value in radix [radix] of the absolute value of `scaledInt`. We then declare our
+     * `var result` to be a [String]. If [n] is 0 (no digits to the right of decimal point needed)
+     * we just set `result` to `scaledString`, otherwise we initialize our `var len` to the length
+     * of `scaledString`. If `len` is less than or equal to [n] we need to add leading zeroes so we
+     * initialize our `val z` to the [String] of [n] plus 1 minus `len` returned by our [zeroes]
+     * method, prepend `z` to `scaledString` and set `len` to [n] plus 1.
+     *
+     * Next we initialize our `val whole` to the substring of `scaledString` from index 0 to index
+     * `len` minus [n], and initialize our `val fraction` to the rest of `scaledString` from index
+     * `len` minus [n] to its end. We then set `result` to the formed by concatenating `whole`
+     * followed a decimal point followed by `fraction`.
+     *
+     * If `scaledInt` is negative we prepend a minus sign to `result`. Finally we return `result`
+     * to the caller.
      *
      * @param n     Number of digits (>= 0) included to the right of decimal point
      * @param radix Base ( >= 2, <= 16) for the resulting representation.
+     * @return a textual representation of *this* in radix [radix] accurate to [n] places to the
+     * right of the decimal point.
      */
     @JvmOverloads
     fun toString(n: Int, radix: Int = 10): String {
@@ -547,25 +608,42 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Equivalent to <TT>toString(10, 10)</TT>
+     * Equivalent to `toString(10, 10)`
+     *
+     * @return a textual representation of *this* in radix 10 accurate to 10 places to the
+     * right of the decimal point.
      */
     override fun toString(): String {
         return toString(10)
     }
 
     /**
-     * Return a textual scientific notation representation accurate
-     * to <TT>n</TT> places to the right of the decimal point.
-     * <TT>n</TT> must be non-negative.  A value smaller than
-     * <TT>radix</TT>**-<TT>m</TT> may be displayed as 0.
-     * The <TT>mantissa</TT> component of the result is either "0"
-     * or exactly <TT>n</TT> digits long.  The <TT>sign</TT>
-     * component is zero exactly when the mantissa is "0".
+     * Return a textual scientific notation representation accurate to [n] places to the right of
+     * the decimal point. [n] must be non-negative. A value smaller than [radix]**-[m] may be
+     * displayed as 0. The _mantissa_ component of the result is either "0" or exactly [n] digits
+     * long.  The _sign_ component is zero exactly when the _mantissa_ is "0". If [n] is less than
+     * or equal to 0 we throw an [ArithmeticException] "Bad precision argument". Otherwise we
+     * initialize our `val log2Radix` to the natural log of [radix] divided by the constant
+     * [doubleLog2] (this is the log base 2 of [radix]). We initialize our `val bigRadix` to a
+     * [BigInteger] constructed from [radix], and initialize our `val longMsdPrec` to the truncated
+     * [Long] value of `log2Radix` times [m]. If `longMsdPrec` is greater than [Integer.MAX_VALUE]
+     * or less than [Integer.MIN_VALUE] we throw a [PrecisionOverflowException]. Otherwise we
+     * initialize our `val msdPrec` to the [Int] value of `longMsdPrec`. We then call our method
+     * [checkPrec] to have it check that `msdPrec` is at least a factor of 8 away from overflowing
+     * the integer used to hold a precision spec (it throws the exception [PrecisionOverflowException]
+     * if it is not). If we pass this check we initialize our `val msd` to the [Int] location of
+     * the most significant digit of *this* that our [iterMsd] finds for a precision of `msdPrec`
+     * minus 2. If `msd` is equal to [Integer.MIN_VALUE] (the most significant digit is arbitrarily
+     * far to the right) we return a [StringFloatRep] constructed with a sign of 0, a mantissa of
+     * "0", a radix of [radix] and an exponent of 0. Otherwise we initialize our `var exponent` to
+     * the rounded up [Int] value of `msd` divided by `log2Radix`, and our `val scaleExp` to `exponent`
+     * minus [n].
      *
-     * @param n     Number of digits (&gt; 0) included to the right of decimal point.
+     * @param n     Number of digits (> 0) included to the right of decimal point.
      * @param radix Base (  2,  16) for the resulting representation.
-     * @param m     Precision used to distinguish number from zero.
-     * Expressed as a power of m.
+     * @param m     Precision used to distinguish number from zero. Expressed as a power of [m].
+     * @return      A textual scientific notation representation in radix [radix] accurate to [n]
+     * places to the right of the decimal point.
      */
     fun toStringFloatRep(n: Int, radix: Int, m: Int): StringFloatRep {
         if (n <= 0) throw ArithmeticException("Bad precision argument")
