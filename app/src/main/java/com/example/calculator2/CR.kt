@@ -637,7 +637,25 @@ abstract class CR : java.lang.Number() {
      * far to the right) we return a [StringFloatRep] constructed with a sign of 0, a mantissa of
      * "0", a radix of [radix] and an exponent of 0. Otherwise we initialize our `var exponent` to
      * the rounded up [Int] value of `msd` divided by `log2Radix`, and our `val scaleExp` to `exponent`
-     * minus [n].
+     * minus [n]. We then declace our `val scale` to be a [CR], and if `scaleExp` is greater than 0
+     * we set it to the inverse of the value of ` bigRadix` raised to the power of `scaleExp` and if
+     * `scaleExp` is not greater than 0 we set `scale` to the value of `bigRadix` raised to the power
+     * of minus `scaleExp`. We initialize `var scaledRes` to *this* multiplied by `scale`, initialize
+     * `var scaledInt` to the [BigInteger] approximation returned by the `approxGet` method of
+     * `scaledRes` for a precision of 0, initialize `var sign` to the sign value of `scaledInt` that
+     * its `signum` method returns and initialize our `var scaledString` to the string value in radix
+     * [radix] of the absolute value of `scaledInt`. If the length of `scaledString` is less than [n]
+     * the exponent is too large so we loop while length of `scaledString` is less than [n] multiplying
+     * `scaledRes` by the value of `bigRadix`, subtracting 1 from `exponent`, setting `scaledInt` to
+     * the [BigInteger] approximation of `scaledRes` that its `approxGet` method returns for a precision
+     * of 0, setting `sign` to the sign value of `scaledInt` that its `signum` method returns, and
+     * setting `scaledString` to the string value in radix [radix] of the absolute value of `scaledInt`
+     * before looping around to see if the exponent is still too large. When we are done with our loop
+     * we check whether the length of `scaledString` is now greater than [n] and if it is the exponent
+     * is too small so we need to adjust by truncating so we add the length of `scaledString` minus [n]
+     * to `exponent`, and set `scaledString` to its substring from index 0 to index [n]. Finally we
+     * return a [StringFloatRep] constructed from `sign`, `scaledString`, `radix`, and `exponent` to
+     * the caller.
      *
      * @param n     Number of digits (> 0) included to the right of decimal point.
      * @param radix Base (  2,  16) for the resulting representation.
@@ -687,42 +705,79 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Return a BigInteger which differs by less than one from the
-     * constructive real.
+     * Return a BigInteger which differs by less than one from *this* constructive real. We just
+     * return the [BigInteger] approximation of *this* returned by our [approxGet] method for a
+     * precision of 0.
+     *
+     * @return a [BigInteger] approximation of *this* accurate to plus or minus 1.
      */
     fun bigIntegerValue(): BigInteger {
         return approxGet(0)
     }
 
     /**
-     * Return an int which differs by less than one from the
-     * constructive real.  Behavior on overflow is undefined.
+     * Return an int which differs by less than one from *this* constructive real. Behavior on
+     * overflow is undefined. We just return the [Int] value of the [BigInteger] approximation
+     * of *this* that our [bigIntegerValue] method returns.
+     *
+     * @return an [Int] approximation of *this* accurate to plus or minus 1.
      */
     override fun intValue(): Int {
         return bigIntegerValue().toInt()
     }
 
     /**
-     * Return an int which differs by less than one from the
-     * constructive real.  Behavior on overflow is undefined.
+     * Return a [Byte] which differs by less than one from *this* constructive real. Behavior on
+     * overflow is undefined. We just return the [Byte] value of the [BigInteger] approximation of
+     * *this* that our [bigIntegerValue] method returns.
+     *
+     * @return a [Byte] approximation of *this* accurate to plus or minus 1.
      */
     override fun byteValue(): Byte {
         return bigIntegerValue().toByte()
     }
 
     /**
-     * Return a long which differs by less than one from the
-     * constructive real.  Behavior on overflow is undefined.
+     * Return a [Long] which differs by less than one from *this* constructive real. Behavior on
+     * overflow is undefined.
+     *
+     * @return a [Long] approximation of *this* accurate to plus or minus 1.
      */
     override fun longValue(): Long {
         return bigIntegerValue().toLong()
     }
 
     /**
-     * Return a double which differs by less than one in the least
-     * represented bit from the constructive real.
-     * (We're in fact closer to round-to-nearest than that, but we can't and
-     * don't promise correct rounding.)
+     * Return a [Double] which differs by less than one in the least represented bit from *this*
+     * constructive real. (We're in fact closer to round-to-nearest than that, but we can't and
+     * don't promise correct rounding.) We initialize our `val myMsd` to the location of the most
+     * significant digit of *this* that is calculated by our [iterMsd] method for a precision of
+     * -1080. If `myMsd` is equal to [Integer.MIN_VALUE] we return 0.0 to the caller. Otherwise we
+     * initialize our `val neededPrec` to `myMsd` minus 60, initialize our `val scaledInt` to the
+     * [Double] value of the approximation of *this* returned by our [approxGet] method for a
+     * precision of `neededPrec`, initialize our `val mayUnderflow` to *true* is `neededPrec` is
+     * less than -1000, initialize our `var scaledIntRep` to the [Long] value returned by the
+     * [java.lang.Double.doubleToLongBits] method when it generates a representation of `scaledInt`
+     * according to the IEEE 754 floating-point "double format" bit layout, initialize our
+     * `val expAdj` to the [Long] of `neededPrec` plus 96 if `mayUnderflow` is *true* or to
+     * `neededPrec` if it is *false* and initialize our `val origExp` to the [Long] that results
+     * when we shift `scaledIntRep` right by 52 bits, and isolate the lower 11 bits my anding it
+     * with 0x7ff.
+     *
+     * We then check whether `origExp` plus `expAdj` has more than 11 bits (by masking the sum with
+     * the inverse of 0x7ff and checking if the result is not 0L) and if so we have an overflow so
+     * we return [java.lang.Double.NEGATIVE_INFINITY] if `scaledInt` is less than 0.0 or
+     * [java.lang.Double.POSITIVE_INFINITY] if it is greater than 0.0.
+     *
+     * If we have not overflowed we add `expAdj` shifted left by 52 bits to `scaledIntRep`, and
+     * initialize our `val result` to the [Double] value that corresponds to the bit representation
+     * contained in `scaledIntRep`. Then if `mayUnderflow` is *true* we initialize our `val two48`
+     * to the [Double] value of 1 shifted left by 48 bits and return `result` divided by `two48` then
+     * divided by `two48` again to the caller. If `mayUnderflow` is *false* we just return `result`
+     * to the caller.
+     *
+     * @return a [Double] approximation of *this* accurate to plus or minus 1 in the least
+     * represented bit.
      */
     override fun doubleValue(): Double {
         val myMsd = iterMsd(-1080 /* slightly > exp. range */)
@@ -754,8 +809,12 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Return a float which differs by less than one in the least
-     * represented bit from the constructive real.
+     * Return a float which differs by less than one in the least represented bit from *this*
+     * constructive real. We just return the [Float] value of the [Double] approximation of
+     * *this* that our [doubleValue] method calculates.
+     *
+     * @return a [Float] approximation of *this* accurate to plus or minus 1 in the least
+     * represented bit.
      */
     override fun floatValue(): Float {
         return doubleValue().toFloat()
@@ -764,17 +823,24 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Add two constructive reals.
+     * Add two constructive reals. We just return a new instance of [AddCR] constructed to add
+     * *this* and [x] when it is evaluated.
+     *
+     * @param x the other [CR] we are to add to *this*
+     * @return a new instance of [AddCR] constructed to add *this* and [x].
      */
     fun add(x: CR): CR {
-
         return AddCR(this, x)
     }
 
     /**
-     * Multiply a constructive real by 2**n.
+     * Multiply a constructive real by 2**n. First we call our method [checkPrec] to check that [n]
+     * is at least a factor of 8 away from overflowing the integer used to hold a precision spec (it
+     * throws [PrecisionOverflowException] if it is not). If [n] is okay we return a new instance of
+     * [ShiftedCR] constructed to shift *this* by [n] bits when it is evaluated.
      *
-     * @param n shift count, may be negative
+     * @param n shift count, may be negative.
+     * @return a new instance of [ShiftedCR] constructed to shift *this* by [n] bits.
      */
     fun shiftLeft(n: Int): CR {
         checkPrec(n)
@@ -782,9 +848,13 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Multiply a constructive real by 2**(-n).
+     * Multiply a constructive real by 2**(-n). First we call our method [checkPrec] to check that
+     * [n] is at least a factor of 8 away from overflowing the integer used to hold a precision spec
+     * (it throws [PrecisionOverflowException] if it is not). If [n] is okay we return a new instance
+     * of [ShiftedCR] constructed to shift *this* by minus [n] bits when it is evaluated.
      *
      * @param n shift count, may be negative
+     * @return a new instance of [ShiftedCR] constructed to shift *this* by [n] bits.
      */
     fun shiftRight(n: Int): CR {
         checkPrec(n)
@@ -792,57 +862,80 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Produce a constructive real equivalent to the original, assuming
-     * the original was an integer.  Undefined results if the original
-     * was not an integer.  Prevents evaluation of digits to the right
-     * of the decimal point, and may thus improve performance.
+     * Produce a constructive real equivalent to the original, assuming the original was an integer.
+     * Undefined results if the original was not an integer. Prevents evaluation of digits to the
+     * right of the decimal point, and may thus improve performance. We just return a new instance
+     * of [AssumedIntCR] constructed from *this*.
+     *
+     * @return a new instance of [AssumedIntCR] constructed from *this*.
      */
     fun assumeInt(): CR {
         return AssumedIntCR(this)
     }
 
     /**
-     * The additive inverse of a constructive real
+     * The additive inverse of a constructive real. We just return a new instance of [NegCR]
+     * constructed from *this*.
+     *
+     * @return a new instance of [NegCR] constructed from *this*.
      */
     fun negate(): CR {
         return NegCR(this)
     }
 
     /**
-     * The difference between two constructive reals
+     * The difference between the constructive real *this* and our parameter [x]. We just return a
+     * new instance of [AddCR] constructed from *this* and the negative of [x].
+     *
+     * @param x the [CR] we are to subtract from *this*.
+     * @return a new instance of [AddCR] constructed from *this* and the negative of [x].
      */
     fun subtract(x: CR): CR {
         return AddCR(this, x.negate())
     }
 
     /**
-     * The product of two constructive reals
+     * The product of the [CR] *this* and our [CR] parameter [x]. We just return a new instance of
+     * [MultCR] constructed from *this* and [x].
+     *
+     * @param x the [CR] we are to multiply *this* by.
+     * @return a new instance of [MultCR] constructed from *this* and [x].
      */
     fun multiply(x: CR): CR {
-
         return MultCR(this, x)
     }
 
     /**
-     * The multiplicative inverse of a constructive real.
-     * <TT>x.inverse()</TT> is equivalent to <TT>CR.valueOf(1).divide(x)</TT>.
+     * The multiplicative inverse of *this* constructive real. `x.inverse()` is equivalent to
+     * `CR.valueOf(1).divide(x)`. We just return a new instance of [InvCR] constructed from *this*.
+     *
+     * @return a new instance of [InvCR] constructed from *this*.
      */
     fun inverse(): CR {
         return InvCR(this)
     }
 
     /**
-     * The quotient of two constructive reals.
+     * The quotient of *this* constructive real divided by our parameter [x]. We just return a new
+     * instance of [MultCR] constructed from *this* and the inverse of [x].
+     *
+     * @param x the [CR] we are to divide *this* by.
+     * @return a new instance of [MultCR] constructed from *this* and the inverse of [x].
      */
     fun divide(x: CR): CR {
         return MultCR(this, x.inverse())
     }
 
     /**
-     * The real number <TT>x</TT> if <TT>this</TT> < 0, or <TT>y</TT> otherwise.
-     * Requires <TT>x</TT> = <TT>y</TT> if <TT>this</TT> = 0.
-     * Since comparisons may diverge, this is often
-     * a useful alternative to conditionals.
+     * The [CR] number [x] if *this* < 0, or [y] otherwise. Requires [x] = [y] if *this* = 0.
+     * Since comparisons may diverge, this is often a useful alternative to conditionals. We just
+     * return a new instance of [SelectCR] constructed to use *this* as the selector [CR] to compare
+     * against 0, [x] as the [CR] to select if *this* < 0, and [y] as the [CR] to select otherwise.
+     *
+     * @param x the [CR] to select if *this* < 0.
+     * @param y the [CR] to select if *this* >= 0.
+     * @return a new instance of [SelectCR] constructed to use *this* as the selector [CR] to compare
+     * against 0, [x] as the [CR] to select if *this* < 0, and [y] as the [CR] to select otherwise.
      */
     fun select(x: CR, y: CR): CR {
         return SelectCR(this, x, y)
