@@ -942,14 +942,26 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * The maximum of two constructive reals.
+     * The maximum of two constructive reals. We return the [CR] selected by the [select] method
+     * of the [CR] that results from subtracting [x] from *this* when it is given the choice between
+     * [x] and *this*, which would be [x] if *this* minus [x] is less than 0 ([x] is larger) or
+     * *this* if *this* minus [x] is greater than or equal to 0.
+     *
+     * @param x the other [CR] we are to compare *this* to
+     * @return the larger of *this* and our parameter [x]
      */
     fun max(x: CR): CR {
         return subtract(x).select(x, this)
     }
 
     /**
-     * The minimum of two constructive reals.
+     * The minimum of two constructive reals. We return the [CR] selected by the [select] method
+     * of the [CR] that results from subtracting [x] from *this* when it is given the choice between
+     * *this* and [x], which would be *this* if *this* minus [x] is less than 0 (*this* is smaller)
+     * or [x] if *this* minus [x] is greater than or equal to 0.
+     *
+     * @param x the other [CR] we are to compare *this* to
+     * @return the larger of *this* and our parameter [x]
      */
     fun min(x: CR): CR {
 
@@ -957,15 +969,28 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * The absolute value of a constructive reals.
-     * Note that this cannot be written as a conditional.
+     * The absolute value of a constructive real. Note that this cannot be written as a conditional.
+     * We return the [CR] returned by our [select] method which would be a [CR] constructed to be the
+     * negation of *this* if *this* is less than 0, or *this* if *this* is greater than or equal to
+     * 0.
+     *
+     * @return a [CR] which is the absolute value of *this*
      */
     fun abs(): CR {
         return select(negate(), this)
     }
 
     /**
-     * The exponential function, that is e**<TT>this</TT>.
+     * The exponential function, that is _e_ raised to the *this* power. We initialize our
+     * `val lowPrec` to -10, and our `val roughAppr` to the [BigInteger] approximation of *this*
+     * returned by our [approxGet] method for a precision of `lowPrec`. If `roughAppr` is bigger
+     * than [big2] (2) or less than [bigm2] (-2) we initialize our `val squareRoot` to the [CR]
+     * that results from evaluating the exponential function of *this* right shifted by 1 bit
+     * (divided by 2) and then we return the result of multiplying `squareRoot` by itself. If
+     * `roughAppr` is within the range [bigm2]..[big2] we just return a [PrescaledExpCR] constructed
+     * from *this*.
+     *
+     * @return a [CR] which is _e_ raised to the *this* power.
      */
     fun exp(): CR {
         val lowPrec = -10
@@ -982,7 +1007,27 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * The trigonometric cosine function.
+     * The trigonometric cosine function. First we initialize our `val halfpiMultiples` to the
+     * [BigInteger] we get when we divide [PI] by the [BigInteger] approximation of *this* that
+     * our [approxGet] method returns for a precision of -1, and initialize our `val absHalfpiMultiples`
+     * to the [BigInteger] absolute value of `halfpiMultiples`. We then have a *when* statement:
+     *  - When `absHalfpiMultiples` is greater than or equal to [big2] we want to subtract multiples
+     *  of PI first so we initialize our `val piMultiples` to the [BigInteger] that our [scale] method
+     *  returns after it divides `halfpiMultiples` by 2 (multiplies by 2^-1) and initialize our
+     *  `val adjustment` to the [CR] that results when we multiply [PI] by the [CR] constructed from
+     *  `piMultiples` that our [valueOf] method returns. Then if the least significant bit of
+     *  `piMultiples` is set (it is odd) we return the negation of the cosine of the [CR] that results
+     *  when we subtract `adjustment` from *this*. If `piMultiples` is even we just return the cosine
+     *  of the [CR] that results when we subtract `adjustment` from *this*.
+     *  - When the absolute value of the [BigInteger] approximation of *this* that our [approxGet]
+     *  method returns is greater than or equal to [big2] we want to scale further with double angle
+     *  formula so we initialize our `val cosHalf` to the [CR] that the [cos] method of the [CR]
+     *  that results when we right shift *this* by 1 bit (divide by 2) and return the [CR] that results
+     *  when we multiply `cosHalf` by itself, shift the result left by 1 bit (multiply by 2) and then
+     *  subtract [ONE] from that result.
+     *  - Otherwise our *else* statement returned a [PrescaledCosCR] constructed from *this*.
+     *
+     * @return a [CR] which is the cosine of *this*.
      */
     fun cos(): CR {
         val halfpiMultiples = divide(PI).approxGet(-1)
@@ -1009,14 +1054,28 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * The trigonometric sine function.
+     * The trigonometric sine function. We just return the [CR] that results when we subtract the
+     * cosine of *this* that our [cos] method returns from the constant [halfPi].
+     *
+     * @return a [CR] which is the sine of *this*.
      */
     fun sin(): CR {
         return halfPi.subtract(this).cos()
     }
 
     /**
-     * The trigonometric arc (inverse) sine function.
+     * The trigonometric arc (inverse) sine function. First we initialize our `val roughAppr` to the
+     * [BigInteger] approximation that our [approxGet] method returns for a precision of -10. Then
+     * we use a *when* expression to branch:
+     *  - When `roughAppr` is bigger than [big750] (a [BigInteger] of 750) we initialize our
+     *  `val newArg` to the [CR] that results when we subtract from [ONE] the [CR] that results
+     *  from multiplying *this* by itself, and then take the square root of that subtraction. We
+     *  then return the arc cosine of `newArg` that its [acos] method constructs.
+     *  - When `roughAppr` is smaller than [bigm750] (a [BigInteger] of -750) we return the negation
+     *  of the arc sine of negative *this*.
+     *  - Otherwise our else clause returns a [PrescaledAsinCR] constructed from *this*.
+     *
+     * @return a [CR] which is the arc (inverse) sine of *this*.
      */
     fun asin(): CR {
         val roughAppr = approxGet(-10)
@@ -1032,14 +1091,37 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * The trigonometric arc (inverse) cosine function.
+     * The trigonometric arc (inverse) cosine function. We just return the result of subtracting
+     * the arc sine of *this* that our [asin] method constructs from the constant [halfPi].
+     *
+     * @return a [CR] which is the arc (inverse) cosine of *this*.
      */
     fun acos(): CR {
         return halfPi.subtract(asin())
     }
 
     /**
-     * The natural (base e) logarithm.
+     * The natural (base e) logarithm. First we initialize our `val lowPrec` to minus 4, and initialize
+     * our `val roughAppr` to the [BigInteger] approximation of *this* that our [approxGet] method
+     * returns for a precision of `lowPrec`. If `roughAppr` is less than [big0] (ie. negative) we
+     * throw an [ArithmeticException] "ln(negative)". If `roughAppr` is less than or equal to
+     * [LOW_LN_LIMIT] we return the negation of the natural log of the inverse of *this*. If
+     * `roughAppr` is greater than or equal to [HIGH_LN_LIMIT] we branch on a comparison of
+     * `roughAppr` with the constant [SCALED_4]:
+     *  - If `roughAppr` is less than or equal to [SCALED_4] we initialize our `val quarter` to
+     *  the natural log of the square root of the square root of *this*, and return the [CR]
+     *  that results when we shift `quarter` left by 2 bits.
+     *  - If `roughAppr` is greater than [SCALED_4] we initialize our `val extraBits` to the [Int]
+     *  that results when we subtract 3 from the bit length of `roughAppr`, and initialize our
+     *  `val scaledResult` to the [CR] that results when we take the natural log of *this* shifted
+     *  right by `extraBits`. We then the [CR] that results when we add `scaledResult` and the
+     *  [CR] that results from multiplying the [CR] value of `extraBits` by the constant [ln2]
+     *  (the natural log of 2)
+     *
+     *  Otherwise we just return the [PrescaledLnCR] constructed from *this* that is returned by our
+     *  [simpleLn] method to our caller.
+     *
+     * @return a [CR] which is the natural logarithm of *this*.
      */
     @Suppress("ReplaceCallWithBinaryOperator")
     fun ln(): CR {
@@ -1065,7 +1147,9 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * The square root of a constructive real.
+     * The square root of *this* constructive real. We just return a [SqrtCR] constructed from *this*.
+     *
+     * @return a [CR] which is the square root of *this*
      */
     fun sqrt(): CR {
         return SqrtCR(this)
@@ -1075,7 +1159,14 @@ abstract class CR : java.lang.Number() {
 
         // First some frequently used constants, so we don't have to
         // recompute these all over the place.
+
+        /**
+         * The [BigInteger] constant 0
+         */
         internal val big0 = BigInteger.ZERO
+        /**
+         * The [BigInteger] constant 1
+         */
         internal val big1 = BigInteger.ONE
         internal val bigm1 = BigInteger.valueOf(-1)
         internal val big2 = BigInteger.valueOf(2)
