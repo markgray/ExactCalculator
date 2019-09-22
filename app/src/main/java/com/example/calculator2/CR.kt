@@ -383,7 +383,7 @@ abstract class CR : java.lang.Number() {
     }
 
     /**
-     * Natural log of 2. Needed for some pre-scaling below.
+     * Used when computing the natural log of 2. Needed for some pre-scaling below.
      *
      * ln(2) = 7ln(10/9) - 2ln(25/24) + 3ln(81/80)
      *
@@ -1168,38 +1168,81 @@ abstract class CR : java.lang.Number() {
          * The [BigInteger] constant 1
          */
         internal val big1 = BigInteger.ONE
+        /**
+         * The [BigInteger] constant minus 1
+         */
         internal val bigm1 = BigInteger.valueOf(-1)
+        /**
+         * The [BigInteger] constant 2
+         */
         internal val big2 = BigInteger.valueOf(2)
+        /**
+         * The [BigInteger] constant minus 2
+         */
         internal val bigm2 = BigInteger.valueOf(-2)
+        /**
+         * The [BigInteger] constant 3
+         */
         @Suppress("unused")
         internal val big3 = BigInteger.valueOf(3)
+        /**
+         * The [BigInteger] constant 6
+         */
         internal val big6 = BigInteger.valueOf(6)
+        /**
+         * The [BigInteger] constant 8
+         */
         internal val big8 = BigInteger.valueOf(8)
+        /**
+         * The [BigInteger] constant 10
+         */
         @Suppress("unused")
         internal val big10 = BigInteger.TEN
+        /**
+         * The [BigInteger] constant 750
+         */
         internal val big750 = BigInteger.valueOf(750)
+        /**
+         * The [BigInteger] constant minus 750
+         */
         internal val bigm750 = BigInteger.valueOf(-750)
 
         /**
          * Setting this to true requests that  all computations be aborted by
-         * throwing AbortedException.  Must be reset to false before any further
-         * computation.  Ideally Thread.interrupt() should be used instead, but
+         * throwing AbortedException. Must be reset to false before any further
+         * computation. Ideally Thread.interrupt() should be used instead, but
          * that doesn't appear to be consistently supported by browser VMs.
          */
         @Volatile
         var pleaseStop = false
 
         // Helper functions
+
+        /**
+         * Returns the log base 2 of its argument, rounded up to an [Int]. We initialize `val absN`
+         * to the absolute value of [n], then return the [Int] value of the rounded up result of
+         * dividing the natural log of `absN` plus 1 by the natural log of 2.
+         *
+         * @param n The number we are to find the log base 2 of.
+         * @return the  log base 2 of our parameter rounded up to an [Int].
+         */
         internal fun boundLog2(n: Int): Int {
             val absN = abs(n)
             return ceil(ln((absN + 1).toDouble()) / ln(2.0)).toInt()
         }
 
-        // Check that a precision is at least a factor of 8 away from
-        // overflowing the integer used to hold a precision spec.
-        // We generally perform this check early on, and then convince
-        // ourselves that none of the operations performed on precisions
-        // inside a function can generate an overflow.
+        /**
+         * Check that a precision is at least a factor of 8 away from overflowing the integer used
+         * to hold a precision spec. We generally perform this check early on, and then convince
+         * ourselves that none of the operations performed on precisions inside a function can
+         * generate an overflow. First we initialize our `val high` to [n] right shifted by 28 bits.
+         * We then initialize our `val highShifted` to [n] right shifted by 29 bits. If [n] is not
+         * in danger of overflowing then its 4 high order are identical so `high` should be 0 or -1,
+         * and `high` exclusive or'ed with `highShifted` should be 0. If this is not so [n] is in
+         * danger of overflowing so we throw [PrecisionOverflowException].
+         *
+         * @param n the precision value we need to check for overflow.
+         */
         internal fun checkPrec(n: Int) {
             val high = n shr 28
             // if n is not in danger of overflowing, then the 4 high order
@@ -1213,33 +1256,58 @@ abstract class CR : java.lang.Number() {
         }
 
         /**
-         * The constructive real number corresponding to a
-         * <TT>BigInteger</TT>.
+         * The constructive real number corresponding to a [BigInteger]. We just return a new
+         * instance of [IntCR] constructed from [n].
+         *
+         * @param n the [BigInteger] we are to construct a [CR] from.
+         * @return a new instance of [IntCR] constructed from [n].
          */
         fun valueOf(n: BigInteger): CR {
             return IntCR(n)
         }
 
         /**
-         * The constructive real number corresponding to a
-         * Java <TT>int</TT>.
+         * The constructive real number corresponding to a kotlin [Int]. We return the [CR] returned
+         * by our [valueOf] method when passed a [BigInteger] constructed from the [Long] value of
+         * our parameter [n].
+         *
+         * @param n the [Int] we are to construct a [CR] from.
+         * @return a new instance of [IntCR] constructed from [n].
          */
         fun valueOf(n: Int): CR {
             return valueOf(BigInteger.valueOf(n.toLong()))
         }
 
         /**
-         * The constructive real number corresponding to a
-         * Java <TT>long</TT>.
+         * The constructive real number corresponding to a kotlin [Long]. We return the [CR]
+         * returned by our [valueOf] method when passed a [BigInteger] constructed from the
+         * value of our parameter [n].
+         *
+         * @param n the [Long] we are to construct a [CR] from.
+         * @return a new instance of [IntCR] constructed from [n].
          */
         fun valueOf(n: Long): CR {
             return valueOf(BigInteger.valueOf(n))
         }
 
         /**
-         * The constructive real number corresponding to a
-         * Java <TT>double</TT>.
-         * The result is undefined if argument is infinite or NaN.
+         * The constructive real number corresponding to a kotlin [Double]. The result is undefined
+         * if argument is infinite or NaN. If the method [java.lang.Double.isNaN] determines that [n]
+         * is not a number we throw an [ArithmeticException] "Nan argument", and if the method
+         * [java.lang.Double.isInfinite] determines that [n] is infinite we throw an [ArithmeticException]
+         * "Infinite argument". Otherwise we initialize our `val negative` to *true* is [n] is less
+         * than 0, initialize our `val bits` to the [Long] that the [java.lang.Double.doubleToLongBits]
+         * method converts the absolute value of [n] to, initialize `var mantissa` to the masked off
+         * lower 52 bits of `bits`, initialize `val biasedExp` to `bits` shifted right by 52 bits,
+         * and initialize `val exp` by subtracting 1075 from `biasedExp`. If `biasedExp` is not equal
+         * to 0 we add 1 left shifted by 52 bits to `mantissa` and if `biasedExp` is 0 we left shift
+         * `mantissa` by 1 bit. We then initialize our `var result` to the [ShiftedCR] that the
+         * `shiftLeft` method of the [IntCR] that our `valueOf` method constructs from `mantissa`
+         * returns. If `negative` is *true* we then set `result` to the [NegCR] that the `negate`
+         * method of `result` constructs from `result`. Finally we return `result` to the caller.
+         *
+         * @param n the [Double] we are to construct a [CR] from.
+         * @return a new instance of [IntCR] constructed from [n].
          */
         fun valueOf(n: Double): CR {
             if (java.lang.Double.isNaN(n)) throw ArithmeticException("Nan argument")
@@ -1262,26 +1330,55 @@ abstract class CR : java.lang.Number() {
         }
 
         /**
-         * The constructive real number corresponding to a
-         * Java <TT>float</TT>.
-         * The result is undefined if argument is infinite or NaN.
+         * The constructive real number corresponding to a kotlin [Float]. The result is undefined
+         * if argument is infinite or NaN. We just return the [IntCR] that our `valueOf` method
+         * constructs from the [Double] value of [n].
+         *
+         * @param n the [Float] we are to construct a [CR] from.
+         * @return a new instance of [IntCR] constructed from [n].
          */
         @Suppress("unused")
         fun valueOf(n: Float): CR {
             return valueOf(n.toDouble())
         }
 
+        /**
+         * A [CR] constant for the [Int] 0
+         */
         @Suppress("unused")
         var ZERO = valueOf(0)
+
+        /**
+         * A [CR] constant for the [Int] 1
+         */
         var ONE = valueOf(1)
 
-        // Multiply k by 2**n.
-        internal fun shift(k: BigInteger, n: Int): BigInteger {
-            if (n == 0) return k
-            return if (n < 0) k.shiftRight(-n) else k.shiftLeft(n)
+        /**
+         * Multiply [k] by 2**[n]. When [n] is equal to 0 we return [k], when [n] is less than 0 we
+         * return [k] right shifted by minus [n] bits, and when [n] is greater than 0 we return [k]
+         * left shifted by [n] bits.
+         *
+         * @param k the [BigInteger] we are to multiply by 2**[n].
+         * @param n the exponent of the power of 2 we are to multiply [k] by.
+         * @return a [BigInteger] which is equal to [k] multiplied by 2**[n].
+         */
+        internal fun shift(k: BigInteger, n: Int): BigInteger = when {
+            n == 0 -> k
+            n < 0 -> k.shiftRight(-n)
+            else -> k.shiftLeft(n)
         }
 
-        // Multiply by 2**n, rounding result
+        /**
+         * Multiply [k] by 2**[n], rounding result. If [n] is greater than or equal to 0 we return
+         * [k] shifted left by [n] bits. Otherwise we initialize our `val adjK` to the [BigInteger]
+         * that our `shift` method creates when it shifts [k] by [n] plus 1 bits, with [big1] added
+         * to that result to round it. Then we return `adjK` shifted right by 1 bit.
+         *
+         * @param k the [BigInteger] we are to multiply by 2**[n].
+         * @param n the exponent of the power of 2 we are to multiply [k] by.
+         * @return a [BigInteger] which is equal to [k] multiplied by 2**[n], rounded if [n] is less
+         * than 0.
+         */
         internal fun scale(k: BigInteger, n: Int): BigInteger {
             return if (n >= 0) {
                 k.shiftLeft(n)
@@ -1291,8 +1388,15 @@ abstract class CR : java.lang.Number() {
             }
         }
 
-        // A helper function for toString.
-        // Generate a String containing n zeroes.
+        /**
+         * A helper function for [toString]. Generate a [String] containing [n] zeroes. First we
+         * initialize our `val a` to an array of [n] characters, then we loop over `i` from 0 until
+         * [n] setting each character in `a` to the zero character. When done we return a [String]
+         * constructed from `a`.
+         *
+         * @param n the number of zero characters in the [String] we are to generate.
+         * @return a [String] consisting of [n] zero characters.
+         */
         private fun zeroes(n: Int): String {
             val a = CharArray(n)
             for (i in 0 until n) {
@@ -1301,31 +1405,66 @@ abstract class CR : java.lang.Number() {
             return String(a)
         }
 
+        /**
+         * A constant [CR] constructed from a [CR] holding a constant 10 divided by a [CR] holding a
+         * constant 9
+         */
         internal var tenNinths = valueOf(10).divide(valueOf(9))
+        /**
+         * A constant [CR] constructed from a [CR] holding a constant 25 divided by a [CR] holding a
+         * constant 24
+         */
         internal var twentyfiveTwentyfourths = valueOf(25).divide(valueOf(24))
+        /**
+         * A constant [CR] constructed from a [CR] holding a constant 81 divided by a [CR] holding a
+         * constant 80
+         */
         internal var eightyoneEightyeths = valueOf(81).divide(valueOf(80))
+        /**
+         * A constant [CR] constructed from a [CR] holding a constant 7 multiplied by a [CR] holding
+         * the natural log of [tenNinths]. Used to compute [ln2] (natural log of 2).
+         */
         internal var ln2s1 = valueOf(7).multiply(tenNinths.simpleLn())
+        /**
+         * A constant [CR] constructed from a [CR] holding a constant 2 multiplied by a [CR] holding
+         * the natural log of [twentyfiveTwentyfourths]. Used to compute [ln2] (natural log of 2).
+         */
         internal var ln2s2 = valueOf(2).multiply(twentyfiveTwentyfourths.simpleLn())
+        /**
+         * A constant [CR] constructed from a [CR] holding a constant 3 multiplied by a [CR] holding
+         * the natural log of [eightyoneEightyeths]. Used to compute [ln2] (natural log of 2).
+         */
         internal var ln2s3 = valueOf(3).multiply(eightyoneEightyeths.simpleLn())
+        /**
+         * The natural log of 2: ln(2) = 7ln(10/9) - 2ln(25/24) + 3ln(81/80)
+         */
         internal var ln2 = ln2s1.subtract(ln2s2).add(ln2s3)
 
-        // Atan of integer reciprocal.  Used for atanPI.  Could perhaps be made
-        // public.
+        /**
+         * Atan of integer reciprocal. Used for [atanPI], the old method used to calculate PI (unused
+         * now). Could perhaps be made public.
+         *
+         * @param n the [Int] whose reciprocal we want to calculate the arctangent of.
+         * @return an [IntegralAtanCR] constructed to calculate the arctangent of 1/[n].
+         */
         internal fun atanReciprocal(n: Int): CR {
             return IntegralAtanCR(n)
         }
 
-        // Other constants used for PI computation.
+        /**
+         * A [CR] holding the constant 4, used for PI computation.
+         */
         internal var four = valueOf(4)
 
         /**
-         * Return the constructive real number corresponding to the given
-         * textual representation and radix.
+         * Return the constructive real number corresponding to the given textual representation
+         * and radix.
          *
          * @param s     [-] digit* [. digit*]
          * @param radix radix of number in our string parameter
+         * @return a [CR] constructed to hold the numeric conversion of [s] interpreted using the
+         * radix [radix].
          */
-
         @Suppress("unused")
         @Throws(NumberFormatException::class)
         fun valueOf(s: String, radix: Int): CR {
@@ -1362,10 +1501,11 @@ abstract class CR : java.lang.Number() {
         // sub-quadratic multiplication, but has high constant overhead.) Many other
         // atan-based formulas are possible, but based on superficial
         // experimentation, this is roughly as good as the more complex formulas.
-        @Suppress("unused")
-        var atanPI = four.multiply(four.multiply(atanReciprocal(5))
-                .subtract(atanReciprocal(239)))
         // pi/4 = 4*atan(1/5) - atan(1/239)
+        @Suppress("unused")
+        var atanPI = four
+                .multiply(four.multiply(atanReciprocal(5)).subtract(atanReciprocal(239)))
+
         internal var halfPi = PI.shiftRight(1)
 
         internal val LOW_LN_LIMIT = big8 /* sixteenths, i.e. 1/2 */
@@ -1697,8 +1837,7 @@ internal class IntegralAtanCR(var op: Int) : SlowCR() {
         //  Total rounding error in series computation is
         //  2*iterationsNeeded*base^calcPrecision,
         //  exclusive of error in op.
-        val calcPrecision = (precision - boundLog2(2 * iterationsNeeded)
-                - 2) // for error in op, truncation.
+        val calcPrecision = (precision - boundLog2(2 * iterationsNeeded) - 2) // for error in op, truncation.
         // Error in argument results in error of < 3/8 ulp.
         // Cumulative arithmetic rounding error is < 1/4 ulp.
         // Series truncation error < 1/4 ulp.
