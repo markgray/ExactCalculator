@@ -1458,12 +1458,25 @@ abstract class CR : java.lang.Number() {
 
         /**
          * Return the constructive real number corresponding to the given textual representation
-         * and radix.
+         * and radix. We initialize our `var len` to the length of [s], initialize `var startPos`
+         * to 0, declare `var pointPos` to be an [Int], and `val fraction` to be a [String]. Then
+         * while the character at index `startPos` in [s] is a blank we increment `startPos`, and
+         * while the character at index `len` minus 1 is a blank we decrement `len`. We then set
+         * `pointPos` to the index in [s] where we find a decimal point (starting from `startPos`).
+         * If `pointPos` is equal to -1 (a decimal point was not found) we set `pointPos` to `len`
+         * and set `fraction` to the string "0", otherwise we set `fraction` to the substring of [s]
+         * from `pointPos` plus 1 to `len`. In either case we initialize our `val whole` to the
+         * substring of [s] from `startPos` to `pointPos`, initialize our `val scaledResult` to the
+         * [BigInteger] constructed from the string `whole` concatenated` to `fraction` interpreted
+         * in radix [radix], and initialize our `val divisor` to a [BigInteger] constructed from the
+         * long value of [radix] then raised to the power of the length of `fraction`. Finally we
+         * return a [CR] calculated by dividing a [CR] constructed from `scaledResult` by a [CR]
+         * constructed from `divisor`.
          *
          * @param s     [-] digit* [. digit*]
          * @param radix radix of number in our string parameter
-         * @return a [CR] constructed to hold the numeric conversion of [s] interpreted using the
-         * radix [radix].
+         * @return a [CR] constructed to hold the conversion of [s] interpreted using the radix
+         * [radix] to a number.
          */
         @Suppress("unused")
         @Throws(NumberFormatException::class)
@@ -1487,30 +1500,55 @@ abstract class CR : java.lang.Number() {
             return valueOf(scaledResult).divide(valueOf(divisor))
         }
 
+        /**
+         * The natural log of 2.0 as a [Double].
+         */
         internal var doubleLog2 = ln(2.0)
 
         /**
-         * The ratio of a circle's circumference to its diameter.
+         * The ratio of a circle's circumference to its diameter, computed using the Gauss-Legendre
+         * alternating arithmetic-geometric mean algorithm.
          */
         var PI: CR = GlPiCR()
 
-        // Our old PI implementation. Keep this around for now to allow checking.
-        // This implementation may also be faster for BigInteger implementations
-        // that support only quadratic multiplication, but exhibit high performance
-        // for small computations.  (The standard Android 6 implementation supports
-        // sub-quadratic multiplication, but has high constant overhead.) Many other
-        // atan-based formulas are possible, but based on superficial
-        // experimentation, this is roughly as good as the more complex formulas.
-        // pi/4 = 4*atan(1/5) - atan(1/239)
+        /**
+         * Our old PI implementation. Keep this around for now to allow checking.
+         * This implementation may also be faster for BigInteger implementations
+         * that support only quadratic multiplication, but exhibit high performance
+         * for small computations.  (The standard Android 6 implementation supports
+         * sub-quadratic multiplication, but has high constant overhead.) Many other
+         * atan-based formulas are possible, but based on superficial
+         * experimentation, this is roughly as good as the more complex formulas.
+         *
+         *  - pi/4 = 4*atan(1/5) - atan(1/239)
+         */
         @Suppress("unused")
         var atanPI = four
                 .multiply(four.multiply(atanReciprocal(5)).subtract(atanReciprocal(239)))
 
+        /**
+         * Half of PI.
+         */
         internal var halfPi = PI.shiftRight(1)
 
+        /**
+         * The lower limit for the natural log of *this*, below LOW_LN_LIMIT we switch to using the
+         * natural log of the inverse of *this* (negated). The value interpreted as the number of
+         * sixteenths so its value is 1/2.
+         */
         internal val LOW_LN_LIMIT = big8 /* sixteenths, i.e. 1/2 */
+        /**
+         * The higher limit for the natural log of *this*, above HIGH_LN_LIMIT (24 sixteenths or 1.5)
+         * we cascade some [CR] instances and recursive calls of [ln] to speed things up.
+         */
         internal val HIGH_LN_LIMIT = BigInteger.valueOf((16 + 8).toLong() /* 1.5 */)
-        internal val SCALED_4 = BigInteger.valueOf((4 * 16).toLong())
+        /**
+         * Between HIGH_LN_LIMIT and SCALED_4 we use the natural log of the square root of the square
+         * root of *this* and shift the result left 2 bits, above SCALED_4 we use the natural log of
+         * *this* right shifted by the bit length of the current appoximation of *this* minus 3, then
+         * add the [CR] constructed of that shift multiplied by the natural log of 2.
+         */
+        internal val SCALED_4 = BigInteger.valueOf((4 * 16).toLong()) /* 4.0 */
     }
 
 }
@@ -1528,6 +1566,28 @@ abstract class CR : java.lang.Number() {
  */
 internal abstract class SlowCR : CR() {
 
+    /**
+     * Identical to approximate(), but maintain and update cache. Returns value / 2 ** prec rounded
+     * to an integer. The error in the result is strictly < 1. Produces the same answer as
+     * [approximate], but uses and maintains a cached approximation. First we call our method
+     * `checkPrec` to check that [precision] is at least a factor of 8 away from overflowing the
+     * integer used to hold a precision spec (it throws `PrecisionOverflowException` if it is not).
+     * Then if our [apprValid] field is *true* (there is a valid cached approximation available) and
+     * [precision] is greater than or equal to our field [minPrec] (the precision of the cached value
+     * in [maxAppr] is better than needed) we return [maxAppr] scaled by our `scale` method by
+     * [minPrec] minus [precision]. Otherwise we initialize our `val evalPrec` to [maxPrec] if
+     * [precision] is greater than or equal to [maxPrec], or to [precision] minus [precIncr] with
+     * the 5 low order bits cleared to 0's.
+     *
+     * Next we inialize our `val result` to the [BigInteger] approximation of *this* for a precision
+     * of `evalPrec` that our [approximate] method returns, set our [minPrec] field to `evalPrec`,
+     * our [maxAppr] to `maxAppr` and our [apprValid] field to *true*. Finally we return `result`
+     * scaled by our `scale` method by `evalPrec` minus [precision] bits.
+     *
+     * @param precision number of bits of precision required.
+     * @return A [BigInteger] which is an approximation of our value with [precision] bits of
+     * precision scaled by 2 ** [precision].
+     */
     @Synchronized
     override fun approxGet(precision: Int): BigInteger {
         checkPrec(precision)
@@ -1569,6 +1629,20 @@ internal class IntCR(var value: BigInteger) : CR() {
  */
 internal class AssumedIntCR(var value: CR) : CR() {
 
+    /**
+     * Returns value of *this* divided by 2^[precision] rounded to an integer. The error in the
+     * result is strictly < 1. Informally, approximate(n) gives a scaled approximation accurate to
+     * 2^n. Implementations may safely assume that precision is at least a factor of 8 away from
+     * overflow. Called only with the lock on the [CR] object already held. If [precision] is
+     * greater than or equal to 0 we return the [BigInteger] that the [approxGet] method of our
+     * field [value] returns for a precision of [precision], otherwise we return the [BigInteger]
+     * that our `scale` method returns when it scales the [BigInteger] that the [approxGet] method
+     * of our field [value] returns for a precision of 0 by minus [precision] bits.
+     *
+     * @param precision number of bits of precision required.
+     * @return A [BigInteger] which is an approximation of our value with [precision] bits of
+     * precision scaled by 2^[precision].
+     */
     override fun approximate(precision: Int): BigInteger {
         return if (precision >= 0) {
             value.approxGet(precision)
@@ -1588,7 +1662,7 @@ internal class AddCR(var op1: CR, var op2: CR) : CR() {
         // Args need to be evaluated so that each error is < 1/4 ulp.
         // Rounding error from the cale call is <= 1/2 ulp, so that
         // final error is < 1 ulp.
-        return scale(op1.approxGet(precision - 2).add(op2.approxGet(precision - 2)), -2)
+        return scale(op1.approxGet(precision-2).add(op2.approxGet(precision-2)),-2)
     }
 }
 
@@ -2059,16 +2133,16 @@ internal class SqrtCR : CR {
 /**
  * The constant PI, computed using the Gauss-Legendre alternating arithmetic-geometric
  * mean algorithm:
- * a[0] = 1
- * b[0] = 1/sqrt(2)
- * t[0] = 1/4
- * p[0] = 1
+ *  - `a[0] = 1`
+ *  - `b[0] = 1/sqrt(2)`
+ *  - `t[0] = 1/4`
+ *  - `p[0] = 1`
  *
- * a[n+1] = (a[ n ] + b[ n ])/2        (arithmetic mean, between 0.8 and 1)
- * b[n+1] = sqrt(a[ n ] * b[ n ])      (geometric mean, between 0.7 and 1)
- * t[n+1] = t[ n ] - (2^n)(a[ n ]-a[n+1])^2,  (always between 0.2 and 0.25)
+ *  - `a[n+1] = (a[ n ] + b[ n ])/2`        (arithmetic mean, between 0.8 and 1)
+ *  - `b[n+1] = sqrt(a[ n ] * b[ n ])`      (geometric mean, between 0.7 and 1)
+ *  - `t[n+1] = t[ n ] - (2^n)(a[ n ]-a[n+1])^2`,  (always between 0.2 and 0.25)
  *
- * pi is then approximated as (a[n+1]+b[n+1])^2 / 4*t[n+1].
+ * pi is then approximated as `(a[n+1]+b[n+1])^2 / 4*t[n+1]`.
  */
 @Suppress("MemberVisibilityCanBePrivate")
 internal class GlPiCR : SlowCR() {
