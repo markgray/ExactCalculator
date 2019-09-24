@@ -1658,20 +1658,40 @@ internal class AssumedIntCR(var value: CR) : CR() {
 @Suppress("MemberVisibilityCanBePrivate")
 internal class AddCR(var op1: CR, var op2: CR) : CR() {
 
+    /**
+     * Returns the approximate [BigInteger] result of adding our two [CR] fields divided by 2 raised
+     * to the power of [precision] rounded to an integer. The error in the result is strictly < 1.
+     * Approximate(n) gives a scaled approximation accurate to 2**n. We return the [BigInteger] which
+     * is scaled by minus 2 bits of the results of adding the [BigInteger] appoximation of [op1] that
+     * its `approxGet` method calculates for a precision of [precision] minus 2, to the [BigInteger]
+     * appoximation of [op2] that its `approxGet` method calculates for a precision of [precision]
+     * minus 2.
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return the scaled [BigInteger] approximation of the results of adding [op1] and [op2].
+     */
     override fun approximate(precision: Int): BigInteger {
         // Args need to be evaluated so that each error is < 1/4 ulp.
-        // Rounding error from the cale call is <= 1/2 ulp, so that
+        // Rounding error from the scale call is <= 1/2 ulp, so that
         // final error is < 1 ulp.
         return scale(op1.approxGet(precision-2).add(op2.approxGet(precision-2)),-2)
     }
 }
 
 /**
- * Representation of a CR multiplied by 2**n
+ * Representation of a [CR] multiplied by 2^[count].
  */
 @Suppress("MemberVisibilityCanBePrivate")
 internal class ShiftedCR(var op: CR, var count: Int) : CR() {
 
+    /**
+     * Returns the scaled [BigInteger] result of right shifting our [CR] field [op] by [count] bits.
+     * We just return the [BigInteger] that the `approxGet` method of [op] generates for a precision
+     * of [precision] minus [count].
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return the scaled [BigInteger] result of right shifting our [CR] field [op] by [count] bits.
+     */
     override fun approximate(precision: Int): BigInteger {
         return op.approxGet(precision - count)
     }
@@ -1683,22 +1703,53 @@ internal class ShiftedCR(var op: CR, var count: Int) : CR() {
 @Suppress("MemberVisibilityCanBePrivate")
 internal class NegCR(var op: CR) : CR() {
 
+    /**
+     * Returns the scaled [BigInteger] result of negating our [CR] field [op]. We just negate and
+     * return the [BigInteger] that the `approxGet` method of [op] calculates for a precision of
+     * [precision].
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return the scaled [BigInteger] result of negating our [CR] field [op].
+     */
     override fun approximate(precision: Int): BigInteger {
         return op.approxGet(precision).negate()
     }
 }
 
 /**
- * Representation of: op1 if selector < 0, op2 if selector >= 0. Assumes x = y if s = 0
+ * Representation of: [op1] if [selector] < 0, [op2] if [selector] >= 0. Assumes x = y if s = 0 (?)
  */
 @Suppress("MemberVisibilityCanBePrivate")
 internal class SelectCR(var selector: CR, var op1: CR, var op2: CR) : CR() {
+    /**
+     * The sign value of our [selector] field that is returned by its `signum` method.
+     */
     var selectorSign: Int = 0
 
     init {
         selectorSign = selector.approxGet(-20).signum()
     }
 
+    /**
+     * Depending on the sign of our [CR] field [selector] we return the [BigInteger] approximation
+     * of our [CR] field [op1] for a negative [selector], or the [BigInteger] approximation of our
+     * [CR] field [op1] for a positive [selector]. If our field [selectorSign] is less than 0 we
+     * just return the [BigInteger] approximation of [op1] that its `approxGet` method calculates
+     * for a precision of [precision], and if it is greater than 0 we just return the [BigInteger]
+     * approximation of [op2] that its `approxGet` method calculates for a precision of [precision].
+     * If on the other hand [selectorSign] is equal to 0 we initialize our `val op1Appr` to the
+     * [BigInteger] approximation of [op1] that its `approxGet` method calculates for a precision of
+     * [precision] minus 1, and our `val op2Appr` to the [BigInteger] approximation of [op2] that
+     * its `approxGet` method calculates for a precision of [precision] minus 1. Then we initialize
+     * our `val diff` to the [BigInteger] result of taking the absolute value of `op1Appr` minus
+     * `op2Appr`. Then if `diff` is less than or equal to `big1` we just return `op1Appr` scaled by
+     * minus 1 bit. Finally if the sign of [selector] is less than 0 we set [selectorSign] to -1 and
+     * return `op1Appr` scaled by minus 1 bit, and if the sign of [selector] is greater than or equal
+     * to 0 we set [selectorSign] to 1 and return `op2Appr` scaled by minus 1 bit.
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return approximation of [op1] if [selector] < 0, [op2] if [selector] >= 0.
+     */
     override fun approximate(precision: Int): BigInteger {
         if (selectorSign < 0) return op1.approxGet(precision)
         if (selectorSign > 0) return op2.approxGet(precision)
@@ -1710,7 +1761,7 @@ internal class SelectCR(var selector: CR, var op1: CR, var op2: CR) : CR() {
             // close enough; use either
             return scale(op1Appr, -1)
         }
-        // op1 and op2 are different; selector != 0;
+        // op1 and op2 are different; selector != 0; (? but it is very close to 0)
         // safe to get sign of selector.
         return if (selector.signum() < 0) {
             selectorSign = -1
@@ -1728,6 +1779,33 @@ internal class SelectCR(var selector: CR, var op1: CR, var op2: CR) : CR() {
 @Suppress("MemberVisibilityCanBePrivate")
 internal class MultCR(var op1: CR, var op2: CR) : CR() {
 
+    /**
+     * Returns the approximate [BigInteger] result of multiplying our two [CR] fields, scaled by 2
+     * raised to the minus [precision]. We initialize our `val halfPrec` to [precision] right shifted
+     * 1 bit then decremented by 1. We initialize our `var msdOp1` to the location of the most
+     * significant digit of our field [op1] when `halfPrec` is used as the precision of the
+     * approximation used for the search the search, and we declare our [Int] `var msdOp2`. If
+     * `msdOp1` is equal to [Integer.MIN_VALUE] (msd was not found) we set `msdOp2` to the location
+     * of the most significant digit of our field [op2] when `halfPrec` is used as the precision of
+     * the approximation used for the search the search, and if `msdOp2` is equal to [Integer.MIN_VALUE]
+     * (msd was not found) we just return `big0` since the product would be small enough for zero to
+     * be used as the approximation. Otherwise we swap [op1] and [op2] so that the larger operand
+     * (in absolute value) is first by initializing `val tmp` to [op1], setting [op1] to [op2], then
+     * setting [op2] to `tmp` and `msdOp1` to `msdOp2`. Continuing on we then initialize `val prec2`
+     * to [precision] minus `msdOp1` minus 3 (this is the precision needed for [op2]), and we then
+     * initialize our `val appr2` to the [BigInteger] approximation of [op2] that its `approxGet`
+     * method calculates for a precision of `prec2`. If the `signum` method of `appr2` indicates that
+     * it is equal to 0 we return `big0` (zero) to the caller. Otherwise we set `msdOp2` to the
+     * position of the most significant digit of [op2], then initialize our `val prec1` to [precision]
+     * minus `msdOp2` minus 3 (precision needed for [op1]), and initialize our `val appr1` to the
+     * [BigInteger] approximation of [op1] that its `approxGet` method calculates for a precision of
+     * `prec1`. We next initialize our `val scaleDigits` to `prec1` plus `prec2` minus [precision]
+     * and finally return the result of multiplying `appr1` by `appr2` then scaling that result by
+     * `scaleDigits` bits.
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return the scaled [BigInteger] approximation of the results of multiplying [op1] by [op2].
+     */
     override fun approximate(precision: Int): BigInteger {
         val halfPrec = (precision shr 1) - 1
         var msdOp1 = op1.msd(halfPrec)
@@ -1772,6 +1850,26 @@ internal class MultCR(var op1: CR, var op2: CR) : CR() {
 @Suppress("MemberVisibilityCanBePrivate")
 internal class InvCR(var op: CR) : CR() {
 
+    /**
+     * Returns the scaled [BigInteger] result of taking the multiplicative inverse of our [CR] field
+     * [op]. First we initialize our `val msd` to the location of the most significant bit in our
+     * [CR] field [op], initialize our `val invMsd` to 1 minus `msd`, and initialize `val digitsNeeded`
+     * to `invMsd` minus [precision] plus 3. Next we initialize our `val precNeeded` to `msd` minus
+     * `digitsNeeded`, and our `val logScaleFactor` to minus [precision] minus `precNeeded`. If
+     * `logScaleFactor` is less than 0 we just return `big0` (zero). Otherwise we initialize our
+     * `val dividend` to the [BigInteger] result of left shifing `big1` (1) by `logScaleFactor` bits.
+     * Then we initialize our `val scaledDivisor` to the [BigInteger] approximation of [op] that is
+     * calculated by its `approxGet` method for a precision of `precNeeded`, and initialize our
+     * `val absScaledDivisor` to the absolute value of `scaledDivisor`. We then initialize our
+     * `val adjDividend` to `dividend` plus `absScaledDivisor`/2. Finally we initialize `val result`
+     * to the [BigInteger] that results from dividing `adjDividend` by `absScaledDivisor`. If the
+     * sign of `scaledDivisor` is negative we return the negative of `result` otherwise we return
+     * `result`.
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return the scaled [BigInteger] approximation of the results of taking the multiplicative
+     * inverse of our [CR] field [op].
+     */
     override fun approximate(precision: Int): BigInteger {
         val msd = op.msd()
         val invMsd = 1 - msd
@@ -1788,15 +1886,14 @@ internal class InvCR(var op: CR) : CR() {
         // calculation.
         // One further bit is required, since the
         // final rounding introduces a 0.5 ulp
-        // error.
+        // (Unit of Least Precision) error.
         val precNeeded = msd - digitsNeeded
         val logScaleFactor = -precision - precNeeded
         if (logScaleFactor < 0) return big0
         val dividend = big1.shiftLeft(logScaleFactor)
         val scaledDivisor = op.approxGet(precNeeded)
         val absScaledDivisor = scaledDivisor.abs()
-        val adjDividend = dividend.add(
-                absScaledDivisor.shiftRight(1))
+        val adjDividend = dividend.add(absScaledDivisor.shiftRight(1))
         // Adjustment so that final result is rounded.
         val result = adjDividend.divide(absScaledDivisor)
         return if (scaledDivisor.signum() < 0) {
@@ -1810,7 +1907,6 @@ internal class InvCR(var op: CR) : CR() {
 /**
  * Representation of the exponential of a constructive real. Private. Uses a Taylor series expansion.
  * Assumes |x| < 1/2.
- *
  *
  * Note: this is known to be a bad algorithm for floating point. Unfortunately, other alternatives
  * appear to require precomputed information.
