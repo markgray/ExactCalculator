@@ -1914,6 +1914,35 @@ internal class InvCR(var op: CR) : CR() {
 @Suppress("MemberVisibilityCanBePrivate")
 internal class PrescaledExpCR(var op: CR) : CR() {
 
+    /**
+     * Returns the scaled [BigInteger] approximation of the results of raising _e_ to the power of
+     * our [CR] field [op]. If our parameter [precision] is greater than or equal to 1 we just return
+     * `big0`. Otherwise we initialize our estimate of of the number of iterations needed
+     * `val iterationsNeeded` to minus [precision] divided by 2 plus 2. Then we initialize
+     * `val calcPrecision` to [precision] minus the log base-2 of 2 times `iterationsNeeded` rounded
+     * up to an [Int], from which we then subtract 4. We initialize our `val opPrec` to [precision]
+     * minus 3, and `val opAppr` to the [BigInteger] approximation of [op] that its `approxGet`
+     * method returns for a precision of `opPrec`. We initialize our `val scaled1` to `big1` left
+     * shifted by minus `calcPrecision`, and initialize both `var currentTerm` and `var currentSum`
+     * to `scaled1`. We then initialize `var n` to 0, and `val maxTruncError` to the [BigInteger]
+     * that results from left shifting `big1` by [precision] minus 4 minus `calcPrecision`. Then we
+     * loop while the absolute value of `currentTerm` is greater than or equal to `maxTruncError`:
+     *  - If our thread has been interrupted while we were looping or `pleaseStop` has been set to
+     *  *true* we throw `AbortedException`.
+     *  - Otherwise we increment `n`
+     *  - Set `currentTerm` to the result of multiplying `currentTerm` by `opAppr` then scaling that
+     *  by `opPrec`
+     *  - Then set `currentTerm` to the result of dividing `currentTerm` by the [BigInteger] value
+     *  of `n`.
+     *  - And then we add `currentTerm` to `currentSum`
+     *
+     * When we exit our *while* loop we return `currentSum` scaled by `calcPrecision` minus
+     * [precision] bits.
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return the scaled [BigInteger] approximation of the results of raising _e_ to the power of
+     * our [CR] field [op].
+     */
     override fun approximate(precision: Int): BigInteger {
         if (precision >= 1) return big0
         val iterationsNeeded = -precision / 2 + 2  // conservative estimate > 0.
@@ -1922,8 +1951,7 @@ internal class PrescaledExpCR(var op: CR) : CR() {
         //  Total rounding error in series computation is
         //  2*iterationsNeeded*2^calcPrecision,
         //  exclusive of error in op.
-        val calcPrecision = (precision - boundLog2(2 * iterationsNeeded)
-                - 4) // for error in op, truncation.
+        val calcPrecision = (precision - boundLog2(2 * iterationsNeeded) - 4) // for error in op, truncation.
         val opPrec = precision - 3
         val opAppr = op.approxGet(opPrec)
         // Error in argument results in error of < 3/8 ulp.
@@ -1950,12 +1978,45 @@ internal class PrescaledExpCR(var op: CR) : CR() {
 }
 
 /**
- * Representation of the cosine of a constructive real. Private. Uses a Taylor series expansion.
+ * Representation of the cosine of *this* constructive real. Private. Uses a Taylor series expansion.
  * Assumes |x| < 1.
  */
 @Suppress("MemberVisibilityCanBePrivate")
 internal class PrescaledCosCR(var op: CR) : SlowCR() {
 
+    /**
+     * Returns the scaled [BigInteger] approximation of the results of taking the cosine of our [CR]
+     * field [op]. If our parameter [precision] is greater than or equal to 1 we just return `big0`.
+     * Otherwise we initialize our estimate of of the number of iterations needed `val iterationsNeeded`
+     * to minus [precision] divided by 2 plus 4. Then we initialize `val calcPrecision` to [precision]
+     * minus the log base-2 of 2 times `iterationsNeeded` rounded up to an [Int], from which we then
+     * subtract 4. We initialize our `val opPrec` to [precision] minus 2, and `val opAppr` to the
+     * [BigInteger] approximation of [op] that its `approxGet` method returns for a precision of
+     * `opPrec`. We then declare `var currentTerm` to be a [BigInteger], initialize `var n` to 0,
+     * and initialize `val maxTruncError` to the [BigInteger] that results when we left shift `big1`
+     * by [precision] minus 4 minus `calcPrecision`. We then set `currentTerm` to `big1` left shifted
+     * by minus calcPrecision, and initialize `var currentSum` to the [BigInteger] `currentTerm`.
+     * Then we loop while the absolute value of `currentTerm` is greater than or equal to
+     * `maxTruncError`:
+     *  - If our thread has been interrupted while we were looping or `pleaseStop` has been set to
+     *  *true* we throw `AbortedException`.
+     *  - Otherwise we add 2 to `n`, then
+     *  - Set `currentTerm` to the result of multiplying `currentTerm` by `opAppr` then scaling that
+     *  by `opPrec`.
+     *  - Then one more time we set `currentTerm` to the result of multiplying `currentTerm` by
+     *  `opAppr` then scaling that by `opPrec`.
+     *  - We initialize `val divisor` to the [BigInteger] that results from multiplying minus `n`
+     *  by `n` minus 1.
+     *  - We set `currentTerm` to `currentTerm` divided by `divisor`
+     *  - Add `currentTerm` to `currentSum` and loop around for the next iteration.
+     *
+     * When we exit our *while* loop we return `currentSum` scaled by `calcPrecision` minus
+     * [precision] bits.
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return the scaled [BigInteger] approximation of the results of taking the cosine of
+     * our [CR] field [op].
+     */
     override fun approximate(precision: Int): BigInteger {
         if (precision >= 1) return big0
         val iterationsNeeded = -precision / 2 + 4  // conservative estimate > 0.
@@ -1984,7 +2045,8 @@ internal class PrescaledCosCR(var op: CR) : SlowCR() {
             /* currentTerm = - currentTerm * op * op / n * (n - 1)   */
             currentTerm = scale(currentTerm.multiply(opAppr), opPrec)
             currentTerm = scale(currentTerm.multiply(opAppr), opPrec)
-            val divisor = BigInteger.valueOf((-n).toLong()).multiply(BigInteger.valueOf((n - 1).toLong()))
+            val divisor = BigInteger.valueOf((-n).toLong())
+                    .multiply(BigInteger.valueOf((n - 1).toLong()))
             currentTerm = currentTerm.divide(divisor)
             currentSum = currentSum.add(currentTerm)
         }
@@ -1999,6 +2061,36 @@ internal class PrescaledCosCR(var op: CR) : SlowCR() {
 @Suppress("MemberVisibilityCanBePrivate")
 internal class IntegralAtanCR(var op: Int) : SlowCR() {
 
+    /**
+     * Returns the scaled [BigInteger] approximation of the results of taking the arctangent of
+     * one over our [Int] field [op]. If our parameter [precision] is greater than or equal to 1 we
+     * just return `big0`. Otherwise we initialize our estimate of of the number of iterations needed
+     * `val iterationsNeeded` to minus [precision] divided by 2 plus 2. Then we initialize
+     * `val calcPrecision` to [precision] minus the log base-2 of 2 times `iterationsNeeded` rounded
+     * up to an [Int], from which we then subtract 2. We initialize `val scaled1` to the [BigInteger]
+     * result of left shifting `big1` by minus `calcPrecision` bits, initialize `val bigOp` to the
+     * [BigInteger] value of [op], initialize `val bigOpSquared` to the [BigInteger] value of [op]
+     * times [op], initialize `val opInverse` to the [BigInteger] `scaled1` divided by `bigOp`,
+     * and initialize `var currentPower`, `var currentTerm` and `var currentSum` all to opInverse`.
+     * We then initialize `var currentSign` to the [Int] 1, and `var n` to the [Int] 1, and initialize
+     * `val maxTruncError` to the [BigInteger] that results from left shifting `big1` by
+     * [precision] minus 2 minus `calcPrecision` bits. Then we loop while the absolute value of
+     * `currentTerm` is greater than or equal to `maxTruncError`:
+     *  - If our thread has been interrupted while we were looping or `pleaseStop` has been set to
+     *  *true* we throw `AbortedException`.
+     *  - Otherwise we add 2 to `n`, then
+     *  - Set `currentPower` to `currentPower` divided by `bigOpSquared`
+     *  - Negate the current value of `currentSign`
+     *  - Set `currentTerm` to `currentPower` divided by the quantity `currentSign` time `n`.
+     *  - We then add `currentTerm` to `currentSum` and loop around for the next iteration.
+     *
+     * When we exit our *while* loop we return `currentSum` scaled by `calcPrecision` minus
+     * [precision] bits.
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return the scaled [BigInteger] approximation of the results of taking the arctangent of
+     * one over our [Int] field [op].
+     */
     override fun approximate(precision: Int): BigInteger {
         if (precision >= 1) return big0
         val iterationsNeeded = -precision / 2 + 2  // conservative estimate > 0.
@@ -2042,14 +2134,22 @@ internal class IntegralAtanCR(var op: Int) : SlowCR() {
 @Suppress("MemberVisibilityCanBePrivate")
 internal class PrescaledLnCR(var op: CR) : SlowCR() {
 
-    // Compute an approximation of ln(1+x) to precision
-    // prec. This assumes |x| < 1/2.
-    // It uses a Taylor series expansion.
-    // Unfortunately there appears to be no way to take
-    // advantage of old information.
-    // Note: this is known to be a bad algorithm for
-    // floating point.  Unfortunately, other alternatives
-    // appear to require precomputed tabular information.
+    /**
+     * Compute an approximation of ln(1+*this*) to precision [precision]. This assumes |*this*| < 1/2.
+     * It uses a Taylor series expansion. Unfortunately there appears to be no way to take advantage
+     * of old information. Note: this is known to be a bad algorithm for floating point. Unfortunately,
+     * other alternatives appear to require precomputed tabular information. If our parameter
+     * [precision] is greater than or equal to 1 we just return `big0`. Otherwise we initialize our
+     * estimate of of the number of iterations needed `val iterationsNeeded` to minus [precision].
+     * Then we initialize `val calcPrecision` to [precision] minus the log base-2 of 2 times
+     * `iterationsNeeded` rounded up to an [Int], from which we then subtract 4. We initialize our
+     * `val opPrec` to [precision] minus 3, and `val opAppr` to the [BigInteger] approximation of
+     * [op] that its `approxGet` method returns for a precision of `opPrec`.
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return the scaled [BigInteger] approximation of the results of taking the natural log of
+     * 1 plus our [CR] field [op].
+     */
     override fun approximate(precision: Int): BigInteger {
         if (precision >= 0) return big0
         val iterationsNeeded = -precision  // conservative estimate > 0.
