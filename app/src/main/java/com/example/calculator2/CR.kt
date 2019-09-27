@@ -2441,6 +2441,59 @@ internal class GlPiCR : SlowCR() {
         bVal.add(null)
     }
 
+    /**
+     * Returns the scaled [BigInteger] approximation of Pi for a precision of [precision] bits. If
+     * the size of our [bPrec] list is bigger than the size of our [bVal] list our last computation
+     * was interrupted after pushing onto [bPrec] so we remove that entry in order to get back into
+     * a consistent state. If our parameter [precision] is greater than or equal to zero we just
+     * return the [BigInteger] of 3 scaled by minus [precision]. Otherwise we initialize
+     * `val extraEvalPrec` to 10 plus the natural log of minus [precision] divided by the natural
+     * log of 2 (this is the extra precision required to ensure that each iteration contributes no
+     * more than 2 ulps to the error in the terms `a`, `b` and `t`). We initialize `val evalPrec` to
+     * [precision] minus `extraEvalPrec` (since all of our terms are implicitly scaled by `evalPrec`).
+     * Next we initialize `var a` to the [BigInteger] that results when we left shift the [BigInteger]
+     * constant `ONE` by minus `evalPrec`, initialize `var b` to the [BigInteger] approximation of
+     * the [CR] constant square root of 1/2 for a precision of `evalPrec`, initialize `var t` to the
+     * [BigInteger] that results when we left shift the constant `ONE` by the quantity minus `evalPrec`
+     * minus 2, and initialize `var n` to 0. Then we loop while `a` minus `b` is greater than our
+     * constant [TOLERANCE] (this is the [BigInteger] of 4):
+     *  - We initialize `val nextA` to the [BigInteger] that results when we add `a` and `b` then
+     *  right shift the result by 1 bit.
+     *  - We declare `val nextB` to be a [BigInteger].
+     *  - We initialize `val aDiff` to `a` minus `nextA`, and we
+     *  - initialize `val bProd` to the [BigInteger] that results when multiply `a` and `b` then
+     *  right shift the result by minus `evalPrec`, and we
+     *  - initialize `val bProdAsCR` to the [CR] constructed from `bProd` then right shifted by minus
+     *  `evalPrec` bits.
+     *  - Now we branch on whether the size of our [bPrec] list is equal to `n` plus 1:
+     *  - If it is equal we need to add an n+1st slot so we:
+     *      - Initialize `val nextBAsCR` to the [CR] that is the square root of `bProdAsCR`
+     *      - Set `nextB` to the [BigInteger] approximation of `nextBAsCR` for a precision of
+     *      `evalPrec` bits.
+     *      - Initialize `val scaledNextB` to `nextB` scaled by minus `extraEvalPrec` bits.
+     *      - Add [precision] to our [bPrec] list, and
+     *      - add `scaledNextB` to our [bVal} list.
+     *  - If it is not equal we can reuse the previous approximation to reduce sqrt iterations, so we:
+     *      - Initialize `val nextBAsCR` to the [CR] constructed to be the square root of `bProdAsCR`,
+     *      with a minimum precision of `bPrec[n + 1]`, and a cached approximation of `bVal[n + 1]`.
+     *      - Set `nextB` to the [BigInteger] approximation of `nextBAsCR` for a precision of
+     *      `evalPrec`
+     *      - Store [precision] in `bPrec[n + 1]` and
+     *      - store `nextB` scaled by minus `extraEvalPrec` in `bVal[n + 1]`
+     *  - After the above branching we continue by initializing `val nextT` to the [BigInteger] that
+     *  results when we subtract the quantity `aDiff` times `aDiff` left shifted by `n` plus `evalPrec`
+     *  from the [BigInteger] `t`.
+     *  - Set `a` to `nextA`, set `b` to `nextB` and set `t` to `nextT`.
+     *  - We then increment `n` and loop around for the next iteration.
+     *
+     *  When we exit the *while* loop we initialize `val sum` to the [BigInteger] `a` plus `b`, and
+     *  initialize `val result` to the [BigInteger] that results when we multiply `sum` by `sum`,
+     *  divide by `t` and right shit the result 2 bits. Finally we return `result` scaled by minus
+     *  `extraEvalPrec`.
+     *
+     * @param precision the precision of the appoximation we are to calculate.
+     * @return the scaled [BigInteger] approximation of Pi
+     */
     override fun approximate(precision: Int): BigInteger {
         // Get us back into a consistent state if the last computation
         // was interrupted after pushing onto bPrec.
@@ -2504,8 +2557,13 @@ internal class GlPiCR : SlowCR() {
 
     companion object {
 
+        /**
+         * Tolerance used by our [GlPiCR] Pi approximation
+         */
         private val TOLERANCE = BigInteger.valueOf(4)
-        // sqrt(1/2)
+        /**
+         * sqrt(1/2) as a [CR].
+         */
         private val SQRT_HALF = SqrtCR(ONE.shiftRight(1))
     }
 }
