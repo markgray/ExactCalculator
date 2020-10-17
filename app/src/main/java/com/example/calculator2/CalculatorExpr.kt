@@ -21,9 +21,12 @@ import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.TtsSpan
-import java.io.*
+import java.io.ByteArrayOutputStream
+import java.io.DataInput
+import java.io.DataOutput
+import java.io.DataOutputStream
+import java.io.IOException
 import java.math.BigInteger
-import java.util.*
 import kotlin.math.abs
 
 /**
@@ -167,7 +170,7 @@ class CalculatorExpr {
          *
          * @param resId the resource id of the operator button that was clicked.
          */
-        internal constructor(resId: Int) {
+        constructor(resId: Int) {
             id = resId
         }
 
@@ -178,7 +181,7 @@ class CalculatorExpr {
          *
          * @param op single byte encoding of the operator.
          */
-        internal constructor(op: Byte) {
+        constructor(op: Byte) {
             id = KeyMaps.fromByte(op)
         }
 
@@ -271,7 +274,7 @@ class CalculatorExpr {
          * Our default constructor, we just initialize [mWhole] and [mFraction] to empty strings,
          * leaving [mSawDecimal] *false* and [mExponent] 0.
          */
-        internal constructor() {
+        constructor() {
             mWhole = ""
             mFraction = ""
             // mSawDecimal = false;
@@ -293,7 +296,7 @@ class CalculatorExpr {
          * @param dataInput a [DataInput] to read our constant from.
          */
         @Throws(IOException::class)
-        internal constructor(dataInput: DataInput) {
+        constructor(dataInput: DataInput) {
             mWhole = dataInput.readUTF()
             val flags = dataInput.readByte().toInt()
             if (flags and SAW_DECIMAL != 0) {
@@ -564,7 +567,7 @@ class CalculatorExpr {
          * @param index Index of expression in the subexpression database.
          * @param shortRep Short string representation of the subexpression.
          */
-        internal constructor(index: Long, shortRep: String) {
+        constructor(index: Long, shortRep: String) {
             mIndex = index
             mShortRep = shortRep
         }
@@ -578,7 +581,7 @@ class CalculatorExpr {
          * @param dataInput the [DataInput] we are read to initialize ourselves from.
          */
         @Throws(IOException::class)
-        internal constructor(dataInput: DataInput) {
+        constructor(dataInput: DataInput) {
             mIndex = dataInput.readInt().toLong()
             mShortRep = dataInput.readUTF()
         }
@@ -982,7 +985,7 @@ class CalculatorExpr {
      * @param nextPos Next position (expression index) to be parsed.
      * @param valueUR Constructive Real result of evaluating subexpression.
      */
-    private class EvalRet internal constructor(var nextPos: Int, val valueUR: UnifiedReal)
+    private class EvalRet(var nextPos: Int, val valueUR: UnifiedReal)
 
     /**
      * Internal evaluation functions take an EvalContext argument.
@@ -1011,7 +1014,7 @@ class CalculatorExpr {
          * @param len [Int] to set our [mPrefixLength] to, it is the length of prefix to evaluate.
          * @param er [ExprResolver] to use for our [mExprResolver] field.
          */
-        internal constructor(degreeMode: Boolean, len: Int, er: ExprResolver) {
+        constructor(degreeMode: Boolean, len: Int, er: ExprResolver) {
             mDegreeMode = degreeMode
             mPrefixLength = len
             mExprResolver = er
@@ -1027,7 +1030,7 @@ class CalculatorExpr {
          */
         @Suppress("unused")
         @Throws(IOException::class)
-        internal constructor(dataInput: DataInput, len: Int, er: ExprResolver) {
+        constructor(dataInput: DataInput, len: Int, er: ExprResolver) {
             mDegreeMode = dataInput.readBoolean()
             mPrefixLength = len
             mExprResolver = er
@@ -1040,7 +1043,7 @@ class CalculatorExpr {
          */
         @Suppress("unused")
         @Throws(IOException::class)
-        internal fun write(dataOutput: DataOutput) {
+        fun write(dataOutput: DataOutput) {
             dataOutput.writeBoolean(mDegreeMode)
         }
     }

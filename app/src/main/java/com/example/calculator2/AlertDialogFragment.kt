@@ -16,7 +16,6 @@
 
 package com.example.calculator2
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.DialogInterface
@@ -80,7 +79,6 @@ class AlertDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
         val builder = AlertDialog.Builder(activity)
 
         val inflater = LayoutInflater.from(builder.context)
-        @SuppressLint("InflateParams")
         val messageView = inflater.inflate(R.layout.dialog_message, null) as TextView
         messageView.text = args.getCharSequence(KEY_MESSAGE)
         builder.setView(messageView)

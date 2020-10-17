@@ -1969,8 +1969,8 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      */
     override fun onClick(fragment: AlertDialogFragment, which: Int) {
         if (which == DialogInterface.BUTTON_POSITIVE) {
-            when {
-                HistoryFragment.CLEAR_DIALOG_TAG == fragment.tag -> {
+            when (fragment.tag) {
+                HistoryFragment.CLEAR_DIALOG_TAG -> {
                     // TODO: Try to preserve the current, saved, and memory expressions. How should we
                     // handle expressions to which they refer?
                     mEvaluator.clearEverything()
@@ -1980,8 +1980,8 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                     mEvaluatorCallback.onMemoryStateChanged()
                     onBackPressed()
                 }
-                Evaluator.TIMEOUT_DIALOG_TAG == fragment.tag -> // Timeout extension request.
-                    mEvaluator.setLongTimeout()
+                Evaluator.TIMEOUT_DIALOG_TAG // Timeout extension request.
+                -> mEvaluator.setLongTimeout()
                 else -> Log.e(TAG, "Unknown AlertDialogFragment click:" + fragment.tag)
             }
         }

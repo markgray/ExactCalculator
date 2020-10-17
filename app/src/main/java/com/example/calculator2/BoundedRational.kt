@@ -445,10 +445,10 @@ class BoundedRational {
         val reduced = reduce().positiveDen()
         // First handle cases in which huge exponents could give compact results.
         if (reduced.mDen == BigInteger.ONE) {
-            when {
-                reduced.mNum == BigInteger.ZERO -> return ZERO
-                reduced.mNum == BigInteger.ONE -> return ONE
-                reduced.mNum == BIG_MINUS_ONE -> return if (exp.testBit(0)) {
+            when (reduced.mNum) {
+                BigInteger.ZERO -> return ZERO
+                BigInteger.ONE -> return ONE
+                BIG_MINUS_ONE -> return if (exp.testBit(0)) {
                     MINUS_ONE
                 } else {
                     ONE
