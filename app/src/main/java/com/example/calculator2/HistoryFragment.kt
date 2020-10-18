@@ -170,7 +170,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
             }
             onOptionsItemSelected(item)
         })
-        toolbar.setNavigationOnClickListener { activity!!.onBackPressed() }
+        toolbar.setNavigationOnClickListener { requireActivity().onBackPressed() }
         return view
     }
 
@@ -341,10 +341,10 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
     ) {
 
         mDragController.setDisplayFormula(
-                activity!!.findViewById<View>(R.id.formula) as CalculatorFormula)
+                requireActivity().findViewById<View>(R.id.formula) as CalculatorFormula)
         mDragController.setDisplayResult(
-                activity!!.findViewById<View>(R.id.result) as CalculatorResult)
-        mDragController.setToolbar(activity!!.findViewById(R.id.toolbar))
+                requireActivity().findViewById<View>(R.id.result) as CalculatorResult)
+        mDragController.setToolbar(requireActivity().findViewById(R.id.toolbar))
         mDragController.setEvaluator(mEvaluator!!)
         mDragController.initializeController(isResult, isOneLine, isDisplayEmpty)
     }

@@ -151,6 +151,7 @@ abstract class CoroutinesAsyncTask<Params, Progress, Result> {
      *
      * @param progress The progress values to update the UI with.
      */
+    @Suppress("MemberVisibilityCanBePrivate")
     fun publishProgress(vararg progress: Progress) {
         //need to update main thread
         GlobalScope.launch(Dispatchers.Main) {

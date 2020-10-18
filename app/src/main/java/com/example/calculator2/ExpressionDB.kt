@@ -51,6 +51,7 @@ import android.util.Log
 import kotlin.math.max
 import kotlin.math.min
 
+// TODO: Convert to use Coroutines or even to Room.
 @Suppress("UNUSED_VARIABLE", "PLATFORM_CLASS_MAPPED_TO_KOTLIN", "MemberVisibilityCanBePrivate")
 class ExpressionDB(context: Context) {
     /**

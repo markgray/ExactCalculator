@@ -16,14 +16,14 @@
 
 package com.example.calculator2
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.util.Log
 import android.view.View
 import android.widget.Button
 import java.text.DecimalFormatSymbols
-import java.util.*
+import java.util.HashMap
+import java.util.Locale
 
 /**
  * Collection of mapping functions between key ids, characters, internationalized
@@ -34,7 +34,6 @@ import java.util.*
  * All functions are either pure, or are assumed to be called only from a single UI thread.
  */
 @Suppress("MemberVisibilityCanBePrivate")
-@SuppressLint("StaticFieldLeak")
 object KeyMaps {
 
     /**
@@ -96,7 +95,6 @@ object KeyMaps {
     /**
      * Activity to use for looking up buttons.
      */
-    @SuppressLint("StaticFieldLeak")
     private var mActivity: Activity? = null
 
     /**
