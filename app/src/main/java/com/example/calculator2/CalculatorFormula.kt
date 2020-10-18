@@ -47,7 +47,6 @@ import kotlin.math.min
  * @param defStyleAttr An attribute in the current theme that contains a reference to a style
  * resource that supplies default values for the view. Can be 0 to not look for defaults.
  */
-@Suppress("MemberVisibilityCanBePrivate")
 class CalculatorFormula
 @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : AlignedTextView(context, attrs, defStyleAttr), MenuItem.OnMenuItemClickListener,
@@ -67,7 +66,7 @@ class CalculatorFormula
      * returned by the [getTextSize] method (aka the `textSize` property of this [TextView]).
      * It is set in the dimens.xml files for the various screen sizes, with the default 28dp.
      */
-    val maximumTextSize: Float
+    private val maximumTextSize: Float
     /**
      * The CalculatorFormula_minTextSize attribute for this [TextView], defaults to the value
      * returned by the [getTextSize] method (aka the `textSize` property of this [TextView]).

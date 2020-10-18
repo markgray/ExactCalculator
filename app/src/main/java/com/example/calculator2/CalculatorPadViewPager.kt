@@ -72,6 +72,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
          * @return Returns an Object representing the new page. This does not need to be a View, but
          * can be some other container of the page.
          */
+        @SuppressLint("ClickableViewAccessibility")
         override fun instantiateItem(container: ViewGroup, position: Int): View {
             val child = getChildAt(position)
 

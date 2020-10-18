@@ -57,7 +57,6 @@ import kotlin.math.*
  * a callback to the program Logic.
  */
 @RequiresApi(Build.VERSION_CODES.N)
-@Suppress("MemberVisibilityCanBePrivate")
 class CalculatorResult(context: Context, attrs: AttributeSet)
     : AlignedTextView(context, attrs), MenuItem.OnMenuItemClickListener, Evaluator.EvaluationListener,
         Evaluator.CharMetricsInfo {
@@ -229,7 +228,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * Get entire result up to current displayed precision, or up to MAX_COPY_EXTRA additional
      * digits, if it will lead to an exact result.
      */
-    val fullCopyText: String
+    private val fullCopyText: String
         get() {
             if (!mValid
                     || mLsdOffset == Integer.MAX_VALUE
@@ -701,7 +700,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * of expression index [mIndex] using *this* as the `CharMetricsInfo` and call back *this*
      * `EvaluationListener` when ready.
      */
-    fun onMemoryStore() {
+    private fun onMemoryStore() {
         if (mEvaluator!!.hasResult(mIndex)) {
             mEvaluator?.copyToMemory(mIndex)
         } else {
@@ -714,7 +713,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * Add the result to the value currently in memory. We just call the `addToMemory` method of
      * [mEvaluator] to add the expression at index [mIndex] to the current contents of "memory".
      */
-    fun onMemoryAdd() {
+    private fun onMemoryAdd() {
         mEvaluator?.addToMemory(mIndex)
     }
 
@@ -723,7 +722,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * method of [mEvaluator] to subtract the expression at index [mIndex] from the current contents
      * of "memory".
      */
-    fun onMemorySubtract() {
+    private fun onMemorySubtract() {
         mEvaluator?.subtractFromMemory(mIndex)
     }
 
@@ -1243,7 +1242,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * @param pos pixel position we are interested in.
      * @return the character position which occupies pixel position [pos]
      */
-    internal fun getCharOffset(pos: Int): Int {
+    private fun getCharOffset(pos: Int): Int {
         return (pos / mCharWidth).roundToInt()  // Lock not needed.
     }
 

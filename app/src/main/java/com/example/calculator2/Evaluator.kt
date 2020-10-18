@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-@file:Suppress("DEPRECATION")
-
 package com.example.calculator2
 
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Build
 import android.os.Handler
-import android.preference.PreferenceManager
+import android.os.Looper.getMainLooper
+import androidx.preference.PreferenceManager
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import android.text.Spannable
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.calculator2.util.CoroutinesAsyncTask
 
 import java.io.ByteArrayInputStream
 import java.io.DataInput
@@ -343,7 +342,7 @@ class Evaluator internal constructor(
          * two separate [ExprInfo] structure for the main and history view, so that they can
          * arrange for independent evaluators.
          */
-        var mEvaluator: AsyncTask<*, *, *>? = null
+        var mEvaluator: CoroutinesAsyncTask<*, *, *>? = null
 
         // The remaining fields are valid only if an evaluation completed successfully.
 
@@ -412,7 +411,7 @@ class Evaluator internal constructor(
     init {
         setMainExpr(ExprInfo(CalculatorExpr(),false))
         mSavedName = "none"
-        mTimeoutHandler = Handler()
+        mTimeoutHandler = Handler(getMainLooper())
         mExprDB = ExpressionDB(mContext)
 
         mSharedPrefs = PreferenceManager.getDefaultSharedPreferences(mContext)
@@ -641,7 +640,7 @@ class Evaluator internal constructor(
             private val mCharMetricsInfo: CharMetricsInfo, // Where to get result size information.
             private val mDm: Boolean, // degrees
             var mRequired: Boolean // Result was requested by user.
-    ) : AsyncTask<Void, Void, InitialResult>() {
+    ) : CoroutinesAsyncTask<Void, Void, InitialResult>() {
         /**
          * Suppress cancellation message if *true*.
          */
@@ -817,7 +816,8 @@ class Evaluator internal constructor(
          * expression in our [mExprInfo], a string representation of this value and precision
          * "offset" information.
          */
-        override fun doInBackground(vararg nothing: Void): InitialResult {
+        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+        override fun doInBackground(vararg nothing: Void?): InitialResult? {
             try {
                 // mExpr does not change while we are evaluating; thus it's OK to read here.
                 var res: UnifiedReal? = mExprInfo!!.mVal.get()
@@ -930,10 +930,10 @@ class Evaluator internal constructor(
          * @param result an [InitialResult] instance containing either the resource ID of an error
          * string, or the result of evaluating our expression.
          */
-        override fun onPostExecute(result: InitialResult) {
+        override fun onPostExecute(result: InitialResult?) {
             mExprInfo!!.mEvaluator = null
             mTimeoutHandler.removeCallbacks(mTimeoutRunnable!!)
-            if (result.isError) {
+            if (result!!.isError) {
                 if (result.errorResourceId == R.string.timeout) {
                     // Emulating timeout due to large result.
                     if (mRequired && mIndex == MAIN_INDEX) {
@@ -983,7 +983,7 @@ class Evaluator internal constructor(
          *
          * @param result The result, if any, computed in [doInBackground], can be null
          */
-        override fun onCancelled(result: InitialResult) {
+        override fun onCancelled(result: InitialResult?) {
             // Invoker resets mEvaluator.
             mTimeoutHandler.removeCallbacks(mTimeoutRunnable!!)
             if (!mQuiet) {
@@ -997,7 +997,7 @@ class Evaluator internal constructor(
     /**
      * Result of asynchronous reevaluation.
      */
-    private class ReevalResult internal constructor(
+    private class ReevalResult(
             val newResultString: String,
             val newResultStringOffset: Int
     )
@@ -1010,10 +1010,10 @@ class Evaluator internal constructor(
      * completed.
      */
     @SuppressLint("StaticFieldLeak")
-    private inner class AsyncReevaluator internal constructor(
+    private inner class AsyncReevaluator(
             private val mIndex: Long, // Index of expression to evaluate.
             private val mListener: EvaluationListener
-    ) : AsyncTask<Int, Void, ReevalResult>() {
+    ) : CoroutinesAsyncTask<Int, Void, ReevalResult>() {
 
         /**
          * [ExprInfo] of the expression we are to reevaluate.
@@ -1033,6 +1033,7 @@ class Evaluator internal constructor(
          * @param prec precision of the result string (digits to the right of the decimal place
          * @return a [ReevalResult] containing the new result string and its precision.
          */
+        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
         override fun doInBackground(vararg prec: Int?): ReevalResult? {
             return try {
                 val precOffset = prec[0]
@@ -1585,8 +1586,8 @@ class Evaluator internal constructor(
      * `mResultStringOffsetReq` of [expr] to its `mResultStringOffset` field, and set its `mEvaluator`
      * field to *null* (then fall through to return *false*). If the `mVal` field of [expr] is *null*
      * we call the `cancel` method of the `mEvaluator` field of [expr] to cancel the background task
-     * (interrupting it if necessary). If [expr] is the same as [mMainExpr] we have a problem as
-     * the expression is modifiable, and the [AsyncTask] is reading it, so we need to clone the
+     * (interrupting it if necessary). If [expr] is the same as [mMainExpr] we have a problem as the
+     * expression is modifiable, and the [CoroutinesAsyncTask] is reading it, so we need to clone the
      * [CalculatorExpr] in the `mExpr` field of [mMainExpr] and set that field to that clone, then
      * set our [mChangedValue] field to *true* (to indicate that we didn't do the expected evaluation).
      * In either case we set the `mEvaluator` field of [expr] to *null* and return *true*.
@@ -2091,7 +2092,9 @@ class Evaluator internal constructor(
         val longTimeout = mExprs[index]!!.mLongTimeout
         val abbrvExpr = collapsedExprGet(index)
         clearMain()
-        assert(abbrvExpr != null)
+        if (BuildConfig.DEBUG && abbrvExpr == null) {
+            error("Assertion failed")
+        }
         mMainExpr!!.mExpr.append(abbrvExpr!!)
         mMainExpr!!.mLongTimeout = longTimeout
         mChangedValue = true
@@ -2124,7 +2127,7 @@ class Evaluator internal constructor(
          * Classes which implement us need to override this method in order for our [onEvaluate]
          * override to call it to do whatever needs to be done with the evaluation result.
          */
-        internal abstract fun setNow()
+        abstract fun setNow()
 
         /**
          * Called if evaluation was explicitly cancelled or evaluation timed out. We ignore.
@@ -2179,9 +2182,9 @@ class Evaluator internal constructor(
      * the result of the manipulation of the "memory" expression is stored back to "memory". If our
      * construction parameter [mPersist] is *true* [mIndex] is stored to our preference file too.
      */
-    private inner class SetMemoryWhenDoneListener internal constructor(
-            internal val mIndex: Long,
-            internal val mPersist: Boolean
+    private inner class SetMemoryWhenDoneListener(
+            val mIndex: Long,
+            val mPersist: Boolean
     ) : SetWhenDoneListener() {
         /**
          * This override of [SetWhenDoneListener.setNow] is used when the result of the evaluation
@@ -2213,8 +2216,8 @@ class Evaluator internal constructor(
      * the *init* block of [Evaluator] in order to restore the expression which mirrors the clipboard
      * to that which was stored in our shared preferences file.
      */
-    private inner class SetSavedWhenDoneListener internal constructor(
-            internal val mIndex: Long
+    private inner class SetSavedWhenDoneListener(
+            val mIndex: Long
     ) : SetWhenDoneListener() {
         /**
          * This override of [SetWhenDoneListener.setNow] is used when the result of the evaluation
