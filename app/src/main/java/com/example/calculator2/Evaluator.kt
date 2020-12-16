@@ -816,7 +816,7 @@ class Evaluator internal constructor(
          * expression in our [mExprInfo], a string representation of this value and precision
          * "offset" information.
          */
-        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "RedundantNullableReturnType")
         override fun doInBackground(vararg nothing: Void?): InitialResult? {
             try {
                 // mExpr does not change while we are evaluating; thus it's OK to read here.

@@ -56,7 +56,7 @@ class AlertDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
 
     /**
      * We override this to build our own custom [Dialog] container. If there were no arguments supplied
-     * when we were created (*getArguments* returns *null*) we inintialize our variable *args* to
+     * when we were created (*getArguments* returns *null*) we initialize our variable *args* to
      * Bundle.EMPTY, otherwise we initialize it to the arguments supplied when the fragment was
      * instantiated. We initialize our variable *builder* with a new instance of *AlertDialog.Builder*
      * that uses *activity* as the parent context and initialize our variable *inflater* with a handle

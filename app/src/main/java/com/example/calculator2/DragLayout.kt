@@ -199,6 +199,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
      * @return Returns a [Parcelable] object containing the view's current dynamic state, or null if
      * there is nothing interesting to save.
      */
+    @Suppress("RedundantNullableReturnType")
     override fun onSaveInstanceState(): Parcelable? {
         val bundle = Bundle()
         bundle.putParcelable(KEY_SUPER_STATE, super.onSaveInstanceState())
