@@ -25,13 +25,13 @@
         android:icon="@mipmap/ic_launcher_calculator"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        tools:ignore="GoogleAppIndexingWarning">
+        tools:ignore="DataExtractionRules,GoogleAppIndexingWarning">
 
         <activity
             android:name=".Calculator2"
-            android:label="@string/app_name"
             android:launchMode="singleTask"
-            android:theme="@style/Theme.Calculator">
+            android:theme="@style/Theme.Calculator"
+            android:exported="true">
             <!--suppress AndroidElementNotAllowed -->
             <layout
                 android:minHeight="220dp"
