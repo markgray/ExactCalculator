@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
+@file:Suppress("KotlinDeprecation", "KotlinDeprecation", "KotlinDeprecation")
+
 package com.example.calculator2
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.util.Log
@@ -33,6 +36,7 @@ import java.util.Locale
  * KeyMap instances are not meaningful; everything here is static.
  * All functions are either pure, or are assumed to be called only from a single UI thread.
  */
+@SuppressLint("StaticFieldLeak")
 @Suppress("MemberVisibilityCanBePrivate")
 object KeyMaps {
 

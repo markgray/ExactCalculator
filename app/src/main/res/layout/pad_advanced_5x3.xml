@@ -18,11 +18,13 @@
 <androidx.gridlayout.widget.GridLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/pad_advanced"
     style="@style/PadLayoutStyle.Advanced"
     android:background="@color/pad_advanced_background_color"
     app:rowCount="3"
-    app:columnCount="5">
+    app:columnCount="5"
+    tools:ignore="Overdraw">
 
     <Button
         android:id="@+id/toggle_inv"

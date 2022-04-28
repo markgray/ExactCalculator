@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("JoinDeclarationAndAssignment")
+
 package com.example.calculator2
 
 import android.annotation.SuppressLint

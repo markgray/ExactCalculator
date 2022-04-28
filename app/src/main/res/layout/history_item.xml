@@ -43,7 +43,7 @@
         android:paddingEnd="@dimen/result_padding_end"
         android:text="@string/title_current_expression"
         android:textColor="?android:attr/colorAccent"
-        android:textSize="14dp" />
+        android:textSize="14sp" />
 
     <com.example.calculator2.CalculatorScrollView
         android:id="@+id/history_formula_container"

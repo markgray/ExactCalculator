@@ -119,6 +119,10 @@
  * hboehm@google.com 3/3/2019.
 */
 
+@file:Suppress("JoinDeclarationAndAssignment", "JoinDeclarationAndAssignment",
+    "JoinDeclarationAndAssignment"
+)
+
 package com.example.calculator2
 
 import java.math.BigInteger

@@ -36,6 +36,8 @@
 // such property, since expressions may be read by one thread while the main thread is updating
 // another expression.
 
+@file:Suppress("RedundantNullableReturnType", "JoinDeclarationAndAssignment")
+
 package com.example.calculator2
 
 import android.annotation.SuppressLint

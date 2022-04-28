@@ -16,6 +16,7 @@
 
 package com.example.calculator2
 
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -124,6 +125,7 @@ class CalculatorFormula
      * is null or if its `shouldDisplayMemory` method returns *false*, otherwise it returns *true*.
      */
     private val isMemoryEnabled: Boolean
+        @SuppressLint("NewApi")
         get() = mOnDisplayMemoryOperationsListener != null
                 && mOnDisplayMemoryOperationsListener!!.shouldDisplayMemory()
 
