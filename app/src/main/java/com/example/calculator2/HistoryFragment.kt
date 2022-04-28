@@ -17,6 +17,7 @@
 package com.example.calculator2
 
 import android.animation.Animator
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -175,9 +176,12 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
     }
 
     /**
-     * Called when the fragment's activity has been created and this fragment's view hierarchy
-     * instantiated. This is called after [onCreateView] and before [onViewStateRestored]. First
-     * we call our super's implementation of `onActivityCreated`. We then initialize our
+     * Called when all saved state has been restored into the view hierarchy of the fragment. This
+     * can be used to do initialization based on saved state that you are letting the view hierarchy
+     * track itself, such as whether check box widgets are currently checked. This is called after
+     * [onViewCreated] and before [onStart].
+     *
+     * First we call our super's implementation of `onViewStateRestored`. We then initialize our
      * `val activity` with the `FragmentActivity` this fragment is currently associated with
      * (casting it to [Calculator2]). We initialize our field [mEvaluator] to our singleton instance
      * of [Evaluator] and set the [Evaluator] of our field [mAdapter] to it. We initialize our
@@ -211,11 +215,11 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
      * our field [mIsDisplayEmpty], and finally call the `notifyDataSetChanged` method of [mAdapter]
      * to notify it that its dataset has changed and it needs to redisplay its contents.
      *
-     * @param savedInstanceState If the fragment is being re-created from a previous saved state,
-     * this is the state.
+     * @param savedInstanceState we do not override [onSaveInstanceState] so ignore this.
      */
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    @SuppressLint("NotifyDataSetChanged") // All entries in the adapter are changed
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
 
         val activity = (activity as Calculator2?)!!
         mEvaluator = Evaluator.instanceGet(activity)
@@ -246,14 +250,14 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
             // element in the list and there will be no "Current Expression."
             mEvaluator!!.copyMainToHistory()
             newDataSet.add(HistoryItem(Evaluator.HISTORY_MAIN_INDEX,
-                    System.currentTimeMillis(), mEvaluator!!.exprAsSpannableGet(0)))
+                System.currentTimeMillis(), mEvaluator!!.exprAsSpannableGet(0)))
         }
         for (i in 0 until maxIndex) {
             newDataSet.add(null)
         }
         val isEmpty = newDataSet.isEmpty()
         mRecyclerView!!.setBackgroundColor(ContextCompat.getColor(activity,
-                if (isEmpty) R.color.empty_history_color else R.color.display_background_color))
+            if (isEmpty) R.color.empty_history_color else R.color.display_background_color))
         if (isEmpty) {
             newDataSet.add(HistoryItem())
         }
