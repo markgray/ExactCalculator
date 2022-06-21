@@ -36,7 +36,9 @@
 // such property, since expressions may be read by one thread while the main thread is updating
 // another expression.
 
-@file:Suppress("RedundantNullableReturnType", "JoinDeclarationAndAssignment")
+@file:Suppress("RedundantNullableReturnType", "JoinDeclarationAndAssignment", "DEPRECATION",
+    "DeprecatedCallableAddReplaceWith"
+)
 
 package com.example.calculator2
 
@@ -469,6 +471,7 @@ class ExpressionDB(context: Context) {
          * open or create our [SQLiteDatabase].
          * @return Our opened (or just created if it did not already exist) [SQLiteDatabase].
          */
+        @Deprecated("Deprecated in Java")
         @SuppressLint("Recycle") // Our mAllCursor is never to be closed
         override fun doInBackground(vararg helper: ExpressionDBHelper): SQLiteDatabase? {
             try {
@@ -531,6 +534,7 @@ class ExpressionDB(context: Context) {
          *
          * @param result The [SQLiteDatabase] opened or created by [doInBackground].
          */
+        @Deprecated("Deprecated in Java")
         override fun onPostExecute(result: SQLiteDatabase?) {
             if (result == null) {
                 displayDatabaseWarning()
@@ -611,6 +615,7 @@ class ExpressionDB(context: Context) {
          * @param nothings The parameters of the task -- there are none.
          * @return A *null* result always.
          */
+        @Deprecated("Deprecated in Java")
         override fun doInBackground(vararg nothings: Void): Void? {
             mExpressionDB!!.execSQL(SQL_DROP_TIMESTAMP_INDEX)
             mExpressionDB!!.execSQL(SQL_DROP_TABLE)
@@ -637,6 +642,7 @@ class ExpressionDB(context: Context) {
          *
          * @param nothing Always *null* result of the operation computed by [doInBackground].
          */
+        @Deprecated("Deprecated in Java")
         override fun onPostExecute(nothing: Void) {
             synchronized(mLock) {
                 // Reinitialize everything to an empty and fully functional database.
@@ -756,6 +762,7 @@ class ExpressionDB(context: Context) {
          * @param cvs The [ContentValues] containing the data for the row to be inserted.
          * @return 0L on success or the row ID number on failur.
          */
+        @Deprecated("Deprecated in Java")
         override fun doInBackground(vararg cvs: ContentValues): Long? {
             val index = cvs[0].getAsLong(BaseColumns._ID)!!
             val result = mExpressionDB!!.insert(
@@ -784,6 +791,7 @@ class ExpressionDB(context: Context) {
          *
          * @param result The result of the operation computed by {@link #doInBackground}.
          */
+        @Deprecated("Deprecated in Java")
         override fun onPostExecute(result: Long?) {
             if (result != 0L) {
                 synchronized(mLock) {
