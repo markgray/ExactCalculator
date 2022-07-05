@@ -41,6 +41,7 @@ class BoundedRational {
      * Numerator of our rational number
      */
     private val mNum: BigInteger
+
     /**
      * Denominator of our rational number
      */
@@ -142,7 +143,7 @@ class BoundedRational {
             len = n + 1
         }
         return ((if (signum() < 0) "-" else "") + digits.substring(0, len - n) + "."
-                + digits.substring(len - n))
+            + digits.substring(len - n))
     }
 
     /**
@@ -329,7 +330,7 @@ class BoundedRational {
         // Compare by multiplying both sides by denominators, invert result if denominator product
         // was negative.
         return (mNum.multiply(other.mDen).compareTo(other.mNum.multiply(mDen))
-                * mDen.signum() * other.mDen.signum())
+            * mDen.signum() * other.mDen.signum())
     }
 
     /**
@@ -460,7 +461,7 @@ class BoundedRational {
             return null
         }
         return if (expSign < 0) {
-            inverse(reduced)!!.rawPow(exp.negate())
+            (inverse(reduced) ?: return null).rawPow(exp.negate())
         } else {
             reduced.rawPow(exp)
         }
@@ -767,7 +768,7 @@ class BoundedRational {
         fun sqrt(r: BoundedRational?): BoundedRational? {
             var rTemp: BoundedRational? = r ?: return null
             // Return non-null if numerator and denominator are small perfect squares.
-            rTemp = rTemp!!.positiveDen().reduce()
+            rTemp = (rTemp ?: return null).positiveDen().reduce()
             if (rTemp.mNum.signum() < 0) {
                 throw ArithmeticException("sqrt(negative)")
             }
@@ -784,91 +785,110 @@ class BoundedRational {
         /**
          * A constant 0 [BoundedRational]
          */
-        val ZERO = BoundedRational(0)
+        val ZERO: BoundedRational = BoundedRational(0)
+
         /**
          * A constant 1/2 [BoundedRational]
          */
-        val HALF = BoundedRational(1, 2)
+        val HALF: BoundedRational = BoundedRational(1, 2)
+
         /**
          * A constant -1/2 [BoundedRational]
          */
-        val MINUS_HALF = BoundedRational(-1, 2)
+        val MINUS_HALF: BoundedRational = BoundedRational(-1, 2)
+
         /**
          * A constant 1/3 [BoundedRational]
          */
-        val THIRD = BoundedRational(1, 3)
+        val THIRD: BoundedRational = BoundedRational(1, 3)
+
         /**
          * A constant 1/4 [BoundedRational]
          */
-        val QUARTER = BoundedRational(1, 4)
+        val QUARTER: BoundedRational = BoundedRational(1, 4)
+
         /**
          * A constant 1/6 [BoundedRational]
          */
-        val SIXTH = BoundedRational(1, 6)
+        val SIXTH: BoundedRational = BoundedRational(1, 6)
+
         /**
          * A constant 1 [BoundedRational]
          */
-        val ONE = BoundedRational(1)
+        val ONE: BoundedRational = BoundedRational(1)
+
         /**
          * A constant -1 [BoundedRational]
          */
-        val MINUS_ONE = BoundedRational(-1)
+        val MINUS_ONE: BoundedRational = BoundedRational(-1)
+
         /**
          * A constant 2 [BoundedRational]
          */
-        val TWO = BoundedRational(2)
+        val TWO: BoundedRational = BoundedRational(2)
+
         /**
          * A constant -2 [BoundedRational]
          */
-        val MINUS_TWO = BoundedRational(-2)
+        val MINUS_TWO: BoundedRational = BoundedRational(-2)
+
         /**
          * A constant 10 [BoundedRational]
          */
-        val TEN = BoundedRational(10)
+        val TEN: BoundedRational = BoundedRational(10)
+
         /**
          * A constant 12 [BoundedRational]
          */
-        val TWELVE = BoundedRational(12)
+        val TWELVE: BoundedRational = BoundedRational(12)
+
         /**
          * A constant 30 [BoundedRational]
          */
         @Suppress("unused")
-        val THIRTY = BoundedRational(30)
+        val THIRTY: BoundedRational = BoundedRational(30)
+
         /**
          * A constant -30 [BoundedRational]
          */
         @Suppress("unused")
-        val MINUS_THIRTY = BoundedRational(-30)
+        val MINUS_THIRTY: BoundedRational = BoundedRational(-30)
+
         /**
          * A constant 45 [BoundedRational]
          */
         @Suppress("unused")
-        val FORTY_FIVE = BoundedRational(45)
+        val FORTY_FIVE: BoundedRational = BoundedRational(45)
+
         /**
          * A constant -45 [BoundedRational]
          */
         @Suppress("unused")
-        val MINUS_FORTY_FIVE = BoundedRational(-45)
+        val MINUS_FORTY_FIVE: BoundedRational = BoundedRational(-45)
+
         /**
          * A constant 90 [BoundedRational]
          */
         @Suppress("unused")
-        val NINETY = BoundedRational(90)
+        val NINETY: BoundedRational = BoundedRational(90)
+
         /**
          * A constant -90 [BoundedRational]
          */
         @Suppress("unused")
-        val MINUS_NINETY = BoundedRational(-90)
+        val MINUS_NINETY: BoundedRational = BoundedRational(-90)
 
         /**
          * A constant 2 [BigInteger]
          */
         @Suppress("unused")
         private val BIG_TWO = BigInteger.valueOf(2)
+
         /**
          * A constant 1 [BigInteger]
          */
         private val BIG_MINUS_ONE = BigInteger.valueOf(-1)
+
         /**
          * A constant 5 [BigInteger]
          */
@@ -893,7 +913,7 @@ class BoundedRational {
             if (base == null) {
                 return null
             }
-            expTemp = expTemp!!.reduce().positiveDen()
+            expTemp = (expTemp ?: return null).reduce().positiveDen()
             return if (expTemp.mDen != BigInteger.ONE) {
                 null
             } else base.pow(expTemp.mNum)

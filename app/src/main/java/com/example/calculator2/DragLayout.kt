@@ -50,6 +50,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
      * The [FrameLayout] which holds the drug down [HistoryFragment] (id R.id.history_frame).
      */
     private lateinit var mHistoryFrame: FrameLayout
+
     /**
      * The [ViewDragHelper] we use for its useful operations and state tracking callbacks which
      * allow the user to drag and reposition views within our [ViewGroup].
@@ -62,6 +63,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
      * add themselves as [DragCallback] implementations.
      */
     private val mDragCallbacks = CopyOnWriteArrayList<DragCallback>()
+
     /**
      * [CloseCallback] whose `onClose` callback should be called when the [DragLayout] needs to be
      * closed for some reason (in our case either because the user has drug it closed (the method
@@ -76,6 +78,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
      */
     @SuppressLint("UseSparseArrays")
     private val mLastMotionPoints = HashMap<Int, PointF>()
+
     /**
      * Hit rectangle in our coordinates of pointer movement that the `tryCaptureView` method of
      * [ViewDragHelper.Callback] needs to evaluate in order to determine if the user can drag the
@@ -104,7 +107,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
         get() {
             val draggingState = mDragHelper.viewDragState
             return (draggingState == ViewDragHelper.STATE_DRAGGING)
-                    || (draggingState == ViewDragHelper.STATE_SETTLING)
+                || (draggingState == ViewDragHelper.STATE_SETTLING)
         }
 
     /**
@@ -177,7 +180,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
             var top = 0
             if (child === mHistoryFrame) {
                 top = if ((mDragHelper.capturedView === mHistoryFrame)
-                        && (mDragHelper.viewDragState != ViewDragHelper.STATE_IDLE)) {
+                    && (mDragHelper.viewDragState != ViewDragHelper.STATE_IDLE)) {
                     child.getTop()
                 } else {
                     if (isOpen) 0 else -mVerticalRange
@@ -226,13 +229,13 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
         var stateLocal = state
         if (stateLocal is Bundle) {
             val bundle = stateLocal as Bundle?
-            isOpen = bundle!!.getBoolean(KEY_IS_OPEN)
+            isOpen = (bundle ?: return).getBoolean(KEY_IS_OPEN)
             mHistoryFrame.visibility = if (isOpen) View.VISIBLE else View.INVISIBLE
             for (c in mDragCallbacks) {
                 c.onInstanceStateRestored(isOpen)
             }
 
-            stateLocal = bundle.getParcelable(KEY_SUPER_STATE)!!
+            stateLocal = (bundle.getParcelable(KEY_SUPER_STATE) ?: return)
         }
         super.onRestoreInstanceState(stateLocal)
     }
@@ -326,9 +329,9 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
     override fun onTouchEvent(event: MotionEvent): Boolean {
         // Workaround: do not process the error case where multi-touch would cause a crash.
         if (event.actionMasked == MotionEvent.ACTION_MOVE
-                && mDragHelper.viewDragState == ViewDragHelper.STATE_DRAGGING
-                && mDragHelper.activePointerId != ViewDragHelper.INVALID_POINTER
-                && event.findPointerIndex(mDragHelper.activePointerId) == -1) {
+            && mDragHelper.viewDragState == ViewDragHelper.STATE_DRAGGING
+            && mDragHelper.activePointerId != ViewDragHelper.INVALID_POINTER
+            && event.findPointerIndex(mDragHelper.activePointerId) == -1) {
             mDragHelper.cancel()
             return false
         }
@@ -539,7 +542,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
             // The view stopped moving.
 
             if (state == ViewDragHelper.STATE_IDLE
-                    && mDragHelper.capturedView!!.top < -(mVerticalRange / 2)) {
+                && (mDragHelper.capturedView ?: return).top < -(mVerticalRange / 2)) {
                 setClosed()
             }
         }
@@ -678,7 +681,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
 
             // If the view is not visible, then settle it closed, not open.
             if (mDragHelper.settleCapturedViewAt(0,
-                            if (settleToOpen && isOpen) 0 else -mVerticalRange)) {
+                    if (settleToOpen && isOpen) 0 else -mVerticalRange)) {
                 ViewCompat.postInvalidateOnAnimation(this@DragLayout)
             }
         }
@@ -693,12 +696,14 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
          * auto open our [DragLayout].
          */
         private const val AUTO_OPEN_SPEED_LIMIT = 600.0
+
         /**
          * Key under which we store our [isOpen] property in the [Bundle] we return from our
          * [onSaveInstanceState] override and retrieve again in our [onRestoreInstanceState]
          * override.
          */
         private const val KEY_IS_OPEN = "IS_OPEN"
+
         /**
          * Key under which we store the [Parcelable] object containing the state of our super that
          * its [onSaveInstanceState] override returns in the [Bundle] we return from our

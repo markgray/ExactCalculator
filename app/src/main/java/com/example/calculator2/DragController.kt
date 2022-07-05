@@ -34,10 +34,12 @@ class DragController {
      * The [CalculatorFormula] containing the current expression
      */
     private var mDisplayFormula: CalculatorFormula? = null
+
     /**
      * The [CalculatorResult] containing the current result of our current expression
      */
     private var mDisplayResult: CalculatorResult? = null
+
     /**
      * The `ToolBar` of the calculator.
      */
@@ -47,14 +49,17 @@ class DragController {
      * Translation in the Y direction of the formula whose drag we are animating
      */
     private var mFormulaTranslationY: Int = 0
+
     /**
      * Translation in the X direction of the formula whose drag we are animating
      */
     private var mFormulaTranslationX: Int = 0
+
     /**
      * Scale of the formula whose drag we are animating
      */
     private var mFormulaScale: Float = 0f
+
     /**
      * Scale of the result whose drag we are animating
      */
@@ -64,6 +69,7 @@ class DragController {
      * Translation in the Y direction of the result whose drag we are animating
      */
     private var mResultTranslationY: Float = 0f
+
     /**
      * Translation in the X direction of the result whose drag we are animating
      */
@@ -79,6 +85,7 @@ class DragController {
      * Starting color for the color change animation of the formula text
      */
     private var mFormulaStartColor: Int = 0
+
     /**
      * Ending color for the color change animation of the formula text
      */
@@ -88,6 +95,7 @@ class DragController {
      * Starting color for the color change animation of the result text
      */
     private var mResultStartColor: Int = 0
+
     /**
      * Ending color for the color change animation of the result text
      */
@@ -107,6 +115,7 @@ class DragController {
      * Are we running on a device which uses a single line display?
      */
     private var mOneLine: Boolean = false
+
     /**
      * Are both of the formula and result text views empty.
      */
@@ -232,9 +241,9 @@ class DragController {
      */
     fun animateViews(yFraction: Float, recyclerView: RecyclerView) {
         if (mDisplayFormula == null
-                || mDisplayResult == null
-                || mToolbar == null
-                || mEvaluator == null) {
+            || mDisplayResult == null
+            || mToolbar == null
+            || mEvaluator == null) {
             // Bail if we aren't yet initialized.
             return
         }
@@ -244,35 +253,35 @@ class DragController {
             recyclerView.visibility = View.VISIBLE
         }
         if (vh != null && !mIsDisplayEmpty
-                && vh.itemViewType == HistoryAdapter.HISTORY_VIEW_TYPE) {
-            val formula = vh.formula!!
-            val result = vh.result!!
-            val date = vh.date!!
-            val divider = vh.divider!!
+            && vh.itemViewType == HistoryAdapter.HISTORY_VIEW_TYPE) {
+            val formula = vh.formula ?: return
+            val result = vh.result ?: return
+            val date = vh.date ?: return
+            val divider = vh.divider ?: return
 
             if (!mAnimationInitialized) {
                 mBottomPaddingHeight = recyclerView.paddingBottom
 
-                mAnimationController!!.initializeScales(formula, result)
+                (mAnimationController ?: return).initializeScales(formula, result)
 
-                mAnimationController!!.initializeColorAnimators(formula, result)
+                (mAnimationController ?: return).initializeColorAnimators(formula, result)
 
-                mAnimationController!!.initializeFormulaTranslationX(formula)
+                (mAnimationController ?: return).initializeFormulaTranslationX(formula)
 
-                mAnimationController!!.initializeFormulaTranslationY(formula, result)
+                (mAnimationController ?: return).initializeFormulaTranslationY(formula, result)
 
-                mAnimationController!!.initializeResultTranslationX(result)
+                (mAnimationController ?: return).initializeResultTranslationX(result)
 
-                mAnimationController!!.initializeResultTranslationY(result)
+                (mAnimationController ?: return).initializeResultTranslationY(result)
 
                 mAnimationInitialized = true
             }
 
-            result.scaleX = mAnimationController!!.getResultScale(yFraction)
-            result.scaleY = mAnimationController!!.getResultScale(yFraction)
+            result.scaleX = (mAnimationController ?: return).getResultScale(yFraction)
+            result.scaleY = (mAnimationController ?: return).getResultScale(yFraction)
 
-            formula.scaleX = mAnimationController!!.getFormulaScale(yFraction)
-            formula.scaleY = mAnimationController!!.getFormulaScale(yFraction)
+            formula.scaleX = (mAnimationController ?: return).getFormulaScale(yFraction)
+            formula.scaleY = (mAnimationController ?: return).getFormulaScale(yFraction)
 
             formula.pivotX = (formula.width - formula.paddingEnd).toFloat()
             formula.pivotY = (formula.height - formula.paddingBottom).toFloat()
@@ -280,37 +289,41 @@ class DragController {
             result.pivotX = (result.width - result.paddingEnd).toFloat()
             result.pivotY = (result.height - result.paddingBottom).toFloat()
 
-            formula.translationX = mAnimationController!!.getFormulaTranslationX(yFraction)
-            formula.translationY = mAnimationController!!.getFormulaTranslationY(yFraction)
+            formula.translationX = (mAnimationController
+                ?: return).getFormulaTranslationX(yFraction)
+            formula.translationY = (mAnimationController
+                ?: return).getFormulaTranslationY(yFraction)
 
-            result.translationX = mAnimationController!!.getResultTranslationX(yFraction)
-            result.translationY = mAnimationController!!.getResultTranslationY(yFraction)
+            result.translationX = (mAnimationController ?: return).getResultTranslationX(yFraction)
+            result.translationY = (mAnimationController ?: return).getResultTranslationY(yFraction)
 
             formula.setTextColor(mColorEvaluator.evaluate(yFraction, mFormulaStartColor,
-                    mFormulaEndColor) as Int)
+                mFormulaEndColor) as Int)
 
             result.setTextColor(mColorEvaluator.evaluate(yFraction, mResultStartColor,
-                    mResultEndColor) as Int)
+                mResultEndColor) as Int)
 
-            date.translationY = mAnimationController!!.getDateTranslationY(yFraction)
-            divider.translationY = mAnimationController!!.getDateTranslationY(yFraction)
+            date.translationY = (mAnimationController ?: return).getDateTranslationY(yFraction)
+            divider.translationY = (mAnimationController ?: return).getDateTranslationY(yFraction)
         } else if (mIsDisplayEmpty) {
             // There is no current expression but we still need to collect information
             // to translate the other ViewHolder's.
             if (!mAnimationInitialized) {
-                mAnimationController!!.initializeDisplayHeight()
+                (mAnimationController ?: return).initializeDisplayHeight()
                 mAnimationInitialized = true
             }
         }
 
         // Move up all ViewHolders above the current expression; if there is no current expression,
         // we're translating all the ViewHolder's.
-        for (i in recyclerView.childCount - 1 downTo mAnimationController!!.firstTranslatedViewHolderIndex) {
+        for (i in recyclerView.childCount - 1 downTo (mAnimationController
+            ?: return).firstTranslatedViewHolderIndex) {
             val vh2 = recyclerView.getChildViewHolder(recyclerView.getChildAt(i))
             if (vh2 != null) {
                 val view = vh2.itemView
 
-                view.translationY = mAnimationController!!.getHistoryElementTranslationY(yFraction)
+                view.translationY = (mAnimationController
+                    ?: return).getHistoryElementTranslationY(yFraction)
             }
         }
     }
@@ -574,10 +587,10 @@ class DragController {
          * @param result the [CalculatorResult] containing the result to be animated
          */
         override fun initializeColorAnimators(formula: AlignedTextView, result: CalculatorResult) {
-            mFormulaStartColor = mDisplayFormula!!.currentTextColor
+            mFormulaStartColor = (mDisplayFormula ?: return).currentTextColor
             mFormulaEndColor = formula.currentTextColor
 
-            mResultStartColor = mDisplayResult!!.currentTextColor
+            mResultStartColor = (mDisplayResult ?: return).currentTextColor
             mResultEndColor = result.currentTextColor
         }
 
@@ -592,7 +605,7 @@ class DragController {
          */
         override fun initializeScales(formula: AlignedTextView, result: CalculatorResult) {
             // Calculate the scale for the text
-            mFormulaScale = mDisplayFormula!!.textSize / formula.textSize
+            mFormulaScale = (mDisplayFormula ?: return).textSize / formula.textSize
         }
 
         /**
@@ -610,13 +623,13 @@ class DragController {
                                                    result: CalculatorResult) {
             mFormulaTranslationY = if (mOneLine) {
                 // Disregard result since we set it to GONE in the one-line case.
-                (mDisplayFormula!!.paddingBottom - formula.paddingBottom
-                        - mBottomPaddingHeight)
+                ((mDisplayFormula ?: return).paddingBottom - formula.paddingBottom
+                    - mBottomPaddingHeight)
             } else {
                 // Baseline of formula moves by the difference in formula bottom padding and the
                 // difference in result height.
-                (mDisplayFormula!!.paddingBottom - formula.paddingBottom
-                        + mDisplayResult!!.height - result.height - mBottomPaddingHeight)
+                ((mDisplayFormula ?: return).paddingBottom - formula.paddingBottom
+                    + (mDisplayResult ?: return).height - result.height - mBottomPaddingHeight)
             }
         }
 
@@ -629,7 +642,7 @@ class DragController {
          */
         override fun initializeFormulaTranslationX(formula: AlignedTextView) {
             // Right border of formula moves by the difference in formula end padding.
-            mFormulaTranslationX = mDisplayFormula!!.paddingEnd - formula.paddingEnd
+            mFormulaTranslationX = (mDisplayFormula ?: return).paddingEnd - formula.paddingEnd
         }
 
         /**
@@ -642,8 +655,8 @@ class DragController {
          */
         override fun initializeResultTranslationY(result: CalculatorResult) {
             // Baseline of result moves by the difference in result bottom padding.
-            mResultTranslationY = (mDisplayResult!!.paddingBottom - result.paddingBottom
-                    - mBottomPaddingHeight).toFloat()
+            mResultTranslationY = ((mDisplayResult ?: return).paddingBottom - result.paddingBottom
+                - mBottomPaddingHeight).toFloat()
         }
 
         /**
@@ -654,7 +667,7 @@ class DragController {
          * @param result the [CalculatorResult] containing the result to be animated
          */
         override fun initializeResultTranslationX(result: CalculatorResult) {
-            mResultTranslationX = mDisplayResult!!.paddingEnd - result.paddingEnd
+            mResultTranslationX = (mDisplayResult ?: return).paddingEnd - result.paddingEnd
         }
 
         /**
@@ -759,8 +772,8 @@ class DragController {
             // this distance decreasing as it's pulled down.
             // Account for the scaled formula height.
             return (-mToolbar!!.height * (1f - yFraction)
-                    + getFormulaTranslationY(yFraction)
-                    - mDisplayFormula!!.height / getFormulaScale(yFraction) * (1f - yFraction))
+                + getFormulaTranslationY(yFraction)
+                - mDisplayFormula!!.height / getFormulaScale(yFraction) * (1f - yFraction))
         }
 
         /**
@@ -803,7 +816,7 @@ class DragController {
          * @param result the [CalculatorResult] containing the result to be animated
          */
         override fun initializeScales(formula: AlignedTextView, result: CalculatorResult) {
-            val textSize = mDisplayResult!!.textSize * mDisplayResult!!.scaleX
+            val textSize = (mDisplayResult ?: return).textSize * (mDisplayResult ?: return).scaleX
             mResultScale = textSize / result.textSize
             mFormulaScale = 1f
         }
@@ -820,8 +833,9 @@ class DragController {
         override fun initializeFormulaTranslationY(formula: AlignedTextView, result: CalculatorResult) {
             // Baseline of formula moves by the difference in formula bottom padding and the
             // difference in the result height.
-            mFormulaTranslationY = (mDisplayFormula!!.paddingBottom - formula.paddingBottom
-                    + mDisplayResult!!.height - result.height - mBottomPaddingHeight)
+            mFormulaTranslationY = ((mDisplayFormula
+                ?: return).paddingBottom - formula.paddingBottom
+                + (mDisplayResult ?: return).height - result.height - mBottomPaddingHeight)
         }
 
         /**
@@ -833,7 +847,7 @@ class DragController {
          */
         override fun initializeFormulaTranslationX(formula: AlignedTextView) {
             // Right border of formula moves by the difference in formula end padding.
-            mFormulaTranslationX = mDisplayFormula!!.paddingEnd - formula.paddingEnd
+            mFormulaTranslationX = (mDisplayFormula ?: return).paddingEnd - formula.paddingEnd
         }
 
         /**
@@ -844,10 +858,10 @@ class DragController {
          */
         override fun initializeResultTranslationY(result: CalculatorResult) {
             // Baseline of result moves by the difference in result bottom padding.
-            mResultTranslationY = (mDisplayResult!!.paddingBottom.toFloat()
-                    - result.paddingBottom.toFloat()
-                    - mDisplayResult!!.translationY
-                    - mBottomPaddingHeight.toFloat())
+            mResultTranslationY = ((mDisplayResult ?: return).paddingBottom.toFloat()
+                - result.paddingBottom.toFloat()
+                - (mDisplayResult ?: return).translationY
+                - mBottomPaddingHeight.toFloat())
         }
 
         /**
@@ -858,7 +872,7 @@ class DragController {
          * @param result the [CalculatorResult] containing the result to be animated
          */
         override fun initializeResultTranslationX(result: CalculatorResult) {
-            mResultTranslationX = mDisplayResult!!.paddingEnd - result.paddingEnd
+            mResultTranslationX = (mDisplayResult ?: return).paddingEnd - result.paddingEnd
         }
 
         /**
@@ -960,8 +974,8 @@ class DragController {
             // We also want the date to start out above the visible screen with
             // this distance decreasing as it's pulled down.
             return ((-mToolbar!!.height * (1f - yFraction) + mResultTranslationY * yFraction
-                    - mResultTranslationY - mDisplayFormula!!.paddingTop.toFloat())
-                    + mDisplayFormula!!.paddingTop * yFraction)
+                - mResultTranslationY - mDisplayFormula!!.paddingTop.toFloat())
+                + mDisplayFormula!!.paddingTop * yFraction)
         }
     }
 
@@ -984,7 +998,8 @@ class DragController {
          * [mDisplayFormula]. We are called from the [animateViews] method.
          */
         override fun initializeDisplayHeight() {
-            mDisplayHeight = (mToolbar!!.height + mDisplayResult!!.height + mDisplayFormula!!.height)
+            mDisplayHeight = ((mToolbar ?: return).height + (mDisplayResult
+                ?: return).height + (mDisplayFormula ?: return).height)
         }
 
         /**

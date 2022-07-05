@@ -120,7 +120,20 @@ class CalculatorExpr {
      * The kind of [Token] we are looking at.
      */
     enum class TokenKind {
-        CONSTANT, OPERATOR, PRE_EVAL
+        /**
+         * The [Token] is a constant value
+         */
+        CONSTANT,
+
+        /**
+         * The [Token] is an operator
+         */
+        OPERATOR,
+
+        /**
+         * The [Token] for previously evaluated subexpressions.
+         */
+        PRE_EVAL
     }
 
     /**
@@ -249,14 +262,17 @@ class CalculatorExpr {
          * Flag indicating that our constant contains a decimal point.
          */
         private var mSawDecimal: Boolean = false
+
         /**
          * String preceding decimal point.
          */
         private var mWhole: String
+
         /**
          * String after decimal point.
          */
         private var mFraction: String
+
         /**
          * Explicit exponent, only generated through [addExponent].
          */
@@ -326,7 +342,7 @@ class CalculatorExpr {
         @Throws(IOException::class)
         override fun write(dataOutput: DataOutput) {
             val flags = ((if (mSawDecimal) SAW_DECIMAL else 0)
-                    or if (mExponent != 0) HAS_EXPONENT else 0).toByte()
+                or if (mExponent != 0) HAS_EXPONENT else 0).toByte()
             dataOutput.writeByte(TokenKind.CONSTANT.ordinal)
             dataOutput.writeUTF(mWhole)
             dataOutput.writeByte(flags.toInt())
@@ -526,6 +542,7 @@ class CalculatorExpr {
              * [mFraction] field is in the [DataInput] it is reading from.
              */
             private const val SAW_DECIMAL = 0x1
+
             /**
              * Bit in the "flags" byte we write to a [DataOutput] which signifies that our
              * [mExponent] field is not 0. This is then used in our [DataInput] constructor
@@ -556,6 +573,7 @@ class CalculatorExpr {
          * Index of expression in the subexpression database.
          */
         val mIndex: Long
+
         /**
          * Short string representation of the subexpression.
          */
@@ -798,7 +816,7 @@ class CalculatorExpr {
         // operator is minus, in which case we just allow it as a unary minus.
         if (binary && !KeyMaps.isPrefix(id)) {
             if (s == 0 || lastOp == R.id.lparen || KeyMaps.isFunc(lastOp)
-                    || KeyMaps.isPrefix(lastOp) && lastOp != R.id.op_sub) {
+                || KeyMaps.isPrefix(lastOp) && lastOp != R.id.op_sub) {
                 return false
             }
             while (hasTrailingBinary()) {
@@ -996,10 +1014,12 @@ class CalculatorExpr {
          * binary operators if there are any. Not explicitly saved.
          */
         val mPrefixLength: Int
+
         /**
          * Flag indicating that trig functions will use degree mode
          */
         val mDegreeMode: Boolean
+
         /**
          * The [ExprResolver] to use to resolve expression indices in embedded subexpressions to
          * the associated [CalculatorExpr]. Reconstructed, not saved.
@@ -1784,7 +1804,7 @@ class CalculatorExpr {
     fun nestedEval(index: Long, er: ExprResolver): UnifiedReal {
         val nestedExpr = er.exprGet(index)
         val newEc = EvalContext(er.degreeModeGet(index),
-                nestedExpr.trailingBinaryOpsStart(), er)
+            nestedExpr.trailingBinaryOpsStart(), er)
         val newRes = nestedExpr.evalExpr(0, newEc)
         return er.putResultIfAbsent(index, newRes.valueUR)
     }
@@ -1870,16 +1890,19 @@ class CalculatorExpr {
          * An array of the constants of the [TokenKind] enum type, in the order they're declared.
          */
         private val tokenKindValues = TokenKind.values()
+
         /**
          * A constant [BigInteger] 1,000,000
          */
         @Suppress("unused")
         private val BIG_MILLION = BigInteger.valueOf(1_000_000)
+
         /**
          * A constant [BigInteger] 1,000,000,000
          */
         @Suppress("unused")
         private val BIG_BILLION = BigInteger.valueOf(1_000_000_000)
+
         /**
          * A constant [UnifiedReal] 1/100
          */

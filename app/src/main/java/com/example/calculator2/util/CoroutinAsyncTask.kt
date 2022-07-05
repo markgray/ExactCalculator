@@ -12,9 +12,23 @@ import kotlinx.coroutines.withContext
  */
 abstract class CoroutinesAsyncTask<Params, Progress, Result> {
 
+    /**
+     * The status of this Async Task
+     */
     enum class Status {
+        /**
+         * Not yet running.
+         */
         PENDING,
+
+        /**
+         * Task is running.
+         */
         RUNNING,
+
+        /**
+         * Task has finished
+         */
         FINISHED
     }
 
@@ -71,7 +85,7 @@ abstract class CoroutinesAsyncTask<Params, Progress, Result> {
      *
      * @return `true` if task was cancelled before it completed
      */
-    var isCancelled = false
+    var isCancelled: Boolean = false
 
     /**
      * Executes the [doInBackground] task with the specified parameters. This method must be
@@ -83,13 +97,13 @@ abstract class CoroutinesAsyncTask<Params, Progress, Result> {
 
         when (status) {
             Status.RUNNING -> throw IllegalStateException(
-                    "Cannot execute task:"
-                            + " the task is already running."
+                "Cannot execute task:"
+                    + " the task is already running."
             )
             Status.FINISHED -> throw IllegalStateException(
-                    "Cannot execute task:"
-                            + " the task has already been executed "
-                            + "(a task can be executed only once)"
+                "Cannot execute task:"
+                    + " the task has already been executed "
+                    + "(a task can be executed only once)"
             )
             Status.PENDING -> Unit
         }
@@ -131,8 +145,8 @@ abstract class CoroutinesAsyncTask<Params, Progress, Result> {
      * interrupted; otherwise, in-progress tasks are allowed to complete.
      */
     @Suppress("MemberVisibilityCanBePrivate")
-    fun cancel(mayInterruptIfRunning: Boolean) : Boolean {
-        if(!mayInterruptIfRunning) Log.d("cancel", "cancel called with mayInterruptIfRunning false")
+    fun cancel(mayInterruptIfRunning: Boolean): Boolean {
+        if (!mayInterruptIfRunning) Log.d("cancel", "cancel called with mayInterruptIfRunning false")
         isCancelled = true
         status = Status.FINISHED
         GlobalScope.launch(Dispatchers.Main) {

@@ -193,11 +193,13 @@ abstract class CR : java.lang.Number() {
      */
     @Transient
     internal var minPrec: Int = 0
+
     /**
      * The scaled approximation corresponding to minPrec.
      */
     @Transient
     internal var maxAppr: BigInteger? = null
+
     /**
      * minPrec and maxVal are valid.
      */
@@ -1168,44 +1170,54 @@ abstract class CR : java.lang.Number() {
          * The [BigInteger] constant 0
          */
         internal val big0 = BigInteger.ZERO
+
         /**
          * The [BigInteger] constant 1
          */
         internal val big1 = BigInteger.ONE
+
         /**
          * The [BigInteger] constant minus 1
          */
         internal val bigm1 = BigInteger.valueOf(-1)
+
         /**
          * The [BigInteger] constant 2
          */
         internal val big2 = BigInteger.valueOf(2)
+
         /**
          * The [BigInteger] constant minus 2
          */
         internal val bigm2 = BigInteger.valueOf(-2)
+
         /**
          * The [BigInteger] constant 3
          */
         @Suppress("unused")
         internal val big3 = BigInteger.valueOf(3)
+
         /**
          * The [BigInteger] constant 6
          */
         internal val big6 = BigInteger.valueOf(6)
+
         /**
          * The [BigInteger] constant 8
          */
         internal val big8 = BigInteger.valueOf(8)
+
         /**
          * The [BigInteger] constant 10
          */
         @Suppress("unused")
         internal val big10 = BigInteger.TEN
+
         /**
          * The [BigInteger] constant 750
          */
         internal val big750 = BigInteger.valueOf(750)
+
         /**
          * The [BigInteger] constant minus 750
          */
@@ -1218,7 +1230,7 @@ abstract class CR : java.lang.Number() {
          * that doesn't appear to be consistently supported by browser VMs.
          */
         @Volatile
-        var pleaseStop = false
+        var pleaseStop: Boolean = false
 
         // Helper functions
 
@@ -1350,12 +1362,12 @@ abstract class CR : java.lang.Number() {
          * A [CR] constant for the [Int] 0
          */
         @Suppress("unused")
-        var ZERO = valueOf(0)
+        var ZERO: CR = valueOf(0)
 
         /**
          * A [CR] constant for the [Int] 1
          */
-        var ONE = valueOf(1)
+        var ONE: CR = valueOf(1)
 
         /**
          * Multiply [k] by 2**[n]. When [n] is equal to 0 we return [k], when [n] is less than 0 we
@@ -1414,31 +1426,37 @@ abstract class CR : java.lang.Number() {
          * constant 9
          */
         internal var tenNinths = valueOf(10).divide(valueOf(9))
+
         /**
          * A constant [CR] constructed from a [CR] holding a constant 25 divided by a [CR] holding a
          * constant 24
          */
         internal var twentyfiveTwentyfourths = valueOf(25).divide(valueOf(24))
+
         /**
          * A constant [CR] constructed from a [CR] holding a constant 81 divided by a [CR] holding a
          * constant 80
          */
         internal var eightyoneEightyeths = valueOf(81).divide(valueOf(80))
+
         /**
          * A constant [CR] constructed from a [CR] holding a constant 7 multiplied by a [CR] holding
          * the natural log of [tenNinths]. Used to compute [ln2] (natural log of 2).
          */
         internal var ln2s1 = valueOf(7).multiply(tenNinths.simpleLn())
+
         /**
          * A constant [CR] constructed from a [CR] holding a constant 2 multiplied by a [CR] holding
          * the natural log of [twentyfiveTwentyfourths]. Used to compute [ln2] (natural log of 2).
          */
         internal var ln2s2 = valueOf(2).multiply(twentyfiveTwentyfourths.simpleLn())
+
         /**
          * A constant [CR] constructed from a [CR] holding a constant 3 multiplied by a [CR] holding
          * the natural log of [eightyoneEightyeths]. Used to compute [ln2] (natural log of 2).
          */
         internal var ln2s3 = valueOf(3).multiply(eightyoneEightyeths.simpleLn())
+
         /**
          * The natural log of 2: ln(2) = 7ln(10/9) - 2ln(25/24) + 3ln(81/80)
          */
@@ -1527,8 +1545,8 @@ abstract class CR : java.lang.Number() {
          *  - pi/4 = 4*atan(1/5) - atan(1/239)
          */
         @Suppress("unused")
-        var atanPI = four
-                .multiply(four.multiply(atanReciprocal(5)).subtract(atanReciprocal(239)))
+        var atanPI: CR = four
+            .multiply(four.multiply(atanReciprocal(5)).subtract(atanReciprocal(239)))
 
         /**
          * Half of PI.
@@ -1541,11 +1559,13 @@ abstract class CR : java.lang.Number() {
          * sixteenths so its value is 1/2.
          */
         internal val LOW_LN_LIMIT = big8 /* sixteenths, i.e. 1/2 */
+
         /**
          * The higher limit for the natural log of *this*, above HIGH_LN_LIMIT (24 sixteenths or 1.5)
          * we cascade some [CR] instances and recursive calls of [ln] to speed things up.
          */
         internal val HIGH_LN_LIMIT = BigInteger.valueOf((16 + 8).toLong() /* 1.5 */)
+
         /**
          * Between HIGH_LN_LIMIT and SCALED_4 we use the natural log of the square root of the square
          * root of *this* and shift the result left 2 bits, above SCALED_4 we use the natural log of
@@ -1678,7 +1698,7 @@ internal class AddCR(var op1: CR, var op2: CR) : CR() {
         // Args need to be evaluated so that each error is < 1/4 ulp.
         // Rounding error from the scale call is <= 1/2 ulp, so that
         // final error is < 1 ulp.
-        return scale(op1.approxGet(precision-2).add(op2.approxGet(precision-2)),-2)
+        return scale(op1.approxGet(precision - 2).add(op2.approxGet(precision - 2)), -2)
     }
 }
 
@@ -2050,7 +2070,7 @@ internal class PrescaledCosCR(var op: CR) : SlowCR() {
             currentTerm = scale(currentTerm.multiply(opAppr), opPrec)
             currentTerm = scale(currentTerm.multiply(opAppr), opPrec)
             val divisor = BigInteger.valueOf((-n).toLong())
-                    .multiply(BigInteger.valueOf((n - 1).toLong()))
+                .multiply(BigInteger.valueOf((n - 1).toLong()))
             currentTerm = currentTerm.divide(divisor)
             currentSum = currentSum.add(currentTerm)
         }
@@ -2324,6 +2344,7 @@ internal class SqrtCR : CR {
     var op: CR
 
     val fpPrec = 50     // Conservative estimate of number of
+
     // significant bits in double precision
     // computation.
     val fpOpPrec = 60
@@ -2565,6 +2586,7 @@ internal class GlPiCR : SlowCR() {
          * Tolerance used by our [GlPiCR] Pi approximation
          */
         private val TOLERANCE = BigInteger.valueOf(4)
+
         /**
          * sqrt(1/2) as a [CR].
          */

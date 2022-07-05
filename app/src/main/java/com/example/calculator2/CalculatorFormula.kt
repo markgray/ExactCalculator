@@ -51,7 +51,7 @@ import kotlin.math.min
 class CalculatorFormula
 @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
     : AlignedTextView(context, attrs, defStyleAttr), MenuItem.OnMenuItemClickListener,
-        ClipboardManager.OnPrimaryClipChangedListener {
+    ClipboardManager.OnPrimaryClipChangedListener {
 
     /**
      * Temporary paint for use in layout methods.
@@ -68,12 +68,14 @@ class CalculatorFormula
      * It is set in the dimens.xml files for the various screen sizes, with the default 28dp.
      */
     private val maximumTextSize: Float
+
     /**
      * The CalculatorFormula_minTextSize attribute for this [TextView], defaults to the value
      * returned by the [getTextSize] method (aka the `textSize` property of this [TextView]).
      * It is set in the dimens.xml files for the various screen sizes, with the default 28dp.
      */
     val minimumTextSize: Float
+
     /**
      * The CalculatorFormula_stepTextSize attribute for this [TextView], defaults to the value
      * [maximumTextSize] minus [minimumTextSize] divided by 3. It is set in the dimens.xml files
@@ -84,35 +86,40 @@ class CalculatorFormula
     /**
      * A handle to the [ClipboardManager] to use for pasting.
      */
-    private val mClipboardManager: ClipboardManager
-            = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    private val mClipboardManager: ClipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
     /**
      * How wide is the space for our text, used to decide whether to change the text size to fit.
      */
     private var mWidthConstraint = -1
+
     /**
      * [ActionMode] we use for pasting.
      */
     private var mActionMode: ActionMode? = null
+
     /**
      * [ActionMode.Callback] that is used for our [mActionMode] pasting [ActionMode].
      */
     private var mPasteActionModeCallback: ActionMode.Callback? = null
+
     /**
      * The [ContextMenu] that is displayed when a user long clicks us, used to paste from the clipboard,
      * or to paste from memory if one or both are holding something.
      */
     private var mContextMenu: ContextMenu? = null
+
     /**
      * The [OnTextSizeChangeListener] that is called to animate a change in text size.
      */
     private var mOnTextSizeChangeListener: OnTextSizeChangeListener? = null
+
     /**
      * The [OnFormulaContextMenuClickListener] whose `onPaste` or `onMemoryRecall` overrides are
      * called when the user selects one or the other of these options from the [ContextMenu]
      */
     private var mOnContextMenuClickListener: OnFormulaContextMenuClickListener? = null
+
     /**
      * The [Calculator2.OnDisplayMemoryOperationsListener] whose `shouldDisplayMemory` is called to
      * determine if the memory of the calculator is currently holding an expression.
@@ -127,7 +134,7 @@ class CalculatorFormula
     private val isMemoryEnabled: Boolean
         @SuppressLint("NewApi")
         get() = mOnDisplayMemoryOperationsListener != null
-                && mOnDisplayMemoryOperationsListener!!.shouldDisplayMemory()
+            && mOnDisplayMemoryOperationsListener!!.shouldDisplayMemory()
 
     /**
      * Property that can be queried to determine if there is data on the clipboard. The getter for
@@ -171,13 +178,13 @@ class CalculatorFormula
     init {
 
         val a = context.obtainStyledAttributes(
-                attrs, R.styleable.CalculatorFormula, defStyleAttr, 0)
+            attrs, R.styleable.CalculatorFormula, defStyleAttr, 0)
         maximumTextSize = a.getDimension(
-                R.styleable.CalculatorFormula_maxTextSize, textSize)
+            R.styleable.CalculatorFormula_maxTextSize, textSize)
         minimumTextSize = a.getDimension(
-                R.styleable.CalculatorFormula_minTextSize, textSize)
+            R.styleable.CalculatorFormula_minTextSize, textSize)
         mStepTextSize = a.getDimension(R.styleable.CalculatorFormula_stepTextSize,
-                (maximumTextSize - minimumTextSize) / 3)
+            (maximumTextSize - minimumTextSize) / 3)
         a.recycle()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -210,7 +217,7 @@ class CalculatorFormula
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         if (!isLaidOut) {
             // Prevent shrinking/resizing with our variable textSize.
-            setTextSizeInternal(TypedValue.COMPLEX_UNIT_PX, maximumTextSize,false)
+            setTextSizeInternal(TypedValue.COMPLEX_UNIT_PX, maximumTextSize, false)
             minimumHeight = (lineHeight + compoundPaddingBottom + compoundPaddingTop)
         }
 
@@ -451,7 +458,7 @@ class CalculatorFormula
      * @param listener the `OnDisplayMemoryOperationsListener` we are to use.
      */
     fun setOnDisplayMemoryOperationsListener(
-            listener: Calculator2.OnDisplayMemoryOperationsListener) {
+        listener: Calculator2.OnDisplayMemoryOperationsListener) {
         mOnDisplayMemoryOperationsListener = listener
     }
 
@@ -682,6 +689,12 @@ class CalculatorFormula
      * textsize changes.
      */
     interface OnTextSizeChangeListener {
+        /**
+         * This is called whenever the textsize changes.
+         *
+         * @param textView [TextView] whose text size has changed.
+         * @param oldSize old text size.
+         */
         fun onTextSizeChanged(textView: TextView, oldSize: Float)
     }
 
@@ -713,6 +726,6 @@ class CalculatorFormula
         /**
          * The tag used for our action mode.
          */
-        const val TAG_ACTION_MODE = "ACTION_MODE"
+        const val TAG_ACTION_MODE: String = "ACTION_MODE"
     }
 }

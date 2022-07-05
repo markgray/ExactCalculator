@@ -39,29 +39,29 @@ package com.example.calculator2
  */
 @Suppress("MemberVisibilityCanBePrivate")
 class StringFloatRep internal constructor(
-        /**
-         * The sign associated with this approximation.  May be -1, _1, or zero.
-         */
-        var sign: Int,
-        /**
-         * A string representation of the mantissa.  The decimal point is implicitly
-         * to the left of the string of digits, and is not explicitly represented.
-         */
-        var mantissa: String,
-        /**
-         * The radix of the representation.  Also the base of the exponent field.
-         */
-        var radix: Int,
-        /**
-         * The mantissa is scaled by radix**exponent.
-         */
-        var exponent: Int) {
+    /**
+     * The sign associated with this approximation.  May be -1, _1, or zero.
+     */
+    var sign: Int,
+    /**
+     * A string representation of the mantissa.  The decimal point is implicitly
+     * to the left of the string of digits, and is not explicitly represented.
+     */
+    var mantissa: String,
+    /**
+     * The radix of the representation.  Also the base of the exponent field.
+     */
+    var radix: Int,
+    /**
+     * The mantissa is scaled by radix**exponent.
+     */
+    var exponent: Int) {
 
     /**
      * Produce a textual representation including the sign and exponent.
      */
     override fun toString(): String {
         return ((if (sign < 0) "-" else "") + mantissa + "E" + exponent
-                + if (radix == 10) "" else "(radix $radix)")
+            + if (radix == 10) "" else "(radix $radix)")
     }
 }

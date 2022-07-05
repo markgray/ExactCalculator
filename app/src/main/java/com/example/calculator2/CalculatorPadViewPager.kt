@@ -314,7 +314,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
 
         // Invalidate the adapter's data set since children may have been added during inflation.
 
-        adapter!!.notifyDataSetChanged()
+        (adapter ?: return).notifyDataSetChanged()
 
         // Let page change listener know about our initial position.
         mOnPageChangeListener.onPageSelected(currentItem)
@@ -414,8 +414,8 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
                     val childIndex = getChildDrawingOrder(childCount, i)
                     val child = getChildAt(childIndex)
                     if (child.visibility == View.VISIBLE
-                            && x >= child.left && x < child.right
-                            && y >= child.top && y < child.bottom) {
+                        && x >= child.left && x < child.right
+                        && y >= child.top && y < child.bottom) {
                         if (action == MotionEvent.ACTION_DOWN) {
                             mClickedItemIndex = childIndex
                         }

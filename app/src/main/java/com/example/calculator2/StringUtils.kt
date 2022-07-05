@@ -103,9 +103,9 @@ object StringUtils {
      * @return String of characters added to the end of [prefix] to create [whole] or *null*.
      */
     fun getExtensionIgnoring(
-            whole: CharSequence,
-            prefix: CharSequence,
-            c: Char
+        whole: CharSequence,
+        prefix: CharSequence,
+        c: Char
     ): CharSequence? {
         var wIndex = 0
         var pIndex = 0

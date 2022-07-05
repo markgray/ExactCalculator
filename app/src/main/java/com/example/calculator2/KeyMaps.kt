@@ -43,17 +43,17 @@ object KeyMaps {
     /**
      * Value returned by [digVal] function when the key checked is not a digit key (not 0-9)
      */
-    const val NOT_DIGIT = 10
+    const val NOT_DIGIT: Int = 10
 
     /**
      * The utf-8 elipsis string ...
      */
-    const val ELLIPSIS = "\u2026"
+    const val ELLIPSIS: String = "\u2026"
 
     /**
      * The utf-8 minus sign
      */
-    const val MINUS_SIGN = '\u2212'
+    const val MINUS_SIGN: Char = '\u2212'
 
     // The following two are only used for recognizing additional
     // input characters from a physical keyboard.  They are not used
@@ -62,6 +62,7 @@ object KeyMaps {
      * The locale-dependent decimal point character.
      */
     private var mDecimalPt: Char = ' '
+
     /**
      * The π character.
      */
@@ -245,23 +246,23 @@ object KeyMaps {
         when (id) {
             R.id.op_fact -> return context.getString(R.string.desc_op_fact)
             R.id.fun_sin -> return (context.getString(R.string.desc_fun_sin)
-                    + " " + context.getString(R.string.desc_lparen))
+                + " " + context.getString(R.string.desc_lparen))
             R.id.fun_cos -> return (context.getString(R.string.desc_fun_cos)
-                    + " " + context.getString(R.string.desc_lparen))
+                + " " + context.getString(R.string.desc_lparen))
             R.id.fun_tan -> return (context.getString(R.string.desc_fun_tan)
-                    + " " + context.getString(R.string.desc_lparen))
+                + " " + context.getString(R.string.desc_lparen))
             R.id.fun_arcsin -> return (context.getString(R.string.desc_fun_arcsin)
-                    + " " + context.getString(R.string.desc_lparen))
+                + " " + context.getString(R.string.desc_lparen))
             R.id.fun_arccos -> return (context.getString(R.string.desc_fun_arccos)
-                    + " " + context.getString(R.string.desc_lparen))
+                + " " + context.getString(R.string.desc_lparen))
             R.id.fun_arctan -> return (context.getString(R.string.desc_fun_arctan)
-                    + " " + context.getString(R.string.desc_lparen))
+                + " " + context.getString(R.string.desc_lparen))
             R.id.fun_ln -> return (context.getString(R.string.desc_fun_ln)
-                    + " " + context.getString(R.string.desc_lparen))
+                + " " + context.getString(R.string.desc_lparen))
             R.id.fun_log -> return (context.getString(R.string.desc_fun_log)
-                    + " " + context.getString(R.string.desc_lparen))
+                + " " + context.getString(R.string.desc_lparen))
             R.id.fun_exp -> return (context.getString(R.string.desc_fun_exp)
-                    + " " + context.getString(R.string.desc_lparen))
+                + " " + context.getString(R.string.desc_lparen))
             R.id.lparen -> return context.getString(R.string.desc_lparen)
             R.id.rparen -> return context.getString(R.string.desc_rparen)
             R.id.op_pow -> return context.getString(R.string.desc_op_pow)
@@ -456,8 +457,8 @@ object KeyMaps {
      * @param button_id the resource ID of the button whose information we want to add.
      */
     internal fun addButtonToFunMap(button_id: Int) {
-        val button = mActivity!!.findViewById<Button>(button_id)
-        sKeyValForFun!![button.text.toString()] = button_id
+        val button = (mActivity ?: return).findViewById<Button>(button_id)
+        (sKeyValForFun ?: return)[button.text.toString()] = button_id
     }
 
     /**
@@ -470,8 +471,8 @@ object KeyMaps {
      * @param button_id The resource ID of the button that produces the character [c].
      */
     internal fun addButtonToOutputMap(c: Char, button_id: Int) {
-        val button = mActivity!!.findViewById<Button>(button_id)
-        sOutputForResultChar!![c] = button.text.toString()
+        val button = (mActivity ?: return).findViewById<Button>(button_id)
+        (sOutputForResultChar ?: return)[c] = button.text.toString()
     }
 
     /**
@@ -491,18 +492,18 @@ object KeyMaps {
 
         Log.v("Calculator", "Setting locale to: " + locale.toLanguageTag())
         sKeyValForFun = HashMap()
-        sKeyValForFun!!["sin"] = R.id.fun_sin
-        sKeyValForFun!!["cos"] = R.id.fun_cos
-        sKeyValForFun!!["tan"] = R.id.fun_tan
-        sKeyValForFun!!["arcsin"] = R.id.fun_arcsin
-        sKeyValForFun!!["arccos"] = R.id.fun_arccos
-        sKeyValForFun!!["arctan"] = R.id.fun_arctan
-        sKeyValForFun!!["asin"] = R.id.fun_arcsin
-        sKeyValForFun!!["acos"] = R.id.fun_arccos
-        sKeyValForFun!!["atan"] = R.id.fun_arctan
-        sKeyValForFun!!["ln"] = R.id.fun_ln
-        sKeyValForFun!!["log"] = R.id.fun_log
-        sKeyValForFun!!["sqrt"] = R.id.op_sqrt // special treatment
+        (sKeyValForFun ?: return)["sin"] = R.id.fun_sin
+        (sKeyValForFun ?: return)["cos"] = R.id.fun_cos
+        (sKeyValForFun ?: return)["tan"] = R.id.fun_tan
+        (sKeyValForFun ?: return)["arcsin"] = R.id.fun_arcsin
+        (sKeyValForFun ?: return)["arccos"] = R.id.fun_arccos
+        (sKeyValForFun ?: return)["arctan"] = R.id.fun_arctan
+        (sKeyValForFun ?: return)["asin"] = R.id.fun_arcsin
+        (sKeyValForFun ?: return)["acos"] = R.id.fun_arccos
+        (sKeyValForFun ?: return)["atan"] = R.id.fun_arctan
+        (sKeyValForFun ?: return)["ln"] = R.id.fun_ln
+        (sKeyValForFun ?: return)["log"] = R.id.fun_log
+        (sKeyValForFun ?: return)["sqrt"] = R.id.op_sqrt // special treatment
         addButtonToFunMap(R.id.fun_sin)
         addButtonToFunMap(R.id.fun_cos)
         addButtonToFunMap(R.id.fun_tan)
@@ -516,7 +517,7 @@ object KeyMaps {
         mDecimalPt = DecimalFormatSymbols.getInstance().decimalSeparator
         // We recognize this in keyboard input, even if we use
         // a different character.
-        val res = mActivity!!.resources
+        val res = (mActivity ?: return).resources
         mPiChar = 0.toChar()
         val piString = res.getString(R.string.const_pi)
         if (piString.length == 1) {
@@ -524,20 +525,21 @@ object KeyMaps {
         }
 
         sOutputForResultChar = HashMap()
-        sOutputForResultChar!!['e'] = "E"
-        sOutputForResultChar!!['E'] = "E"
-        sOutputForResultChar!![' '] = CHAR_DIGIT_UNKNOWN.toString()
-        sOutputForResultChar!![ELLIPSIS[0]] = ELLIPSIS
+        (sOutputForResultChar ?: return)['e'] = "E"
+        (sOutputForResultChar ?: return)['E'] = "E"
+        (sOutputForResultChar ?: return)[' '] = CHAR_DIGIT_UNKNOWN.toString()
+        (sOutputForResultChar ?: return)[ELLIPSIS[0]] = ELLIPSIS
         // Translate numbers for fraction display, but not the separating slash, which appears
         // to be universal.  We also do not translate the ln, sqrt, pi
-        sOutputForResultChar!!['/'] = "/"
-        sOutputForResultChar!!['('] = "("
-        sOutputForResultChar!![')'] = ")"
-        sOutputForResultChar!!['l'] = "l"
-        sOutputForResultChar!!['n'] = "n"
-        sOutputForResultChar!![','] = DecimalFormatSymbols.getInstance().groupingSeparator.toString()
-        sOutputForResultChar!!['\u221A'] = "\u221A" // SQUARE ROOT
-        sOutputForResultChar!!['\u03C0'] = "\u03C0" // GREEK SMALL LETTER PI
+        (sOutputForResultChar ?: return)['/'] = "/"
+        (sOutputForResultChar ?: return)['('] = "("
+        (sOutputForResultChar ?: return)[')'] = ")"
+        (sOutputForResultChar ?: return)['l'] = "l"
+        (sOutputForResultChar ?: return)['n'] = "n"
+        (sOutputForResultChar
+            ?: return)[','] = DecimalFormatSymbols.getInstance().groupingSeparator.toString()
+        (sOutputForResultChar ?: return)['\u221A'] = "\u221A" // SQUARE ROOT
+        (sOutputForResultChar ?: return)['\u03C0'] = "\u03C0" // GREEK SMALL LETTER PI
         addButtonToOutputMap('-', R.id.op_sub)
         addButtonToOutputMap('.', R.id.dec_point)
         for (i in 0..9) {

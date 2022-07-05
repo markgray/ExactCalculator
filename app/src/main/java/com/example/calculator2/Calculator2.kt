@@ -63,11 +63,14 @@ import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+/**
+ * This is the main activity or our app.
+ */
 @RequiresApi(Build.VERSION_CODES.N)
 @Suppress("MemberVisibilityCanBePrivate", "LocalVariableName")
 class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickListener,
-        AlertDialogFragment.OnClickListener, Evaluator.EvaluationListener /* for main result */,
-        DragLayout.CloseCallback, DragLayout.DragCallback {
+    AlertDialogFragment.OnClickListener, Evaluator.EvaluationListener /* for main result */,
+    DragLayout.CloseCallback, DragLayout.DragCallback {
     // Normal transition sequence is
     // INPUT -> EVALUATE -> ANIMATE -> RESULT (or ERROR) -> INPUT
     // A RESULT -> ERROR transition is possible in rare corner cases, in which
@@ -145,7 +148,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         override fun showMessageDialog(@StringRes title: Int, @StringRes message: Int,
                                        @StringRes positiveButtonLabel: Int, tag: String?) {
             AlertDialogFragment.showMessageDialog(this@Calculator2, title, message,
-                    positiveButtonLabel, tag)
+                positiveButtonLabel, tag)
 
         }
     }
@@ -186,8 +189,8 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
          */
         override fun onPaste(clip: ClipData): Boolean {
             val item = (if (clip.itemCount == 0) null else clip.getItemAt(0))
-                    ?: // nothing to paste, bail early...
-                    return false
+                ?: // nothing to paste, bail early...
+                return false
 
             // Check if the item is a previously copied result, otherwise paste as raw text.
             val uri = item.uri
@@ -251,6 +254,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * The current [CalculatorState] of the calculator.
      */
     private lateinit var mCurrentState: CalculatorState
+
     /**
      * The [Evaluator] instance we use to evaluate the formulas entered.
      */
@@ -261,22 +265,27 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * the toolbar, formula, and result.
      */
     private lateinit var mDisplayView: CalculatorDisplay
+
     /**
      * The [TextView] in our ui which displays whether we are in degree mode or radian mode
      */
     private lateinit var mModeView: TextView
+
     /**
      * The [CalculatorFormula] TextView displaying the current formula.
      */
     private lateinit var mFormulaText: CalculatorFormula
+
     /**
      * The [CalculatorResult] TextView displaying the results of our calculations.
      */
     private lateinit var mResultText: CalculatorResult
+
     /**
      * The [HorizontalScrollView] holding our infinite [CalculatorFormula] formula TextView
      */
     private lateinit var mFormulaContainer: HorizontalScrollView
+
     /**
      * The [DragLayout] with id R.id.drag_layout which holds the FrameLayout for our history
      */
@@ -287,18 +296,22 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * (it is null when in landscape orientation).
      */
     private var mPadViewPager: ViewPager? = null
+
     /**
      * The DEL key (id R.id.del) deletes character from forumla on click, clears display on long click
      */
     private lateinit var mDeleteButton: View
+
     /**
      * The CLR key (id R.id.clr) clears display, only visible after pressing '=' key (replaces DEL)
      */
     private lateinit var mClearButton: View
+
     /**
      * The '=' key (id R.id.eq) starts evaluation of the current formual
      */
     private lateinit var mEqualButton: View
+
     /**
      * The layout file that is resolved from the "activity_calculator" value for the particular
      * screen size of our device, could be layout/activity_calculator_port.xml, or could be
@@ -312,6 +325,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * The INV button (id R.id.toggle_inv) toggles transcendental functions to/from their inverse
      */
     private lateinit var mInverseToggle: TextView
+
     /**
      * Button used to toggle the RAD/DEG trigonometric mode currently in effect
      */
@@ -323,6 +337,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * of these buttons is toggled VISIBLE/GONE by the INV button)
      */
     private lateinit var mInvertibleButtons: Array<View>
+
     /**
      * Array containing references to all the inverse transcendental function buttons: R.id.fun_arcsin,
      * R.id.fun_arccos, R.id.fun_arctan, R.id.fun_exp, R.id.fun_10pow, and R.id.op_sqr (the visibility
@@ -335,6 +350,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * the center of the [reveal] method's animation which sweeps over the display and status bar.
      */
     private lateinit var mCurrentButton: View
+
     /**
      * [AnimatorSet] set in action by [reveal] or [onResult] methods (or null when they are done)
      */
@@ -402,15 +418,20 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      */
     private enum class CalculatorState {
         INPUT, // Result and formula both visible, no evaluation requested,
+
         // Though result may be visible on bottom line.
         EVALUATE, // Both visible, evaluation requested, evaluation/animation incomplete.
+
         // Not used for instant result evaluation.
         INIT, // Very temporary state used as alternative to EVALUATE
+
         // during reinitialization.  Do not animate on completion.
         INIT_FOR_RESULT, // Identical to INIT, but evaluation is known to terminate
+
         // with result, and current expression has been copied to history.
         ANIMATE, // Result computed, animation to enlarge result window in progress.
         RESULT, // Result displayed, formula invisible.
+
         // If we are in RESULT state, the formula was evaluated without
         // error to initial precision.
         // The current formula is now also the last history entry.
@@ -463,7 +484,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      */
     private fun restoreInstanceState(savedInstanceState: Bundle) {
         val indexOfEnum = savedInstanceState
-                .getInt(KEY_DISPLAY_STATE, CalculatorState.INPUT.ordinal)
+            .getInt(KEY_DISPLAY_STATE, CalculatorState.INPUT.ordinal)
         val savedState = CalculatorState.values()[indexOfEnum]
         setState(savedState)
         val unprocessed = savedInstanceState.getCharSequence(KEY_UNPROCESSED_CHARS)
@@ -473,8 +494,8 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         val state = savedInstanceState.getByteArray(KEY_EVAL_STATE)
         if (state != null) {
             try {
-                ObjectInputStream(ByteArrayInputStream(state)).use {
-                    stream -> mEvaluator.restoreInstanceState(stream)
+                ObjectInputStream(ByteArrayInputStream(state)).use { stream ->
+                    mEvaluator.restoreInstanceState(stream)
                 }
             } catch (ignored: Throwable) {
                 // When in doubt, revert to clean state
@@ -593,8 +614,8 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         actionBar?.displayOptions = 0
 
         // Ensure the toolbar stays visible while the options menu is displayed.
-        actionBar?.addOnMenuVisibilityListener {
-            isVisible -> mDisplayView.forceToolbarVisible = isVisible
+        actionBar?.addOnMenuVisibilityListener { isVisible ->
+            mDisplayView.forceToolbarVisible = isVisible
         }
 
         mMainCalculator = findViewById(R.id.main_calculator)
@@ -630,11 +651,11 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         isOneLine = mResultText.visibility == View.INVISIBLE
 
         mInvertibleButtons = arrayOf(findViewById(R.id.fun_sin), findViewById(R.id.fun_cos),
-                findViewById(R.id.fun_tan), findViewById(R.id.fun_ln), findViewById(R.id.fun_log),
-                findViewById(R.id.op_sqrt))
+            findViewById(R.id.fun_tan), findViewById(R.id.fun_ln), findViewById(R.id.fun_log),
+            findViewById(R.id.op_sqrt))
         mInverseButtons = arrayOf(findViewById(R.id.fun_arcsin), findViewById(R.id.fun_arccos),
-                findViewById(R.id.fun_arctan), findViewById(R.id.fun_exp),
-                findViewById(R.id.fun_10pow), findViewById(R.id.op_sqr))
+            findViewById(R.id.fun_arctan), findViewById(R.id.fun_exp),
+            findViewById(R.id.fun_10pow), findViewById(R.id.op_sqr))
 
         mDragLayout = findViewById(R.id.drag_layout)
         mDragLayout.removeDragCallback(this)
@@ -809,9 +830,9 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                 }
                 mCurrentState != CalculatorState.RESULT -> {
                     mFormulaText.setTextColor(
-                            ContextCompat.getColor(this, R.color.display_formula_text_color))
+                        ContextCompat.getColor(this, R.color.display_formula_text_color))
                     mResultText.setTextColor(
-                            ContextCompat.getColor(this, R.color.display_result_text_color))
+                        ContextCompat.getColor(this, R.color.display_result_text_color))
                     window.statusBarColor = ContextCompat.getColor(this, R.color.calculator_statusbar_color)
                 }
             }
@@ -922,8 +943,9 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                     }
                     return
                 }
-                mPadViewPager != null && mPadViewPager!!.currentItem != 0 -> {
-                    mPadViewPager!!.currentItem = mPadViewPager!!.currentItem - 1
+                mPadViewPager != null && (mPadViewPager ?: return).currentItem != 0 -> {
+                    (mPadViewPager ?: return).currentItem = (mPadViewPager
+                        ?: return).currentItem - 1
                 }
                 else -> super.onBackPressed()
             }
@@ -1181,7 +1203,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      */
     fun evaluateInstantIfNecessary() {
         if (mCurrentState == CalculatorState.INPUT
-                && mEvaluator.exprGet(Evaluator.MAIN_INDEX).hasInterestingOps()) {
+            && mEvaluator.exprGet(Evaluator.MAIN_INDEX).hasInterestingOps()) {
             mEvaluator.evaluateAndNotify(Evaluator.MAIN_INDEX, this, mResultText)
         }
     }
@@ -1327,7 +1349,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                 cancelIfEvaluating(false)
                 val mode = !mEvaluator.degreeModeGet(Evaluator.MAIN_INDEX)
                 if (mCurrentState == CalculatorState.RESULT
-                        && mEvaluator.exprGet(Evaluator.MAIN_INDEX).hasTrigFuncs()) {
+                    && mEvaluator.exprGet(Evaluator.MAIN_INDEX).hasTrigFuncs()) {
                     // Capture current result evaluated in old mode.
                     mEvaluator.collapse(mEvaluator.maxIndexGet())
                     redisplayFormula()
@@ -1374,7 +1396,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         if (mUnprocessedChars != null) {
             // Add and highlight characters we couldn't process.
             formula.append(mUnprocessedChars, mUnprocessedColorSpan,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
         mFormulaText.changeTextTo(formula)
         mFormulaText.contentDescription = if (TextUtils.isEmpty(formula))
@@ -1433,8 +1455,8 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         if (mCurrentState != CalculatorState.INPUT) {
             // In EVALUATE, INIT, RESULT, or INIT_FOR_RESULT state.
             onResult(mCurrentState == CalculatorState.EVALUATE /* animate */,
-                    mCurrentState == CalculatorState.INIT_FOR_RESULT
-                            || mCurrentState == CalculatorState.RESULT /* previously preserved */)
+                mCurrentState == CalculatorState.INIT_FOR_RESULT
+                    || mCurrentState == CalculatorState.RESULT /* previously preserved */)
         }
     }
 
@@ -1499,10 +1521,10 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
 
         val animatorSet = AnimatorSet()
         animatorSet.playTogether(
-                ObjectAnimator.ofFloat(textView, View.SCALE_X, textScale, 1.0f),
-                ObjectAnimator.ofFloat(textView, View.SCALE_Y, textScale, 1.0f),
-                ObjectAnimator.ofFloat(textView, View.TRANSLATION_X, translationX, 0.0f),
-                ObjectAnimator.ofFloat(textView, View.TRANSLATION_Y, translationY, 0.0f))
+            ObjectAnimator.ofFloat(textView, View.SCALE_X, textScale, 1.0f),
+            ObjectAnimator.ofFloat(textView, View.SCALE_Y, textScale, 1.0f),
+            ObjectAnimator.ofFloat(textView, View.TRANSLATION_X, translationX, 0.0f),
+            ObjectAnimator.ofFloat(textView, View.TRANSLATION_Y, translationY, 0.0f))
         animatorSet.duration = resources.getInteger(android.R.integer.config_mediumAnimTime).toLong()
         animatorSet.interpolator = AccelerateDecelerateInterpolator()
         animatorSet.start()
@@ -1594,7 +1616,8 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         if (cancelIfEvaluating(false)) return
         setState(CalculatorState.INPUT)
         if (haveUnprocessed()) {
-            mUnprocessedChars = mUnprocessedChars?.substring(0, mUnprocessedChars!!.length - 1)
+            mUnprocessedChars = mUnprocessedChars?.substring(0, (mUnprocessedChars
+                ?: return).length - 1)
         } else {
             mEvaluator.delete()
         }
@@ -1676,7 +1699,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         val revealRadius = max(sqrt(x1_2 + y_2), sqrt(x2_2 + y_2)).toFloat()
 
         val revealAnimator = ViewAnimationUtils.createCircularReveal(revealView,
-                revealCenterX, revealCenterY, 0.0f, revealRadius)
+            revealCenterX, revealCenterY, 0.0f, revealRadius)
         revealAnimator.duration = resources.getInteger(android.R.integer.config_longAnimTime).toLong()
         revealAnimator.addListener(listener)
 
@@ -1785,12 +1808,12 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                 setState(CalculatorState.ANIMATE)
                 mResultText.announceForAccessibility(resources.getString(errorId))
                 reveal(mCurrentButton, R.color.calculator_error_color,
-                        object : AnimatorListenerAdapter() {
-                            override fun onAnimationEnd(animation: Animator) {
-                                setState(CalculatorState.ERROR)
-                                mResultText.onError(index, errorId)
-                            }
-                        })
+                    object : AnimatorListenerAdapter() {
+                        override fun onAnimationEnd(animation: Animator) {
+                            setState(CalculatorState.ERROR)
+                            mResultText.onError(index, errorId)
+                        }
+                    })
             }
             CalculatorState.INIT, CalculatorState.INIT_FOR_RESULT -> {  /* very unlikely */
                 setState(CalculatorState.ERROR)
@@ -1872,7 +1895,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         // Calculate the necessary translations so the result takes the place of the formula and
         // the formula moves off the top of the screen.
         val resultTranslationY = (mFormulaContainer.bottom - mResultText.bottom
-                - (mFormulaText.paddingBottom - mResultText.paddingBottom)).toFloat()
+            - (mFormulaText.paddingBottom - mResultText.paddingBottom)).toFloat()
         var formulaTranslationY = (-mFormulaContainer.bottom).toFloat()
         if (isOneLine) {
             // Position the result text.
@@ -1898,15 +1921,15 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
             setState(CalculatorState.ANIMATE)
             val animatorSet = AnimatorSet()
             animatorSet.playTogether(
-                    ObjectAnimator.ofPropertyValuesHolder(mResultText,
-                            PropertyValuesHolder.ofFloat(View.SCALE_X, resultScale),
-                            PropertyValuesHolder.ofFloat(View.SCALE_Y, resultScale),
-                            PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, resultTranslationY)),
-                    ObjectAnimator.ofArgb(mResultText, textColor, formulaTextColor),
-                    ObjectAnimator.ofFloat(mFormulaContainer, View.TRANSLATION_Y, formulaTranslationY))
+                ObjectAnimator.ofPropertyValuesHolder(mResultText,
+                    PropertyValuesHolder.ofFloat(View.SCALE_X, resultScale),
+                    PropertyValuesHolder.ofFloat(View.SCALE_Y, resultScale),
+                    PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, resultTranslationY)),
+                ObjectAnimator.ofArgb(mResultText, textColor, formulaTextColor),
+                ObjectAnimator.ofFloat(mFormulaContainer, View.TRANSLATION_Y, formulaTranslationY))
             animatorSet.duration = resources
-                    .getInteger(android.R.integer.config_longAnimTime)
-                    .toLong()
+                .getInteger(android.R.integer.config_longAnimTime)
+                .toLong()
             animatorSet.addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     setState(CalculatorState.RESULT)
@@ -2138,8 +2161,8 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * @return *true* to have [DragLayout] capture the [view].
      */
     override fun shouldCaptureView(view: View, x: Int, y: Int): Boolean =
-            (view.id == R.id.history_frame
-                    && (mDragLayout.isMoving || mDragLayout.isViewUnder(view, x, y)))
+        (view.id == R.id.history_frame
+            && (mDragLayout.isMoving || mDragLayout.isViewUnder(view, x, y)))
 
     /**
      * Called from the *onLayout* override of [DragLayout] to get the height of our [mDisplayView],
@@ -2220,10 +2243,10 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
 
         stopActionModeOrContextMenu()
         manager.beginTransaction()
-                .replace(R.id.history_frame, HistoryFragment() as Fragment, HistoryFragment.TAG)
-                .setTransition(FragmentTransaction.TRANSIT_NONE)
-                .addToBackStack(HistoryFragment.TAG)
-                .commit()
+            .replace(R.id.history_frame, HistoryFragment() as Fragment, HistoryFragment.TAG)
+            .setTransition(FragmentTransaction.TRANSIT_NONE)
+            .addToBackStack(HistoryFragment.TAG)
+            .commit()
 
         // When HistoryFragment is visible, hide all descendants of the main Calculator view.
         mMainCalculator.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
@@ -2250,7 +2273,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
     private fun displayFraction() {
         val result = mEvaluator.resultGet(Evaluator.MAIN_INDEX)
         displayMessage(getString(R.string.menu_fraction),
-                KeyMaps.translateResult(result!!.toNiceString()))
+            KeyMaps.translateResult((result ?: return).toNiceString()))
     }
 
     /**
@@ -2377,7 +2400,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                 } else {
                     val isDigit = KeyMaps.digVal(k) != KeyMaps.NOT_DIGIT
                     if (current == 0 && (isDigit || k == R.id.dec_point)
-                            && mEvaluator.exprGet(Evaluator.MAIN_INDEX).hasTrailingConstant()) {
+                        && mEvaluator.exprGet(Evaluator.MAIN_INDEX).hasTrailingConstant()) {
                         // Refuse to concatenate pasted content to trailing constant.
                         // This makes pasting of calculator results more consistent, whether or
                         // not the old calculator instance is still around.
@@ -2475,29 +2498,34 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         /**
          * Constant for an invalid resource id.
          */
-        const val INVALID_RES_ID = -1
+        const val INVALID_RES_ID: Int = -1
 
         /**
          * Namespace we use for the keys of values saved by [onSaveInstanceState] in the [Bundle] it
          * is passed, and which are restored by [restoreInstanceState].
          */
         private const val NAME = "Calculator"
+
         /**
          * Key under which the Int *ordinal* of [mCurrentState] is saved.
          */
         private const val KEY_DISPLAY_STATE = NAME + "_display_state"
+
         /**
          * Key under which the [CharSequence] of [mUnprocessedChars] is stored.
          */
         private const val KEY_UNPROCESSED_CHARS = NAME + "_unprocessed_chars"
+
         /**
          * Associated value is a byte array holding the evaluator state of [mEvaluator].
          */
         private const val KEY_EVAL_STATE = NAME + "_eval_state"
+
         /**
          *  Key under which the boolean *isSelected* state of [mInverseToggle] is stored.
          */
         private const val KEY_INVERSE_MODE = NAME + "_inverse_mode"
+
         /**
          * Associated value is an boolean holding the visibility state of the toolbar.
          */

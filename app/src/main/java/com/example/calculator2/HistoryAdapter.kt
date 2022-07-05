@@ -54,10 +54,12 @@ class HistoryAdapter(dataSet: ArrayList<HistoryItem?>)
      * Is the calculator display displaying a result line at the moment?
      */
     private var mIsResultLayout: Boolean = false
+
     /**
      * Does the calculator display use a one line layout?
      */
     private var mIsOneLine: Boolean = false
+
     /**
      * Is the calculator display empty?
      */
@@ -88,10 +90,10 @@ class HistoryAdapter(dataSet: ArrayList<HistoryItem?>)
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val v: View = if (viewType == HISTORY_VIEW_TYPE) {
             LayoutInflater.from(parent.context)
-                    .inflate(R.layout.history_item, parent, false)
+                .inflate(R.layout.history_item, parent, false)
         } else {
             LayoutInflater.from(parent.context)
-                    .inflate(R.layout.empty_history_view, parent, false)
+                .inflate(R.layout.empty_history_view, parent, false)
         }
         return ViewHolder(v, viewType)
     }
@@ -130,25 +132,25 @@ class HistoryAdapter(dataSet: ArrayList<HistoryItem?>)
             return
         }
 
-        holder.formula!!.text = item.formulaGet()
+        (holder.formula ?: return).text = item.formulaGet()
         // Note: HistoryItems that are not the current expression will always have interesting ops.
-        holder.result!!.setEvaluator(mEvaluator!!, item.evaluatorIndexGet())
+        (holder.result ?: return).setEvaluator(mEvaluator ?: return, item.evaluatorIndexGet())
         if (item.evaluatorIndexGet() == Evaluator.HISTORY_MAIN_INDEX) {
-            holder.date!!.setText(R.string.title_current_expression)
+            (holder.date ?: return).setText(R.string.title_current_expression)
             holder.result.visibility = if (mIsOneLine) View.GONE else View.VISIBLE
         } else {
             // If the previous item occurred on the same date, the current item does not need
             // a date header.
             if (shouldShowHeader(position, item)) {
-                holder.date!!.text = item.dateStringGet()
+                (holder.date ?: return).text = item.dateStringGet()
                 // Special case -- very first item should not have a divider above it.
-                holder.divider!!.visibility = if (position == itemCount - 1)
+                (holder.divider ?: return).visibility = if (position == itemCount - 1)
                     View.GONE
                 else
                     View.VISIBLE
             } else {
-                holder.date!!.visibility = View.GONE
-                holder.divider!!.visibility = View.INVISIBLE
+                (holder.date ?: return).visibility = View.GONE
+                (holder.divider ?: return).visibility = View.INVISIBLE
             }
         }
     }
@@ -179,13 +181,13 @@ class HistoryAdapter(dataSet: ArrayList<HistoryItem?>)
         if (holder.itemViewType == EMPTY_VIEW_TYPE) {
             return
         }
-        mEvaluator!!.cancel(holder.itemId, true)
+        (mEvaluator ?: return).cancel(holder.itemId, true)
 
-        holder.date!!.visibility = View.VISIBLE
-        holder.divider!!.visibility = View.VISIBLE
+        (holder.date ?: return).visibility = View.VISIBLE
+        (holder.divider ?: return).visibility = View.VISIBLE
         holder.date.text = null
-        holder.formula!!.text = null
-        holder.result!!.text = null
+        (holder.formula ?: return).text = null
+        (holder.result ?: return).text = null
 
         super.onViewRecycled(holder)
     }
@@ -341,8 +343,8 @@ class HistoryAdapter(dataSet: ArrayList<HistoryItem?>)
         if (item == null) {
             val evaluatorIndex = getEvaluatorIndex(position)
             item = HistoryItem(evaluatorIndex.toLong(),
-                    mEvaluator!!.timeStampGet(evaluatorIndex.toLong()),
-                    mEvaluator!!.exprAsSpannableGet(evaluatorIndex.toLong()))
+                mEvaluator!!.timeStampGet(evaluatorIndex.toLong()),
+                mEvaluator!!.exprAsSpannableGet(evaluatorIndex.toLong()))
             mDataSet!![position] = item
         }
         return item
@@ -360,14 +362,17 @@ class HistoryAdapter(dataSet: ArrayList<HistoryItem?>)
          * The [TextView] displaying our date header (if any).
          */
         val date: TextView?
+
         /**
          * The [AlignedTextView] displaying our formula.
          */
         val formula: AlignedTextView?
+
         /**
          * The [CalculatorResult] displaying our result.
          */
         val result: CalculatorResult?
+
         /**
          * The divider [View].
          */
@@ -404,13 +409,15 @@ class HistoryAdapter(dataSet: ArrayList<HistoryItem?>)
          */
         @Suppress("unused")
         private const val TAG = "HistoryAdapter"
+
         /**
          * View type used when history is empty.
          */
         private const val EMPTY_VIEW_TYPE = 0
+
         /**
          * View type which holds a normal [HistoryItem]
          */
-        const val HISTORY_VIEW_TYPE = 1
+        const val HISTORY_VIEW_TYPE: Int = 1
     }
 }

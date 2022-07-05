@@ -326,8 +326,8 @@ internal class SqrtUnaryCRFunction : UnaryCRFunction() {
  * value returned by the `execute` method of its [f2] parameter.
  */
 internal class ComposeUnaryCRFunction(
-        var f1: UnaryCRFunction,
-        var f2: UnaryCRFunction
+    var f1: UnaryCRFunction,
+    var f2: UnaryCRFunction
 ) : UnaryCRFunction() {
 
     override fun execute(x: CR): CR {
@@ -336,15 +336,16 @@ internal class ComposeUnaryCRFunction(
 }
 
 internal class InverseMonotoneUnaryCRFunction(
-        func: UnaryCRFunction,
-        l: CR,
-        h: CR
+    func: UnaryCRFunction,
+    l: CR,
+    h: CR
 ) : UnaryCRFunction() {
     // The following variables are final, so that they
     // can be referenced from the inner class InverseIncreasingCR.
     // I couldn't find a way to initialize these such that the
     // compiler accepted them as final without turning them into arrays.
     val f = arrayOfNulls<UnaryCRFunction>(1)
+
     // Monotone increasing.
     // If it was monotone decreasing, we
     // negate it.
@@ -354,8 +355,10 @@ internal class InverseMonotoneUnaryCRFunction(
     val fLow = arrayOfNulls<CR>(1)
     val fHigh = arrayOfNulls<CR>(1)
     val maxMsd = IntArray(1)
+
     // Bound on msd of both f(high) and f(low)
     val maxArgPrec = IntArray(1)
+
     // base**maxArgPrec is a small fraction
     // of low - high.
     val derivMsd = IntArray(1)
@@ -383,7 +386,7 @@ internal class InverseMonotoneUnaryCRFunction(
         maxMsd[0] = low[0]!!.abs().max(high[0]!!.abs()).msd()
         maxArgPrec[0] = high[0]!!.subtract(low[0]!!).msd() - 4
         derivMsd[0] = fHigh[0]!!.subtract(fLow[0]!!)
-                .divide(high[0]!!.subtract(low[0]!!)).msd()
+            .divide(high[0]!!.subtract(low[0]!!)).msd()
     }
 
     internal inner class InverseIncreasingCR(x: CR) : CR() {
@@ -451,9 +454,9 @@ internal class InverseMonotoneUnaryCRFunction(
             var h: BigInteger
             var fH: BigInteger
             val lowAppr = low[0]!!.approxGet(workingArgPrec)
-                    .add(big1)
+                .add(big1)
             val highAppr = high[0]!!.approxGet(workingArgPrec)
-                    .subtract(big1)
+                .subtract(big1)
             var argAppr = arg.approxGet(workingEvalPrec)
             val haveGoodAppr = apprValid && minPrec < maxMsd[0]
             if (digitsNeeded < 30 && !haveGoodAppr) {
@@ -481,9 +484,9 @@ internal class InverseMonotoneUnaryCRFunction(
                 trace("Setting interval based on prev. appr")
                 trace("prev. prec = $roughPrec appr = $roughAppr")
                 h = roughAppr.add(big1)
-                        .shiftLeft(roughPrec - workingArgPrec)
+                    .shiftLeft(roughPrec - workingArgPrec)
                 l = roughAppr.subtract(big1)
-                        .shiftLeft(roughPrec - workingArgPrec)
+                    .shiftLeft(roughPrec - workingArgPrec)
                 @Suppress("ReplaceCallWithBinaryOperator")
                 if (h.compareTo(highAppr) > 0) {
                     h = highAppr
@@ -512,8 +515,8 @@ internal class InverseMonotoneUnaryCRFunction(
                     throw AbortedException()
                 trace("***Iteration: $i")
                 trace("Arg prec = " + workingArgPrec
-                        + " eval prec = " + workingEvalPrec
-                        + " arg appr. = " + argAppr)
+                    + " eval prec = " + workingEvalPrec
+                    + " arg appr. = " + argAppr)
                 trace("l = $l")
                 trace("h = $h")
                 trace("f(l) = $fL")
@@ -553,9 +556,9 @@ internal class InverseMonotoneUnaryCRFunction(
                             adj = adj.shiftLeft(8)
                             trace("adjusting left")
                         } else if (adj.compareTo(difference.multiply(BIG1023)
-                                        .shiftRight(10)) > 0) {
+                                .shiftRight(10)) > 0) {
                             adj = difference.subtract(difference.subtract(adj)
-                                    .shiftLeft(8))
+                                .shiftLeft(8))
                             trace("adjusting right")
                         }
                         if (adj.signum() <= 0)
@@ -571,10 +574,10 @@ internal class InverseMonotoneUnaryCRFunction(
                     var adjPrec = false
                     while (true) {
                         val guessCR = valueOf(guess)
-                                .shiftLeft(workingArgPrec)
+                            .shiftLeft(workingArgPrec)
                         trace("Evaluating at " + guessCR
-                                + " with precision " + workingEvalPrec)
-                        val fGuessCR = fn!!.execute(guessCR)
+                            + " with precision " + workingEvalPrec)
+                        val fGuessCR = (fn ?: return@run).execute(guessCR)
                         trace("fn value = $fGuessCR")
                         fGuess = fGuessCR.approxGet(workingEvalPrec)
                         outcome = sloppyCompare(fGuess, argAppr)
@@ -591,19 +594,19 @@ internal class InverseMonotoneUnaryCRFunction(
                             val hCR = valueOf(h).shiftLeft(workingArgPrec)
                             workingEvalPrec += adjustment
                             trace("New eval prec = " + workingEvalPrec
-                                    + (if (atLeft) "(at left)" else "")
-                                    + if (atRight) "(at right)" else "")
+                                + (if (atLeft) "(at left)" else "")
+                                + if (atRight) "(at right)" else "")
                             fL = if (atLeft) {
-                                fLow[0]!!.approxGet(workingEvalPrec)
+                                (fLow[0] ?: return@run).approxGet(workingEvalPrec)
                             } else {
                                 fn.execute(lCR)
-                                        .approxGet(workingEvalPrec)
+                                    .approxGet(workingEvalPrec)
                             }
                             fH = if (atRight) {
-                                fHigh[0]!!.approxGet(workingEvalPrec)
+                                (fHigh[0] ?: return@run).approxGet(workingEvalPrec)
                             } else {
                                 fn.execute(hCR)
-                                        .approxGet(workingEvalPrec)
+                                    .approxGet(workingEvalPrec)
                             }
                             argAppr = arg.approxGet(workingEvalPrec)
                         } else {
@@ -637,7 +640,7 @@ internal class InverseMonotoneUnaryCRFunction(
                     if (!binaryStep) {
                         @Suppress("ReplaceCallWithBinaryOperator")
                         if (newDifference.compareTo(difference
-                                        .shiftRight(1)) >= 0) {
+                                .shiftRight(1)) >= 0) {
                             ++smallStepDeficit
                         } else {
                             --smallStepDeficit
@@ -684,6 +687,7 @@ internal class MonotoneDerivativeUnaryCRFunction
     // The following variables are final, so that they
     // can be referenced from the inner class InverseIncreasingCR.
     val f = arrayOfNulls<UnaryCRFunction>(1)
+
     // Monotone increasing.
     // If it was monotone decreasing, we
     // negate it.

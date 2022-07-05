@@ -53,6 +53,7 @@ open class AlignedTextView
      * ascent alignment.
      */
     private var mTopPaddingOffset: Int = 0
+
     /**
      * Padding offset that we subract from the normal bottom padding of our view for
      * descent (baseline) alignment.

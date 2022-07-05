@@ -47,11 +47,13 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
      * R.id.history_recycler_view which displays the History database entries.
      */
     private var mRecyclerView: RecyclerView? = null
+
     /**
      * The custom [RecyclerView.Adapter] which fills our [RecyclerView] field [mRecyclerView] with
      * [HistoryItem] entries from its dataset when requested to do so.
      */
     private var mAdapter: HistoryAdapter? = null
+
     /**
      * The [DragLayout] in the main layout file layout/activity_calculator_main.xml which holds both
      * the calculator display layout file activity_calculator and the `FrameLayout` we display in.
@@ -122,18 +124,19 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
      * @return The [View] for our fragment's UI.
      */
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_history, container, false)
 
-        mDragLayout = container!!.rootView.findViewById(R.id.drag_layout)
-        mDragLayout!!.addDragCallback(this)
+        mDragLayout = (container ?: return null).rootView.findViewById(R.id.drag_layout)
+        (mDragLayout ?: return null).addDragCallback(this)
 
         mRecyclerView = view.findViewById(R.id.history_recycler_view)
 
-        mRecyclerView!!.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        (mRecyclerView
+            ?: return null).addOnScrollListener(object : RecyclerView.OnScrollListener() {
             /**
              * Callback method to be invoked when RecyclerView's scroll state changes. If our
              * parameter [newState] is SCROLL_STATE_DRAGGING (the [RecyclerView] is currently
@@ -155,8 +158,8 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
         })
 
         // The size of the RecyclerView is not affected by the adapter's contents.
-        mRecyclerView!!.setHasFixedSize(true)
-        mRecyclerView!!.adapter = mAdapter
+        (mRecyclerView ?: return null).setHasFixedSize(true)
+        (mRecyclerView ?: return null).adapter = mAdapter
 
         val toolbar = view.findViewById<Toolbar>(R.id.history_toolbar)
         toolbar.inflateMenu(R.menu.fragment_history)
@@ -164,9 +167,9 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
             if (item.itemId == R.id.menu_clear_history) {
                 val calculator = activity as Calculator2?
                 AlertDialogFragment.showMessageDialog(calculator!!, "" /* title */,
-                        getString(R.string.dialog_clear),
-                        getString(R.string.menu_clear_history),
-                        CLEAR_DIALOG_TAG)
+                    getString(R.string.dialog_clear),
+                    getString(R.string.menu_clear_history),
+                    CLEAR_DIALOG_TAG)
                 return@OnMenuItemClickListener true
             }
             onOptionsItemSelected(item)
@@ -221,9 +224,9 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
 
-        val activity = (activity as Calculator2?)!!
+        val activity = (activity as Calculator2?) ?: return
         mEvaluator = Evaluator.instanceGet(activity)
-        mAdapter!!.setEvaluator(mEvaluator!!)
+        (mAdapter ?: return).setEvaluator(mEvaluator ?: return)
 
         val isResultLayout = activity.isResultLayout
         val isOneLine = activity.isOneLine
@@ -231,14 +234,14 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
         // Snapshot display state here. For the rest of the lifecycle of this current
         // HistoryFragment, this is what we will consider the display state.
         // In rare cases, the display state can change after our adapter is initialized.
-        val mainExpr = mEvaluator!!.exprGet(Evaluator.MAIN_INDEX)
+        val mainExpr = (mEvaluator ?: return).exprGet(Evaluator.MAIN_INDEX)
 
         @Suppress("SENSELESS_COMPARISON")
         mIsDisplayEmpty = mainExpr == null || mainExpr.isEmpty
 
         initializeController(isResultLayout, isOneLine, mIsDisplayEmpty)
 
-        val maxIndex = mEvaluator!!.maxIndexGet()
+        val maxIndex = (mEvaluator ?: return).maxIndexGet()
 
         val newDataSet = ArrayList<HistoryItem?>()
 
@@ -248,25 +251,25 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
             // RecyclerView).
             // If we are in the result state, the result will animate to the last history
             // element in the list and there will be no "Current Expression."
-            mEvaluator!!.copyMainToHistory()
+            (mEvaluator ?: return).copyMainToHistory()
             newDataSet.add(HistoryItem(Evaluator.HISTORY_MAIN_INDEX,
-                System.currentTimeMillis(), mEvaluator!!.exprAsSpannableGet(0)))
+                System.currentTimeMillis(), (mEvaluator ?: return).exprAsSpannableGet(0)))
         }
         for (i in 0 until maxIndex) {
             newDataSet.add(null)
         }
         val isEmpty = newDataSet.isEmpty()
-        mRecyclerView!!.setBackgroundColor(ContextCompat.getColor(activity,
+        (mRecyclerView ?: return).setBackgroundColor(ContextCompat.getColor(activity,
             if (isEmpty) R.color.empty_history_color else R.color.display_background_color))
         if (isEmpty) {
             newDataSet.add(HistoryItem())
         }
         mDataSet = newDataSet
-        mAdapter!!.setDataSet(mDataSet)
-        mAdapter!!.setIsResultLayout(isResultLayout)
-        mAdapter!!.setIsOneLine(activity.isOneLine)
-        mAdapter!!.setIsDisplayEmpty(mIsDisplayEmpty)
-        mAdapter!!.notifyDataSetChanged()
+        (mAdapter ?: return).setDataSet(mDataSet)
+        (mAdapter ?: return).setIsResultLayout(isResultLayout)
+        (mAdapter ?: return).setIsOneLine(activity.isOneLine)
+        (mAdapter ?: return).setIsDisplayEmpty(mIsDisplayEmpty)
+        (mAdapter ?: return).notifyDataSetChanged()
     }
 
     /**
@@ -282,9 +285,9 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
         val activity = activity as Calculator2?
 
         mDragController.initializeAnimation(
-                activity!!.isResultLayout,
-                activity.isOneLine,
-                mIsDisplayEmpty)
+            (activity ?: return).isResultLayout,
+            activity.isOneLine,
+            mIsDisplayEmpty)
     }
 
     /**
@@ -300,7 +303,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
      */
     @Suppress("RedundantNullableReturnType")
     override fun onCreateAnimator(transit: Int, enter: Boolean, nextAnim: Int): Animator? {
-        return mDragLayout!!.createAnimator(enter)
+        return (mDragLayout ?: return null).createAnimator(enter)
     }
 
     /**
@@ -315,13 +318,13 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
         super.onDestroy()
 
         if (mDragLayout != null) {
-            mDragLayout!!.removeDragCallback(this)
+            (mDragLayout ?: return).removeDragCallback(this)
         }
 
         if (mEvaluator != null) {
             // Note that the view is destroyed when the fragment backstack is popped, so
             // these are essentially called when the DragLayout is closed.
-            mEvaluator!!.cancelNonMain()
+            (mEvaluator ?: return).cancelNonMain()
         }
     }
 
@@ -340,17 +343,17 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
      * @param isDisplayEmpty *true* if the calculator display is cleared (no result or formula)
      */
     private fun initializeController(
-            isResult: Boolean,
-            isOneLine: Boolean,
-            isDisplayEmpty: Boolean
+        isResult: Boolean,
+        isOneLine: Boolean,
+        isDisplayEmpty: Boolean
     ) {
 
         mDragController.setDisplayFormula(
-                requireActivity().findViewById<View>(R.id.formula) as CalculatorFormula)
+            requireActivity().findViewById<View>(R.id.formula) as CalculatorFormula)
         mDragController.setDisplayResult(
-                requireActivity().findViewById<View>(R.id.result) as CalculatorResult)
+            requireActivity().findViewById<View>(R.id.result) as CalculatorResult)
         mDragController.setToolbar(requireActivity().findViewById(R.id.toolbar))
-        mDragController.setEvaluator(mEvaluator!!)
+        mDragController.setEvaluator(mEvaluator ?: return)
         mDragController.initializeController(isResult, isOneLine, isDisplayEmpty)
     }
 
@@ -381,7 +384,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
             val viewHolder = mRecyclerView!!.getChildViewHolder(view) as HistoryAdapter.ViewHolder
             @Suppress("NullChecksToSafeCall", "SENSELESS_COMPARISON")
             if (viewHolder != null && viewHolder.result != null
-                    && viewHolder.result.stopActionModeOrContextMenu()) {
+                && viewHolder.result.stopActionModeOrContextMenu()) {
                 return true
             }
         }
@@ -406,7 +409,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
      */
     override fun onInstanceStateRestored(isOpen: Boolean) {
         if (isOpen) {
-            mRecyclerView!!.visibility = View.VISIBLE
+            (mRecyclerView ?: return).visibility = View.VISIBLE
         }
     }
 
@@ -420,7 +423,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
      */
     override fun whileDragging(yFraction: Float) {
         if (isVisible || isRemoving) {
-            mDragController.animateViews(yFraction, mRecyclerView!!)
+            mDragController.animateViews(yFraction, mRecyclerView ?: return)
         }
     }
 
@@ -457,10 +460,11 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
         /**
          * The TAG used for our `HistoryFragment` when adding our fragment to the fragment manager.
          */
-        const val TAG = "HistoryFragment"
+        const val TAG: String = "HistoryFragment"
+
         /**
          * The TAG used for the `AlertDialogFragment` which clears the history.
          */
-        const val CLEAR_DIALOG_TAG = "clear"
+        const val CLEAR_DIALOG_TAG: String = "clear"
     }
 }

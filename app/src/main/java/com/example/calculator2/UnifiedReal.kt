@@ -44,8 +44,8 @@ import kotlin.math.round
  */
 @Suppress("MemberVisibilityCanBePrivate")
 class UnifiedReal private constructor(
-        private val mRatFactor: BoundedRational,
-        private val mCrFactor: CR) {
+    private val mRatFactor: BoundedRational,
+    private val mCrFactor: CR) {
 
     /**
      * Return (*this* mod 2pi)/(pi/6) as a [BigInteger], or *null* if that isn't easily possible.
@@ -55,7 +55,7 @@ class UnifiedReal private constructor(
             if (definitelyZero()) return BigInteger.ZERO
             if (mCrFactor === CR_PI) {
                 val quotient = BoundedRational.asBigInteger(
-                        BoundedRational.multiply(mRatFactor, BoundedRational.TWELVE)) ?: return null
+                    BoundedRational.multiply(mRatFactor, BoundedRational.TWELVE)) ?: return null
                 return quotient.mod(BIG_24)
             }
             return null
@@ -268,7 +268,7 @@ class UnifiedReal private constructor(
             len = n + 1
         }
         return ((if (negative) "-" else "") + digits.substring(0, len - n) + "."
-                + digits.substring(len - n))
+            + digits.substring(len - n))
     }
 
     /**
@@ -335,9 +335,9 @@ class UnifiedReal private constructor(
         // We check for ONE only to speed up the common case.
         // The use of a tolerance here means we can spuriously return false, not true.
         return (mCrFactor === u.mCrFactor && (isNamed(mCrFactor) || mCrFactor.signum(DEFAULT_COMPARE_TOLERANCE) != 0)
-                || mRatFactor.signum() == 0 && u.mRatFactor.signum() == 0
-                || definitelyIndependent(mCrFactor, u.mCrFactor)
-                || crValue().compareTo(u.crValue(), DEFAULT_COMPARE_TOLERANCE) != 0)
+            || mRatFactor.signum() == 0 && u.mRatFactor.signum() == 0
+            || definitelyIndependent(mCrFactor, u.mCrFactor)
+            || crValue().compareTo(u.crValue(), DEFAULT_COMPARE_TOLERANCE) != 0)
     }
 
     /**
@@ -424,7 +424,7 @@ class UnifiedReal private constructor(
     fun approxEquals(u: UnifiedReal, a: Int): Boolean {
         return if (isComparable(u)) {
             if (definitelyIndependent(mCrFactor, u.mCrFactor) && (mRatFactor.signum() != 0
-                            || u.mRatFactor.signum() != 0)) {
+                    || u.mRatFactor.signum() != 0)) {
                 // No need to actually evaluate, though we don't know which is larger.
                 false
             } else {
@@ -687,7 +687,7 @@ class UnifiedReal private constructor(
             if (square != null) {
 
                 val nRatFactor = BoundedRational.multiply(
-                        BoundedRational.multiply(square, mRatFactor)!!, u.mRatFactor)
+                    BoundedRational.multiply(square, mRatFactor)!!, u.mRatFactor)
                 if (nRatFactor != null) {
                     return UnifiedReal(nRatFactor)
                 }
@@ -728,7 +728,7 @@ class UnifiedReal private constructor(
         if (square != null) {
             // 1/sqrt(n) = sqrt(n)/n
             val nRatFactor = BoundedRational.inverse(
-                    BoundedRational.multiply(mRatFactor, square))
+                BoundedRational.multiply(mRatFactor, square))
             if (nRatFactor != null) {
                 return UnifiedReal(nRatFactor, mCrFactor)
             }
@@ -791,7 +791,7 @@ class UnifiedReal private constructor(
             for (divisor in 1 until sSqrts.size) {
                 if (sSqrts[divisor] != null) {
                     ratSqrt = BoundedRational.sqrt(
-                            BoundedRational.divide(mRatFactor, BoundedRational(divisor.toLong())))
+                        BoundedRational.divide(mRatFactor, BoundedRational(divisor.toLong())))
                     if (ratSqrt != null) {
                         return UnifiedReal(ratSqrt, sSqrts[divisor]!!)
                     }
@@ -1148,7 +1148,7 @@ class UnifiedReal private constructor(
             } else {
                 // Check for exponent that is a multiple of a half.
                 expAsBI = BoundedRational.asBigInteger(
-                        BoundedRational.multiply(BoundedRational.TWO, expAsBR))
+                    BoundedRational.multiply(BoundedRational.TWO, expAsBR))
                 if (expAsBI != null) {
                     return pow(expAsBI).sqrt()
                 }
@@ -1237,7 +1237,7 @@ class UnifiedReal private constructor(
                             val intLog = getIntLog(bi, intSquare)
                             if (intLog != 0L) {
                                 val nRatFactor = BoundedRational.add(BoundedRational(intLog),
-                                        BoundedRational.HALF)
+                                    BoundedRational.HALF)
                                 if (nRatFactor != null) {
                                     return UnifiedReal(nRatFactor, sLogs[intSquare]!!)
                                 }
@@ -1420,7 +1420,7 @@ class UnifiedReal private constructor(
          * Perform some nontrivial consistency checks.
          */
         @Suppress("unused")
-        var enableChecks = true
+        var enableChecks: Boolean = true
 
         /**
          * Throws an [AssertionError] if the argument is *false*
@@ -1472,6 +1472,7 @@ class UnifiedReal private constructor(
          * The [BigInteger] of the integer 24, used by our [piTwelfths] method.
          */
         private val BIG_24 = BigInteger.valueOf(24)
+
         /**
          * The number of bits of precision tolerance we use for comparing some values.
          */
@@ -1483,42 +1484,52 @@ class UnifiedReal private constructor(
          * The [CR] constant 1.0
          */
         private val CR_ONE = CR.ONE
+
         /**
          * The [CR] constant pi
          */
         private val CR_PI = CR.PI
+
         /**
          * The [CR] constant for _e_, the base of the natural logarithm
          */
         private val CR_E = CR.ONE.exp()
+
         /**
          * The [CR] constant for the square root of 2.0
          */
         private val CR_SQRT2 = CR.valueOf(2).sqrt()
+
         /**
          * The [CR] constant for the square root of 3.0
          */
         private val CR_SQRT3 = CR.valueOf(3).sqrt()
+
         /**
          * The [CR] constant for the natural log of 2.0
          */
         private val CR_LN2 = CR.valueOf(2).ln()
+
         /**
          * The [CR] constant for the natural log of 3.0
          */
         private val CR_LN3 = CR.valueOf(3).ln()
+
         /**
          * The [CR] constant for the natural log of 5.0
          */
         private val CR_LN5 = CR.valueOf(5).ln()
+
         /**
          * The [CR] constant for the natural log of 6.0
          */
         private val CR_LN6 = CR.valueOf(6).ln()
+
         /**
          * The [CR] constant for the natural log of 7.0
          */
         private val CR_LN7 = CR.valueOf(7).ln()
+
         /**
          * The [CR] constant for the natural log of 10.0
          */
@@ -1531,9 +1542,9 @@ class UnifiedReal private constructor(
          */
         @Suppress("RemoveExplicitTypeArguments")
         private val sSqrts = arrayOf<CR?>(
-                null, CR.ONE, CR_SQRT2, CR_SQRT3, null, CR.valueOf(5).sqrt(),
-                CR.valueOf(6).sqrt(), CR.valueOf(7).sqrt(), null, null,
-                CR.valueOf(10).sqrt()
+            null, CR.ONE, CR_SQRT2, CR_SQRT3, null, CR.valueOf(5).sqrt(),
+            CR.valueOf(6).sqrt(), CR.valueOf(7).sqrt(), null, null,
+            CR.valueOf(10).sqrt()
         )
 
         /**
@@ -1541,8 +1552,8 @@ class UnifiedReal private constructor(
          */
         @Suppress("RemoveExplicitTypeArguments")
         private val sLogs = arrayOf<CR?>(
-                null, null, CR_LN2, CR_LN3, null, CR_LN5,
-                CR_LN6, CR_LN7, null, null, CR_LN10
+            null, null, CR_LN2, CR_LN3, null, CR_LN5,
+            CR_LN6, CR_LN7, null, null, CR_LN10
         )
 
         // Some convenient UnifiedReal constants.
@@ -1550,83 +1561,102 @@ class UnifiedReal private constructor(
         /**
          * The [UnifiedReal] for the constant pi.
          */
-        val PI = UnifiedReal(CR_PI)
+        val PI: UnifiedReal = UnifiedReal(CR_PI)
+
         /**
          * The [UnifiedReal] for the mathematical constant _e_, base of the natural logarithms.
          */
-        val E = UnifiedReal(CR_E)
+        val E: UnifiedReal = UnifiedReal(CR_E)
+
         /**
          * The [UnifiedReal] for the integer constant 0
          */
-        val ZERO = UnifiedReal(BoundedRational.ZERO)
+        val ZERO: UnifiedReal = UnifiedReal(BoundedRational.ZERO)
+
         /**
          * The [UnifiedReal] for the integer constant 1
          */
-        val ONE = UnifiedReal(BoundedRational.ONE)
+        val ONE: UnifiedReal = UnifiedReal(BoundedRational.ONE)
+
         /**
          * The [UnifiedReal] for the integer constant -1
          */
-        val MINUS_ONE = UnifiedReal(BoundedRational.MINUS_ONE)
+        val MINUS_ONE: UnifiedReal = UnifiedReal(BoundedRational.MINUS_ONE)
+
         /**
          * The [UnifiedReal] for the integer constant 2
          */
-        val TWO = UnifiedReal(BoundedRational.TWO)
+        val TWO: UnifiedReal = UnifiedReal(BoundedRational.TWO)
+
         /**
          * The [UnifiedReal] for the integer constant -2
          */
         @Suppress("unused")
-        val MINUS_TWO = UnifiedReal(BoundedRational.MINUS_TWO)
+        val MINUS_TWO: UnifiedReal = UnifiedReal(BoundedRational.MINUS_TWO)
+
         /**
          * The [UnifiedReal] for the rational constant 1/2
          */
-        val HALF = UnifiedReal(BoundedRational.HALF)
+        val HALF: UnifiedReal = UnifiedReal(BoundedRational.HALF)
+
         /**
          * The [UnifiedReal] for the rational constant -1/2
          */
         @Suppress("unused")
-        val MINUS_HALF = UnifiedReal(BoundedRational.MINUS_HALF)
+        val MINUS_HALF: UnifiedReal = UnifiedReal(BoundedRational.MINUS_HALF)
+
         /**
          * The [UnifiedReal] for the integer constant 10
          */
-        val TEN = UnifiedReal(BoundedRational.TEN)
+        val TEN: UnifiedReal = UnifiedReal(BoundedRational.TEN)
+
         /**
          * The multiplier for converting degrees to radians, used in the [CalculatorExpr.toRadians]
          * method and the [CalculatorExpr.fromRadians] method.
          */
-        val RADIANS_PER_DEGREE = UnifiedReal(BoundedRational(1, 180), CR_PI)
+        val RADIANS_PER_DEGREE: UnifiedReal = UnifiedReal(BoundedRational(1, 180), CR_PI)
+
         /**
          * The [UnifiedReal] for the integer constant 6
          */
         @Suppress("unused")
         private val SIX = UnifiedReal(6)
+
         /**
          * The [UnifiedReal] for the constant one half of the square root of 2.0
          */
         private val HALF_SQRT2 = UnifiedReal(BoundedRational.HALF, CR_SQRT2)
+
         /**
          * The [UnifiedReal] for the constant square root of 3.0
          */
         private val SQRT3 = UnifiedReal(CR_SQRT3)
+
         /**
          * The [UnifiedReal] for the constant 1/2 of the square root of 3.0
          */
         private val HALF_SQRT3 = UnifiedReal(BoundedRational.HALF, CR_SQRT3)
+
         /**
          * The [UnifiedReal] for the constant 1/3 of the square root of 3.0
          */
         private val THIRD_SQRT3 = UnifiedReal(BoundedRational.THIRD, CR_SQRT3)
+
         /**
          * The [UnifiedReal] for the constant 1/2 of pi.
          */
         private val PI_OVER_2 = UnifiedReal(BoundedRational.HALF, CR_PI)
+
         /**
          * The [UnifiedReal] for the constant 1/3 of pi.
          */
         private val PI_OVER_3 = UnifiedReal(BoundedRational.THIRD, CR_PI)
+
         /**
          * The [UnifiedReal] for the constant 1/4 of pi.
          */
         private val PI_OVER_4 = UnifiedReal(BoundedRational.QUARTER, CR_PI)
+
         /**
          * The [UnifiedReal] for the constant 1/6 of pi.
          */
@@ -1886,6 +1916,7 @@ class UnifiedReal private constructor(
          * and can produce rational results. But it can become slow for very large exponents.
          */
         private val RECURSIVE_POW_LIMIT = BigInteger.valueOf(1000)
+
         /**
          * The corresponding limit when we're using rational arithmetic. This should fail fast
          * anyway, but we avoid ridiculously deep recursion.

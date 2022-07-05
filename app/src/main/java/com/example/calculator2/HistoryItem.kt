@@ -29,10 +29,12 @@ class HistoryItem {
      * Index of the expression in our history database.
      */
     private var mEvaluatorIndex: Long = 0
+
     /**
      * Date in millis when the expression was added to the database.
      */
     private var mTimeInMillis: Long = 0
+
     /**
      * [Spannable] representation of the expression.
      */
@@ -83,7 +85,7 @@ class HistoryItem {
      */
     fun dateStringGet(): CharSequence {
         return DateUtils.getRelativeTimeSpanString(mTimeInMillis, System.currentTimeMillis(),
-                DateUtils.DAY_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE)
+            DateUtils.DAY_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE)
     }
 
     /**

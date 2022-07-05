@@ -65,8 +65,8 @@ class CalculatorDisplay
     /**
      * Our handle to the system level service ACCESSIBILITY_SERVICE
      */
-    private val mAccessibilityManager: AccessibilityManager
-            = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+    private val mAccessibilityManager: AccessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+
     /**
      * The [GestureDetector] we use to intercept taps to our [View] which we interpret as a request
      * to show the toolbar if it is not VISIBLE, or to hide it if it is VISIBLE.
@@ -77,6 +77,7 @@ class CalculatorDisplay
      * The [Toolbar] in our [LinearLayout] with id R.id.toolbar
      */
     private lateinit var mToolbar: Toolbar
+
     /**
      * The [Fade] transition we use when our [mHideToolbarRunnable] runnable hides the toolbar.
      */
@@ -169,8 +170,8 @@ class CalculatorDisplay
 
         mToolbar = findViewById(R.id.toolbar)
         mTransition = Fade()
-                .setDuration(FADE_DURATION)
-                .addTarget(mToolbar)
+            .setDuration(FADE_DURATION)
+            .addTarget(mToolbar)
     }
 
     /**

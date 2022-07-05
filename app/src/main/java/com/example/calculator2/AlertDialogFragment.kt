@@ -142,10 +142,10 @@ class AlertDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
                               @StringRes positiveButtonLabel: Int,
                               tag: String?) {
             showMessageDialog(activity,
-                    if (title != 0) activity.getString(title) else null,
-                    activity.getString(message),
-                    if (positiveButtonLabel != 0) activity.getString(positiveButtonLabel) else null,
-                    tag)
+                if (title != 0) activity.getString(title) else null,
+                activity.getString(message),
+                if (positiveButtonLabel != 0) activity.getString(positiveButtonLabel) else null,
+                tag)
         }
 
         /**

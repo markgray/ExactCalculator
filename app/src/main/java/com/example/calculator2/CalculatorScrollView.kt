@@ -64,7 +64,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
      */
     private fun getChildMeasureSpecCompat(spec: Int, padding: Int, childDimension: Int): Int {
         if (MeasureSpec.getMode(spec) == UNSPECIFIED
-                && (childDimension == MATCH_PARENT || childDimension == WRAP_CONTENT)) {
+            && (childDimension == MATCH_PARENT || childDimension == WRAP_CONTENT)) {
             val size = max(0, MeasureSpec.getSize(spec) - padding)
             return MeasureSpec.makeMeasureSpec(size, UNSPECIFIED)
         }
@@ -99,9 +99,9 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 
         val lp = child.layoutParams
         val childWidthMeasureSpec = getChildMeasureSpecCompat(widthMeasureSpec,
-                0 /* padding */, lp.width)
+            0 /* padding */, lp.width)
         val childHeightMeasureSpec = getChildMeasureSpecCompat(parentHeightMeasureSpec,
-                paddingTop + paddingBottom, lp.height)
+            paddingTop + paddingBottom, lp.height)
 
         child.measure(childWidthMeasureSpec, childHeightMeasureSpec)
     }
@@ -139,9 +139,9 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 
         val lp = child.layoutParams as MarginLayoutParams
         val childWidthMeasureSpec = getChildMeasureSpecCompat(widthMeasureSpec,
-                lp.leftMargin + lp.rightMargin, lp.width)
+            lp.leftMargin + lp.rightMargin, lp.width)
         val childHeightMeasureSpec = getChildMeasureSpecCompat(parentHeightMeasureSpec,
-                paddingTop + paddingBottom + lp.topMargin + lp.bottomMargin, lp.height)
+            paddingTop + paddingBottom + lp.topMargin + lp.bottomMargin, lp.height)
 
         child.measure(childWidthMeasureSpec, childHeightMeasureSpec)
     }

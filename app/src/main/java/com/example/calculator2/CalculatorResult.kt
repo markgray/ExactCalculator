@@ -59,36 +59,42 @@ import kotlin.math.*
 @RequiresApi(Build.VERSION_CODES.N)
 class CalculatorResult(context: Context, attrs: AttributeSet)
     : AlignedTextView(context, attrs), MenuItem.OnMenuItemClickListener, Evaluator.EvaluationListener,
-        Evaluator.CharMetricsInfo {
+    Evaluator.CharMetricsInfo {
     /**
      * [OverScroller] that we use to calculate our current position [mCurrentPos] when the user is
      * scrolling or flinging our [AlignedTextView]
      */
     internal val mScroller: OverScroller = OverScroller(context)
+
     /**
      * The [GestureDetector] that we use to handle `onFling`, `onScroll`, and `onLongPress` gestures
      * that our view's `OnTouchListener` receives.
      */
     internal val mGestureDetector: GestureDetector
+
     /**
      * Index of expression we are displaying.
      */
     private var mIndex: Long = 0
+
     /**
      * The [Evaluator] we should use to evaluate the expression whose result we are showing.
      */
     private var mEvaluator: Evaluator? = null
+
     /**
      * A scrollable result is currently displayed.
      *
      * @return `true` if the currently displayed result is scrollable
      */
-    var isScrollable = false
+    var isScrollable: Boolean = false
         private set
+
     /**
      * The result holds a valid number (not an error message).
      */
     private var mValid = false
+
     /**
      * Position of right of display relative to decimal point, in pixels. A suffix of "Pos" denotes
      * a pixel offset. Zero represents a scroll position in which the decimal point is just barely
@@ -96,19 +102,23 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * off the left of the display.
      */
     private var mCurrentPos: Int = 0
+
     /**
      * Position already reflected in display. Pixels.
      */
     private var mLastPos: Int = 0
+
     /**
      * Minimum position to avoid unnecessary blanks on the left. Pixels.
      */
     private var mMinPos: Int = 0
+
     /**
      * Maximum position before we start displaying the infinite sequence of trailing zeroes
      * on the right. Pixels.
      */
     private var mMaxPos: Int = 0
+
     /**
      * Length of the whole part of current result.
      */
@@ -125,22 +135,27 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * the same as [mLsdOffset]
      */
     private var mMaxCharOffset: Int = 0
+
     /**
      * Position of least-significant digit in result
      */
     private var mLsdOffset: Int = 0
+
     /**
      * Offset of last digit actually displayed after adding exponent.
      */
     private var mLastDisplayedOffset: Int = 0
+
     /**
      * Scientific notation not needed for initial display.
      */
     private var mWholePartFits: Boolean = false
+
     /**
      * Fraction of digit width saved by avoiding scientific notation. Only accessed from UI thread.
-      */
+     */
     private var mNoExponentCredit: Float = 0.toFloat()
+
     /**
      * The result fits entirely in the display, even with an exponent, but not with grouping
      * separators. Since the result is not scrollable, and we do not add the exponent to max.
@@ -153,24 +168,29 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * accesses by the UI thread sometimes do not acquire the lock.
      */
     private val mWidthLock = Any()
+
     /**
      * Our total width in pixels minus space for ellipsis. 0 ==> uninitialized.
      */
     private var mWidthConstraint = 0
+
     /**
      * Maximum character width. For now we pretend that all characters have this width. We're not
      * really using a fixed width font. But it appears to be close enough for the characters we use
      * that the difference is not noticeable.
      */
     private var mCharWidth = 1f
+
     /**
      * Fraction of digit width occupied by a digit separator.
      */
     private var mGroupingSeparatorWidthRatio: Float = 0.toFloat()
+
     /**
      * Fraction of digit width saved by replacing digit with decimal point.
      */
     private var mDecimalCredit: Float = 0.toFloat()
+
     /**
      * Fraction of digit width saved by both replacing ellipsis with digit and avoiding
      * scientific notation.
@@ -189,6 +209,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      */
     @EvaluationRequest
     private var mEvaluationRequest = SHOULD_REQUIRE
+
     /**
      * Listener to use if/when evaluation is requested.
      */
@@ -198,7 +219,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * Lighter color for exponent while scrolling when the exponent is used as a position indicator
      */
     private val mExponentColorSpan: ForegroundColorSpan = ForegroundColorSpan(
-            ContextCompat.getColor(context, R.color.display_result_exponent_text_color))
+        ContextCompat.getColor(context, R.color.display_result_exponent_text_color))
 
     /**
      * Background color to use to highlight the result when the context menu has been launched by
@@ -210,10 +231,12 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * The [ActionMode] that has been started by long clicking us (Android M and above).
      */
     private var mActionMode: ActionMode? = null
+
     /**
      * The [ActionMode.Callback2] that interprets the selection of action menu item clicks
      */
     private var mCopyActionModeCallback: ActionMode.Callback? = null
+
     /**
      * The [ContextMenu] that has been started by long clicking us (Android L and lower).
      */
@@ -231,11 +254,11 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
     private val fullCopyText: String
         get() {
             if (!mValid
-                    || mLsdOffset == Integer.MAX_VALUE
-                    || fullTextIsExact()
-                    || mWholeLen > MAX_RECOMPUTE_DIGITS
-                    || mWholeLen + mLsdOffset > MAX_RECOMPUTE_DIGITS
-                    || mLsdOffset - mLastDisplayedOffset > MAX_COPY_EXTRA) {
+                || mLsdOffset == Integer.MAX_VALUE
+                || fullTextIsExact()
+                || mWholeLen > MAX_RECOMPUTE_DIGITS
+                || mWholeLen + mLsdOffset > MAX_RECOMPUTE_DIGITS
+                || mLsdOffset - mLastDisplayedOffset > MAX_COPY_EXTRA) {
                 return getFullText(false)
             }
             // It's reasonable to compute and copy the exact result instead.
@@ -247,8 +270,8 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
                 fractionLsdOffset = -1
             }
             val formattedResult = formatResult(rawResult, fractionLsdOffset, MAX_COPY_SIZE,
-                    false, rawResult[0] == '-', null,
-                    forcePrecision = true, forceSciNotation = false, insertCommas = false)
+                false, rawResult[0] == '-', null,
+                forcePrecision = true, forceSciNotation = false, insertCommas = false)
             return KeyMaps.translateResult(formattedResult)
         }
 
@@ -268,128 +291,128 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      */
     init {
         mGestureDetector = GestureDetector(context,
-                object : GestureDetector.SimpleOnGestureListener() {
-                    /**
-                     * Notified when a tap occurs with the down [MotionEvent] that triggered it. This
-                     * will be triggered immediately for every down event. All other events should be
-                     * preceded by this. We just return *true* so that we continue to recieve events.
-                     *
-                     * @param e The down motion event.
-                     * @return *true* if you wish to receive the following events.
-                     */
-                    override fun onDown(e: MotionEvent): Boolean {
-                        return true
-                    }
+            object : GestureDetector.SimpleOnGestureListener() {
+                /**
+                 * Notified when a tap occurs with the down [MotionEvent] that triggered it. This
+                 * will be triggered immediately for every down event. All other events should be
+                 * preceded by this. We just return *true* so that we continue to recieve events.
+                 *
+                 * @param e The down motion event.
+                 * @return *true* if you wish to receive the following events.
+                 */
+                override fun onDown(e: MotionEvent): Boolean {
+                    return true
+                }
 
-                    /**
-                     * Notified of a fling event when it occurs with the initial on down [MotionEvent]
-                     * and the matching up [MotionEvent]. The calculated velocity is supplied along
-                     * the x and y axis in pixels per second. If the [mScroller] `OverScroller` has
-                     * not yet finished scrolling we set our field [mCurrentPos] (position of right
-                     * of our display relative to decimal point) to the end position (`finalX`) that
-                     * the scroll would reach. Finished or not we then call the `forceFinished` method
-                     * of [mScroller] to force its finished field to *true*. We then call our
-                     * [stopActionModeOrContextMenu] to close a possible action mode or context menu,
-                     * and call our [cancelLongPress] to cancel any pending long press. If our result
-                     * is not scrollable (text which fits our display is not scrolled) we just return
-                     * *true* to consume the event. Otherwise we call the `fling` method of [mScroller]
-                     * to have it start to fling the text it contains starting from [mCurrentPos] with
-                     * a velocity of minus [velocityX], with its minimum X value [mMinPos], and maximum
-                     * X value [mMaxPos] (we do not scroll vertically so all the Y values are 0). Then
-                     * we call the [postInvalidateOnAnimation] method to cause an invalidate to happen
-                     * on the next animation time step. Finally we return *true* to consume the event.
-                     *
-                     * @param e1 The first down motion event that started the fling.
-                     * @param e2 The move motion event that triggered the current onFling.
-                     * @param velocityX The velocity of this fling measured in pixels per second
-                     *              along the x axis.
-                     * @param velocityY The velocity of this fling measured in pixels per second
-                     *              along the y axis.
-                     * @return *true* if the event is consumed, else *false*
-                     */
-                    override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float,
-                                         velocityY: Float): Boolean {
-                        if (!mScroller.isFinished) {
-                            mCurrentPos = mScroller.finalX
-                        }
-                        mScroller.forceFinished(true)
-                        stopActionModeOrContextMenu()
-                        this@CalculatorResult.cancelLongPress()
-                        // Ignore scrolls of error string, etc.
-                        if (!isScrollable) return true
-                        mScroller.fling(mCurrentPos, 0, -velocityX.toInt(), 0  /* horizontal only */,
-                                mMinPos, mMaxPos, 0, 0)
-                        postInvalidateOnAnimation()
-                        return true
+                /**
+                 * Notified of a fling event when it occurs with the initial on down [MotionEvent]
+                 * and the matching up [MotionEvent]. The calculated velocity is supplied along
+                 * the x and y axis in pixels per second. If the [mScroller] `OverScroller` has
+                 * not yet finished scrolling we set our field [mCurrentPos] (position of right
+                 * of our display relative to decimal point) to the end position (`finalX`) that
+                 * the scroll would reach. Finished or not we then call the `forceFinished` method
+                 * of [mScroller] to force its finished field to *true*. We then call our
+                 * [stopActionModeOrContextMenu] to close a possible action mode or context menu,
+                 * and call our [cancelLongPress] to cancel any pending long press. If our result
+                 * is not scrollable (text which fits our display is not scrolled) we just return
+                 * *true* to consume the event. Otherwise we call the `fling` method of [mScroller]
+                 * to have it start to fling the text it contains starting from [mCurrentPos] with
+                 * a velocity of minus [velocityX], with its minimum X value [mMinPos], and maximum
+                 * X value [mMaxPos] (we do not scroll vertically so all the Y values are 0). Then
+                 * we call the [postInvalidateOnAnimation] method to cause an invalidate to happen
+                 * on the next animation time step. Finally we return *true* to consume the event.
+                 *
+                 * @param e1 The first down motion event that started the fling.
+                 * @param e2 The move motion event that triggered the current onFling.
+                 * @param velocityX The velocity of this fling measured in pixels per second
+                 *              along the x axis.
+                 * @param velocityY The velocity of this fling measured in pixels per second
+                 *              along the y axis.
+                 * @return *true* if the event is consumed, else *false*
+                 */
+                override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float,
+                                     velocityY: Float): Boolean {
+                    if (!mScroller.isFinished) {
+                        mCurrentPos = mScroller.finalX
                     }
+                    mScroller.forceFinished(true)
+                    stopActionModeOrContextMenu()
+                    this@CalculatorResult.cancelLongPress()
+                    // Ignore scrolls of error string, etc.
+                    if (!isScrollable) return true
+                    mScroller.fling(mCurrentPos, 0, -velocityX.toInt(), 0  /* horizontal only */,
+                        mMinPos, mMaxPos, 0, 0)
+                    postInvalidateOnAnimation()
+                    return true
+                }
 
-                    /**
-                     * Notified when a scroll occurs with the initial on down [MotionEvent] and the
-                     * current move [MotionEvent]. The distance in x and y is also supplied for
-                     * convenience. We initialize our variable `distance` with the [Int] value of
-                     * [distanceX]. If the [mScroller] `OverScroller` has not yet finished scrolling
-                     * we set our field [mCurrentPos] (position of right of our display relative to
-                     * decimal point) to the end position (`finalX`) that the scroll would reach.
-                     * Finished or not we then call the `forceFinished` method of [mScroller] to force
-                     * its finished field to *true*. We then call our [stopActionModeOrContextMenu]
-                     * to close a possible action mode or context menu, and call our [cancelLongPress]
-                     * to cancel any pending long press. If our result is not scrollable (text which
-                     * fits our display is not scrolled) we just return *true* to consume the event.
-                     * If the end position of the scroll ([mCurrentPos] plus `distance`) is less than
-                     * [mMinPos] we set `distance` to [mMinPos] minus [mCurrentPos], and if the end
-                     * position is greater than [mMaxPos] we set `distance` to [mMaxPos] minus
-                     * [mCurrentPos]. We initialize our variable `duration` to the [Int] value of
-                     * the `eventTime` field of [e2] minus the `eventTime` field of [e1]. If `duration`
-                     * is less than 1 or greater than 100 we set it to 10. We then call the `startScroll`
-                     * method of [mScroller] to have it scroll its text contents starting from the
-                     * X position [mCurrentPos] and moving `distance` pixels with a duration of
-                     * `duration` milliseconds (the Y coordinates are 0 since we do not scroll verically).
-                     * Then we call the [postInvalidateOnAnimation] method to cause an invalidate to
-                     * happen on the next animation time step, and return *true* to consume the event.
-                     *
-                     * @param e1 The first down motion event that started the scrolling.
-                     * @param e2 The move motion event that triggered the current [onScroll].
-                     * @param distanceX The distance along the X axis that has been scrolled since
-                     * the last call to [onScroll]. This is NOT the distance between [e1] and [e2].
-                     * @param distanceY The distance along the Y axis that has been scrolled since
-                     * the last call to [onScroll]. This is NOT the distance between [e1] and [e2].
-                     * @return *true* if the event is consumed, else *false*
-                     */
-                    override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float,
-                                          distanceY: Float): Boolean {
-                        var distance = distanceX.toInt()
-                        if (!mScroller.isFinished) {
-                            mCurrentPos = mScroller.finalX
-                        }
-                        mScroller.forceFinished(true)
-                        stopActionModeOrContextMenu()
-                        this@CalculatorResult.cancelLongPress()
-                        if (!isScrollable) return true
-                        if (mCurrentPos + distance < mMinPos) {
-                            distance = mMinPos - mCurrentPos
-                        } else if (mCurrentPos + distance > mMaxPos) {
-                            distance = mMaxPos - mCurrentPos
-                        }
-                        var duration = (e2.eventTime - e1.eventTime).toInt()
-                        if (duration < 1 || duration > 100) duration = 10
-                        mScroller.startScroll(mCurrentPos, 0, distance, 0, duration)
-                        postInvalidateOnAnimation()
-                        return true
+                /**
+                 * Notified when a scroll occurs with the initial on down [MotionEvent] and the
+                 * current move [MotionEvent]. The distance in x and y is also supplied for
+                 * convenience. We initialize our variable `distance` with the [Int] value of
+                 * [distanceX]. If the [mScroller] `OverScroller` has not yet finished scrolling
+                 * we set our field [mCurrentPos] (position of right of our display relative to
+                 * decimal point) to the end position (`finalX`) that the scroll would reach.
+                 * Finished or not we then call the `forceFinished` method of [mScroller] to force
+                 * its finished field to *true*. We then call our [stopActionModeOrContextMenu]
+                 * to close a possible action mode or context menu, and call our [cancelLongPress]
+                 * to cancel any pending long press. If our result is not scrollable (text which
+                 * fits our display is not scrolled) we just return *true* to consume the event.
+                 * If the end position of the scroll ([mCurrentPos] plus `distance`) is less than
+                 * [mMinPos] we set `distance` to [mMinPos] minus [mCurrentPos], and if the end
+                 * position is greater than [mMaxPos] we set `distance` to [mMaxPos] minus
+                 * [mCurrentPos]. We initialize our variable `duration` to the [Int] value of
+                 * the `eventTime` field of [e2] minus the `eventTime` field of [e1]. If `duration`
+                 * is less than 1 or greater than 100 we set it to 10. We then call the `startScroll`
+                 * method of [mScroller] to have it scroll its text contents starting from the
+                 * X position [mCurrentPos] and moving `distance` pixels with a duration of
+                 * `duration` milliseconds (the Y coordinates are 0 since we do not scroll verically).
+                 * Then we call the [postInvalidateOnAnimation] method to cause an invalidate to
+                 * happen on the next animation time step, and return *true* to consume the event.
+                 *
+                 * @param e1 The first down motion event that started the scrolling.
+                 * @param e2 The move motion event that triggered the current [onScroll].
+                 * @param distanceX The distance along the X axis that has been scrolled since
+                 * the last call to [onScroll]. This is NOT the distance between [e1] and [e2].
+                 * @param distanceY The distance along the Y axis that has been scrolled since
+                 * the last call to [onScroll]. This is NOT the distance between [e1] and [e2].
+                 * @return *true* if the event is consumed, else *false*
+                 */
+                override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float,
+                                      distanceY: Float): Boolean {
+                    var distance = distanceX.toInt()
+                    if (!mScroller.isFinished) {
+                        mCurrentPos = mScroller.finalX
                     }
+                    mScroller.forceFinished(true)
+                    stopActionModeOrContextMenu()
+                    this@CalculatorResult.cancelLongPress()
+                    if (!isScrollable) return true
+                    if (mCurrentPos + distance < mMinPos) {
+                        distance = mMinPos - mCurrentPos
+                    } else if (mCurrentPos + distance > mMaxPos) {
+                        distance = mMaxPos - mCurrentPos
+                    }
+                    var duration = (e2.eventTime - e1.eventTime).toInt()
+                    if (duration < 1 || duration > 100) duration = 10
+                    mScroller.startScroll(mCurrentPos, 0, distance, 0, duration)
+                    postInvalidateOnAnimation()
+                    return true
+                }
 
-                    /**
-                     * Notified when a long press occurs with the initial on down [MotionEvent] that
-                     * triggered it. If our contents represents a valid result we call our
-                     * [performLongClick] method to handle the event.
-                     *
-                     * @param e The initial on down motion event that started the longpress.
-                     */
-                    override fun onLongPress(e: MotionEvent) {
-                        if (mValid) {
-                            performLongClick()
-                        }
+                /**
+                 * Notified when a long press occurs with the initial on down [MotionEvent] that
+                 * triggered it. If our contents represents a valid result we call our
+                 * [performLongClick] method to handle the event.
+                 *
+                 * @param e The initial on down motion event that started the longpress.
+                 */
+                override fun onLongPress(e: MotionEvent) {
+                    if (mValid) {
+                        performLongClick()
                     }
-                })
+                }
+            })
 
         val slop = ViewConfiguration.get(context).scaledTouchSlop
         setOnTouchListener(object : OnTouchListener {
@@ -472,7 +495,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
             // Set a minimum height so scaled error messages won't affect our layout.
             minimumHeight = (lineHeight + compoundPaddingBottom
-                    + compoundPaddingTop)
+                + compoundPaddingTop)
         }
 
         val paint = paint
@@ -512,7 +535,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
         val extraWidth = max(type1Extra, type2Extra)
         val intExtraWidth = ceil(extraWidth.toDouble()).toInt() + 1 /* to cover rounding sins */
         val newWidthConstraint = (MeasureSpec.getSize(widthMeasureSpec)
-                - (paddingLeft + paddingRight) - intExtraWidth)
+            - (paddingLeft + paddingRight) - intExtraWidth)
 
         // Calculate other width constants we need to handle grouping separators.
         val groupingSeparatorW = Layout.getDesiredWidth(KeyMaps.translateResult(","), paint)
@@ -557,12 +580,12 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
         super.onLayout(changed, left, top, right, bottom)
 
         if (mEvaluator != null && mEvaluationRequest != SHOULD_NOT_EVALUATE) {
-            val expr = mEvaluator!!.exprGet(mIndex)
+            val expr = (mEvaluator ?: return).exprGet(mIndex)
             if (expr.hasInterestingOps()) {
                 if (mEvaluationRequest == SHOULD_REQUIRE) {
-                    mEvaluator!!.requireResult(mIndex, mEvaluationListener, this)
+                    (mEvaluator ?: return).requireResult(mIndex, mEvaluationListener, this)
                 } else {
-                    mEvaluator!!.evaluateAndNotify(mIndex, mEvaluationListener, this)
+                    (mEvaluator ?: return).evaluateAndNotify(mIndex, mEvaluationListener, this)
                 }
             }
         }
@@ -654,7 +677,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
     private fun expLen(exp: Int): Int {
         if (exp == 0) return 0
         val absExpDigits = ceil(log10(abs(exp.toDouble()))
-                + 0.0000000001).toInt()
+            + 0.0000000001).toInt()
         return absExpDigits + if (exp >= 0) 1 else 2
     }
 
@@ -701,7 +724,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * `EvaluationListener` when ready.
      */
     private fun onMemoryStore() {
-        if (mEvaluator!!.hasResult(mIndex)) {
+        if ((mEvaluator ?: return).hasResult(mIndex)) {
             mEvaluator?.copyToMemory(mIndex)
         } else {
             mStoreToMemoryRequested = true
@@ -824,7 +847,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
         // calculation.  If getPreferredPrec() decided it should fit, we want to make it fit, too.
         // We reserved one extra pixel, so the extra length is OK.
         val nSeparatorChars = ceil((separatorChars(truncatedWholePart, truncatedWholePart.length)
-                        - noEllipsisCreditGet() - 0.0001f).toDouble()).toInt()
+            - noEllipsisCreditGet() - 0.0001f).toDouble()).toInt()
         mWholePartFits = mWholeLen + nSeparatorChars <= maxCharsLocal
         mLastPos = INVALID
         mLsdOffset = lsdOffset
@@ -1035,7 +1058,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
             var exponent = initExponent
             var hasPoint = false
             if (!truncated && msdIndex < maxDigs - 1
-                    && result.length - msdIndex + 1 + minusSpace <= maxDigs + SCI_NOTATION_EXTRA) {
+                && result.length - msdIndex + 1 + minusSpace <= maxDigs + SCI_NOTATION_EXTRA) {
                 // Type (1) exponent computation and transformation:
                 // Leading digit is in display window. Use standard calculator scientific notation
                 // with one digit to the left of the decimal point. Insert decimal point and
@@ -1051,7 +1074,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
                 val resLen = result.length
                 val fraction = result.substring(msdIndex + 1, resLen)
                 result = ((if (negative) "-" else "") + result.substring(msdIndex, msdIndex + 1)
-                        + "." + fraction)
+                    + "." + fraction)
                 // Original exp was correct for decimal point at right of fraction.
                 // Adjust by length of fraction.
                 exponent = initExponent + resLen - msdIndex - 1
@@ -1171,9 +1194,9 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
         val negative = BooleanArray(1)
         val requestedPrecOffset = intArrayOf(precOffset)
         val rawResult = mEvaluator!!.stringGet(mIndex, requestedPrecOffset, mMaxCharOffset,
-                maxSize, truncated, negative, this)
+            maxSize, truncated, negative, this)
         return formatResult(rawResult, requestedPrecOffset[0], maxSize, truncated[0], negative[0],
-                lastDisplayedOffset, forcePrecision, forceSciNotation, insertCommas)
+            lastDisplayedOffset, forcePrecision, forceSciNotation, insertCommas)
     }
 
     /**
@@ -1198,8 +1221,8 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
             text.toString()
         } else {
             KeyMaps.translateResult(getFormattedResult(mLastDisplayedOffset, MAX_COPY_SIZE,
-                    null, forcePrecision = true,
-                    forceSciNotation = false, insertCommas = withSeparators))
+                null, forcePrecision = true,
+                forceSciNotation = false, insertCommas = withSeparators))
         }
     }
 
@@ -1216,7 +1239,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      */
     fun fullTextIsExact(): Boolean {
         val terminating = getCharOffset(mMaxPos) == getCharOffset(mCurrentPos)
-                && mMaxCharOffset != MAX_RIGHT_SCROLL
+            && mMaxCharOffset != MAX_RIGHT_SCROLL
         return !isScrollable || terminating
     }
 
@@ -1326,17 +1349,17 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
         val currentCharOffset = getCharOffset(mCurrentPos)
         val lastDisplayedOffset = IntArray(1)
         var result = getFormattedResult(currentCharOffset, maxCharsLocal, lastDisplayedOffset,
-                mAppendExponent /* forcePrecision; preserve entire result */,
-                !mWholePartFits && currentCharOffset == getCharOffset(mMinPos) /* forceSciNotation */,
-                mWholePartFits /* insertCommas */)
+            mAppendExponent /* forcePrecision; preserve entire result */,
+            !mWholePartFits && currentCharOffset == getCharOffset(mMinPos) /* forceSciNotation */,
+            mWholePartFits /* insertCommas */)
         val expIndex = result.indexOf('E')
         result = KeyMaps.translateResult(result)
         text = if (expIndex > 0 && result.indexOf('.') == -1) {
             // Gray out exponent if used as position indicator
             val formattedResult = SpannableString(result)
             formattedResult.setSpan(mExponentColorSpan,
-                    expIndex, result.length,
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                expIndex, result.length,
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             formattedResult
         } else {
             result
@@ -1688,7 +1711,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         // We include a tag URI, to allow us to recognize our own results and handle them
         // specially.
-        val newItem = ClipData.Item(text, null, mEvaluator!!.capture(mIndex))
+        val newItem = ClipData.Item(text, null, (mEvaluator ?: return).capture(mIndex))
         val mimeTypes = arrayOf(ClipDescription.MIMETYPE_TEXT_PLAIN)
         val cd = ClipData("calculator result", mimeTypes, newItem)
         clipboard.setPrimaryClip(cd)
@@ -1759,34 +1782,40 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
          * Maximum value our result can be scrolled to the right.
          */
         internal const val MAX_RIGHT_SCROLL = 10_000_000
+
         /**
          * Value for the scroll position that indicates that the current result is invalid.
          * A larger value is unlikely to avoid running out of space
          */
         internal const val INVALID = MAX_RIGHT_SCROLL + 10_000
+
         /**
          * Require the evaluation of our expression by our [Evaluator] (our [mEvaluator] field).
          */
-        const val SHOULD_REQUIRE = 2
+        const val SHOULD_REQUIRE: Int = 2
+
         /**
          * Explicitly call `evaluateAndNotify` when ready.
          */
-        const val SHOULD_EVALUATE = 1
+        const val SHOULD_EVALUATE: Int = 1
+
         /**
          * Explicitly request evaluation.
          */
-        const val SHOULD_NOT_EVALUATE = 0
+        const val SHOULD_NOT_EVALUATE: Int = 0
 
         /**
          * Maximum number of leading zeroes after decimal point before we switch to scientific
          * notation with negative exponent.
          */
-        const val MAX_LEADING_ZEROES = 6
+        const val MAX_LEADING_ZEROES: Int = 6
+
         /**
          * Maximum number of trailing zeroes before the decimal point before we switch to scientific
          * notation with positive exponent.
          */
-        const val MAX_TRAILING_ZEROES = 6
+        const val MAX_TRAILING_ZEROES: Int = 6
+
         /**
          * Extra digits for standard scientific notation. In this case we have a decimal point and
          * no ellipsis. We assume that we do not drop digits to make room for the decimal point in
@@ -1798,11 +1827,13 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
          * The number of extra digits we are willing to compute to copy a result as an exact number.
          */
         private const val MAX_COPY_EXTRA = 100
+
         /**
          * The maximum number of digits we're willing to recompute in the UI thread. We only do
          * this for known rational results, where we can bound the computation cost.
          */
         private const val MAX_RECOMPUTE_DIGITS = 2_000
+
         /**
          * Maximum number of characters we are willing to copy for an exact result.
          */

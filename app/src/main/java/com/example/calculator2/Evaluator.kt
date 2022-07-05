@@ -102,7 +102,7 @@ import kotlin.math.min
 @Suppress("MemberVisibilityCanBePrivate")
 @RequiresApi(Build.VERSION_CODES.N)
 class Evaluator internal constructor(
-        private val mContext: Context // Context for database helper.
+    private val mContext: Context // Context for database helper.
 ) : CalculatorExpr.ExprResolver {
 
     /**
@@ -110,15 +110,18 @@ class Evaluator internal constructor(
      * short representations to be embedded on formulas.
      */
     private val mDummyCharMetricsInfo = DummyCharMetricsInfo()
+
     /**
      * Index of "saved" expression mirroring clipboard. 0 if unused.
      */
     private var mSavedIndex: Long = 0
+
     /**
      * To update e.g. "memory" contents, we copy the corresponding expression to a permanent index,
      * and then remember that index. Index of "memory" expression. 0 if unused.
      */
     private var mMemoryIndex: Long = 0
+
     /**
      * Listener that reports changes to the state (empty/filled) of memory. Protected for testing.
      */
@@ -200,11 +203,11 @@ class Evaluator internal constructor(
          * @param truncatedWholePart the integer part of the result
          */
         fun onEvaluate(
-                index: Long,
-                initPrecOffset: Int,
-                msdIndex: Int,
-                lsdOffset: Int,
-                truncatedWholePart: String
+            index: Long,
+            initPrecOffset: Int,
+            msdIndex: Int,
+            lsdOffset: Int,
+            truncatedWholePart: String
         )
 
         /**
@@ -244,8 +247,8 @@ class Evaluator internal constructor(
          * supplied string prefix (the first [len] characters of the string [s] is the prefix).
          */
         fun separatorChars(
-                s: String,
-                len: Int
+            s: String,
+            len: Int
         ): Float
 
         /**
@@ -269,7 +272,7 @@ class Evaluator internal constructor(
      * A [CharMetricsInfo] that can be used when we are really only interested in computing
      * short representations to be embedded on formulas.
      */
-    private inner class DummyCharMetricsInfo : CharMetricsInfo {
+    private class DummyCharMetricsInfo : CharMetricsInfo {
         /**
          * Return the maximum number of (adjusted, digit-width) characters that will fit in the
          * result display. We just return the constant SHORT_TARGET_LENGTH (8) plus 10.
@@ -291,8 +294,8 @@ class Evaluator internal constructor(
          * supplied string prefix (the first [len] characters of the string [s] is the prefix).
          */
         override fun separatorChars(
-                s: String,
-                len: Int
+            s: String,
+            len: Int
         ): Float {
             return 0f
         }
@@ -330,9 +333,15 @@ class Evaluator internal constructor(
      * [mExprs]. [mVal] may be asynchronously set by any thread, but we take care that it
      * does not change after that. [mDegreeMode] is handled exactly like [mExpr].
      */
-    inner class ExprInfo(
-            var mExpr: CalculatorExpr, // The expression itself.
-            var mDegreeMode: Boolean   // Evaluating in degree, not radian, mode.
+    class ExprInfo(
+        /**
+         * The expression itself.
+         */
+        var mExpr: CalculatorExpr,
+        /**
+         * Evaluating in degree, not radian, mode.
+         */
+        var mDegreeMode: Boolean
     ) {
 
         /**
@@ -360,24 +369,29 @@ class Evaluator internal constructor(
          * ERRONEOUS_RESULT indicates evaluation resulted in an error.
          */
         var mResultString: String? = null
+
         /**
          * Number of significant digits in [mResultString].
          */
-        var mResultStringOffset = 0
+        var mResultStringOffset: Int = 0
+
         /**
          * Number of digits to which (possibly incomplete) evaluation has been requested.
          * Only accessed by UI thread.
          */
-        var mResultStringOffsetReq = 0
+        var mResultStringOffsetReq: Int = 0
+
         /**
          * Position of most significant digit in current cached result, if determined.  This is just
          * the index in [mResultString] holding the msd.
          */
-        var mMsdIndex = INVALID_MSD
+        var mMsdIndex: Int = INVALID_MSD
+
         /**
          * Long timeout needed for evaluation?
          */
-        var mLongTimeout = false
+        var mLongTimeout: Boolean = false
+
         /**
          * Time in milliseconds when the expression we are the [Evaluator] for is stored to the
          * database when the `addRow` method of [ExpressionDB] calls the `toContentValues` method
@@ -409,7 +423,7 @@ class Evaluator internal constructor(
      * KEY_PREF_SAVED_NAME defaulting to "none".
      */
     init {
-        setMainExpr(ExprInfo(CalculatorExpr(),false))
+        setMainExpr(ExprInfo(CalculatorExpr(), false))
         mSavedName = "none"
         mTimeoutHandler = Handler(getMainLooper())
         mExprDB = ExpressionDB(mContext)
@@ -496,22 +510,27 @@ class Evaluator internal constructor(
          * Resource ID of an error string or INVALID_RES_ID.
          */
         val errorResourceId: Int
+
         /**
          * Constructive real value of this initial result.
          */
         val unifiedReal: UnifiedReal
+
         /**
          * Truncated [String] representation of the result. Null iff it can't be computed.
          */
         val newResultString: String
+
         /**
          * Precision "offset" of [newResultString]
          */
         val newResultStringOffset: Int
+
         /**
          * Preferred precision "offset" for the currently displayed result.
          */
         val initDisplayOffset: Int
+
         /**
          * Flag indicating that we contain an error instead of a numerical result.
          */
@@ -530,10 +549,10 @@ class Evaluator internal constructor(
          * @param idp Preferred precision "offset" for displaying us as a result.
          */
         internal constructor(
-                v: UnifiedReal,
-                s: String,
-                p: Int,
-                idp: Int
+            v: UnifiedReal,
+            s: String,
+            p: Int,
+            idp: Int
         ) {
             errorResourceId = Calculator2.INVALID_RES_ID
             unifiedReal = v
@@ -564,7 +583,7 @@ class Evaluator internal constructor(
      */
     private fun displayCancelledMessage() {
         if (mCallback != null) {
-            mCallback!!.showMessageDialog(0, R.string.cancelled, 0, null)
+            (mCallback ?: return).showMessageDialog(0, R.string.cancelled, 0, null)
         }
     }
 
@@ -608,8 +627,8 @@ class Evaluator internal constructor(
      */
     private fun displayTimeoutMessage(longTimeout: Boolean) {
         if (mCallback != null) {
-            mCallback!!.showMessageDialog(R.string.dialog_timeout, R.string.timeout,
-                    if (longTimeout) 0 else R.string.ok_remove_timeout, TIMEOUT_DIALOG_TAG)
+            (mCallback ?: return).showMessageDialog(R.string.dialog_timeout, R.string.timeout,
+                if (longTimeout) 0 else R.string.ok_remove_timeout, TIMEOUT_DIALOG_TAG)
         }
     }
 
@@ -618,7 +637,7 @@ class Evaluator internal constructor(
      * increase the maximum amount of time we attempt to evaluate the expression before "timing out".
      */
     fun setLongTimeout() {
-        mMainExpr!!.mLongTimeout = true
+        (mMainExpr ?: return).mLongTimeout = true
     }
 
     /**
@@ -635,20 +654,22 @@ class Evaluator internal constructor(
      */
     @SuppressLint("StaticFieldLeak")
     internal inner class AsyncEvaluator(
-            private val mIndex: Long, // Expression index.
-            private val mListener: EvaluationListener?, // Completion callback.
-            private val mCharMetricsInfo: CharMetricsInfo, // Where to get result size information.
-            private val mDm: Boolean, // degrees
-            var mRequired: Boolean // Result was requested by user.
+        private val mIndex: Long, // Expression index.
+        private val mListener: EvaluationListener?, // Completion callback.
+        private val mCharMetricsInfo: CharMetricsInfo, // Where to get result size information.
+        private val mDm: Boolean, // degrees
+        var mRequired: Boolean // Result was requested by user.
     ) : CoroutinesAsyncTask<Void, Void, InitialResult>() {
         /**
          * Suppress cancellation message if *true*.
          */
         private var mQuiet: Boolean = false
+
         /**
          * The [Runnable] that is scheduled to run when a timeout is reached.
          */
         private var mTimeoutRunnable: Runnable? = null
+
         /**
          * Current expression.
          */
@@ -691,12 +712,13 @@ class Evaluator internal constructor(
             val running = status != Status.FINISHED
             if (running && cancel(true)) {
 
-                mExprs[mIndex]!!.mEvaluator = null
+                (mExprs[mIndex] ?: return).mEvaluator = null
                 if (mRequired && mIndex == MAIN_INDEX) {
                     // Replace mExpr with clone to avoid races if task still runs for a while.
-                    mMainExpr!!.mExpr = mMainExpr!!.mExpr.clone() as CalculatorExpr
+                    (mMainExpr ?: return).mExpr = (mMainExpr
+                        ?: return).mExpr.clone() as CalculatorExpr
                     suppressCancelMessage()
-                    displayTimeoutMessage(mExprInfo!!.mLongTimeout)
+                    displayTimeoutMessage((mExprInfo ?: return).mLongTimeout)
                 }
             }
         }
@@ -722,7 +744,8 @@ class Evaluator internal constructor(
          * have [mTimeoutHandler] schedule [mTimeoutRunnable] to run after `timeout` milliseconds.
          */
         override fun onPreExecute() {
-            var timeout = if (mRequired) timeoutGet(mExprInfo!!.mLongTimeout) else QUICK_TIMEOUT
+            var timeout = if (mRequired) timeoutGet((mExprInfo
+                ?: return).mLongTimeout) else QUICK_TIMEOUT
             if (mIndex != MAIN_INDEX) {
                 // We evaluated the expression before with the current timeout, so this shouldn't
                 // ever time out. We evaluate it with a ridiculously long timeout to avoid running
@@ -731,8 +754,8 @@ class Evaluator internal constructor(
                 timeout = NON_MAIN_TIMEOUT
             }
             mTimeoutRunnable = Runnable { handleTimeout() }
-            mTimeoutHandler.removeCallbacks(mTimeoutRunnable!!)
-            mTimeoutHandler.postDelayed(mTimeoutRunnable!!, timeout)
+            mTimeoutHandler.removeCallbacks(mTimeoutRunnable ?: return)
+            mTimeoutHandler.postDelayed(mTimeoutRunnable ?: return, timeout)
         }
 
         /**
@@ -820,7 +843,7 @@ class Evaluator internal constructor(
         override fun doInBackground(vararg nothing: Void?): InitialResult? {
             try {
                 // mExpr does not change while we are evaluating; thus it's OK to read here.
-                var res: UnifiedReal? = mExprInfo!!.mVal.get()
+                var res: UnifiedReal? = (mExprInfo ?: return null).mVal.get()
                 if (res == null) {
                     try {
                         res = mExprInfo.mExpr.eval(mDm, this@Evaluator)
@@ -931,14 +954,14 @@ class Evaluator internal constructor(
          * string, or the result of evaluating our expression.
          */
         override fun onPostExecute(result: InitialResult?) {
-            mExprInfo!!.mEvaluator = null
-            mTimeoutHandler.removeCallbacks(mTimeoutRunnable!!)
-            if (result!!.isError) {
+            (mExprInfo ?: return).mEvaluator = null
+            mTimeoutHandler.removeCallbacks(mTimeoutRunnable ?: return)
+            if ((result ?: return).isError) {
                 if (result.errorResourceId == R.string.timeout) {
                     // Emulating timeout due to large result.
                     if (mRequired && mIndex == MAIN_INDEX) {
 
-                        displayTimeoutMessage(mExprs[mIndex]!!.mLongTimeout)
+                        displayTimeoutMessage((mExprs[mIndex] ?: return).mLongTimeout)
                     }
                     mListener?.onCancelled(mIndex)
                 } else {
@@ -952,17 +975,17 @@ class Evaluator internal constructor(
             // mExprInfo.mVal was already set asynchronously by child thread.
             mExprInfo.mResultString = result.newResultString
             mExprInfo.mResultStringOffset = result.newResultStringOffset
-            val dotIndex = mExprInfo.mResultString!!.indexOf('.')
-            val truncatedWholePart = mExprInfo.mResultString!!.substring(0, dotIndex)
+            val dotIndex = (mExprInfo.mResultString ?: return).indexOf('.')
+            val truncatedWholePart = (mExprInfo.mResultString ?: return).substring(0, dotIndex)
             // Recheck display precision; it may change, since display dimensions may have been
             // un-know the first time.  In that case the initial evaluation precision should have
             // been conservative.
             // TODO: Could optimize by remembering display size and checking for change.
             var initPrecOffset = result.initDisplayOffset
-            mExprInfo.mMsdIndex = msdIndexOfGet(mExprInfo.mResultString!!)
+            mExprInfo.mMsdIndex = msdIndexOfGet(mExprInfo.mResultString ?: return)
             val leastDigOffset = lsdOffsetGet(result.unifiedReal, mExprInfo.mResultString, dotIndex)
-            val newInitPrecOffset = preferredPrecGet(mExprInfo.mResultString!!,
-                    mExprInfo.mMsdIndex, leastDigOffset, mCharMetricsInfo)
+            val newInitPrecOffset = preferredPrecGet(mExprInfo.mResultString ?: return,
+                mExprInfo.mMsdIndex, leastDigOffset, mCharMetricsInfo)
             if (newInitPrecOffset < initPrecOffset) {
                 initPrecOffset = newInitPrecOffset
             } else {
@@ -971,7 +994,7 @@ class Evaluator internal constructor(
                 Log.i(TAG, "newInitPrecOffset was not less than initPrecOffset")
             }
             mListener?.onEvaluate(mIndex, initPrecOffset, mExprInfo.mMsdIndex, leastDigOffset,
-                    truncatedWholePart)
+                truncatedWholePart)
         }
 
         /**
@@ -985,7 +1008,7 @@ class Evaluator internal constructor(
          */
         override fun onCancelled(result: InitialResult?) {
             // Invoker resets mEvaluator.
-            mTimeoutHandler.removeCallbacks(mTimeoutRunnable!!)
+            mTimeoutHandler.removeCallbacks(mTimeoutRunnable ?: return)
             if (!mQuiet) {
                 displayCancelledMessage()
             } // Otherwise, if mRequired, timeout processing displayed message.
@@ -998,8 +1021,8 @@ class Evaluator internal constructor(
      * Result of asynchronous reevaluation.
      */
     private class ReevalResult(
-            val newResultString: String,
-            val newResultStringOffset: Int
+        val newResultString: String,
+        val newResultStringOffset: Int
     )
 
     /**
@@ -1011,8 +1034,8 @@ class Evaluator internal constructor(
      */
     @SuppressLint("StaticFieldLeak")
     private inner class AsyncReevaluator(
-            private val mIndex: Long, // Index of expression to evaluate.
-            private val mListener: EvaluationListener
+        private val mIndex: Long, // Index of expression to evaluate.
+        private val mListener: EvaluationListener
     ) : CoroutinesAsyncTask<Int, Void, ReevalResult>() {
 
         /**
@@ -1037,7 +1060,8 @@ class Evaluator internal constructor(
         override fun doInBackground(vararg prec: Int?): ReevalResult? {
             return try {
                 val precOffset = prec[0]
-                ReevalResult(mExprInfo!!.mVal.get().toStringTruncated(precOffset!!), precOffset)
+                ReevalResult((mExprInfo ?: return null).mVal.get().toStringTruncated(precOffset
+                    ?: return null), precOffset)
             } catch (e: ArithmeticException) {
                 null
             } catch (e: CR.PrecisionOverflowException) {
@@ -1072,15 +1096,15 @@ class Evaluator internal constructor(
                 // This should only be possible in the extremely rare case of encountering a
                 // domain error while reevaluating or in case of a precision overflow.  We don't
                 // know of a way to get the latter with a plausible amount of user input.
-                mExprInfo!!.mResultString = ERRONEOUS_RESULT
+                (mExprInfo ?: return).mResultString = ERRONEOUS_RESULT
                 mListener.onError(mIndex, R.string.error_nan)
             } else {
-                if (result.newResultStringOffset < mExprInfo!!.mResultStringOffset) {
+                if (result.newResultStringOffset < (mExprInfo ?: return).mResultStringOffset) {
                     throw AssertionError("Unexpected onPostExecute timing")
                 }
-                mExprInfo.mResultString = unflipZeroes(mExprInfo.mResultString!!,
-                        mExprInfo.mResultStringOffset, result.newResultString,
-                        result.newResultStringOffset)
+                mExprInfo.mResultString = unflipZeroes(mExprInfo.mResultString ?: return,
+                    mExprInfo.mResultStringOffset, result.newResultString,
+                    result.newResultStringOffset)
                 mExprInfo.mResultStringOffset = result.newResultStringOffset
                 mListener.onReevaluate(mIndex)
             }
@@ -1118,17 +1142,17 @@ class Evaluator internal constructor(
      * @param listener [EvaluationListener] whose callbacks should be informed of evaluation result.
      */
     private fun ensureCachePrec(
-            index: Long,
-            precOffset: Int,
-            listener: EvaluationListener
+        index: Long,
+        precOffset: Int,
+        listener: EvaluationListener
     ) {
         val ei = mExprs[index]
 
-        if (ei!!.mResultString != null && ei.mResultStringOffset >= precOffset
-                || ei.mResultStringOffsetReq >= precOffset) return
+        if ((ei ?: return).mResultString != null && ei.mResultStringOffset >= precOffset
+            || ei.mResultStringOffsetReq >= precOffset) return
         if (ei.mEvaluator != null) {
             // Ensure we only have one evaluation running at a time.
-            ei.mEvaluator!!.cancel(true)
+            (ei.mEvaluator ?: return).cancel(true)
             ei.mEvaluator = null
         }
         val reEval = AsyncReevaluator(index, listener)
@@ -1243,13 +1267,13 @@ class Evaluator internal constructor(
      * @return [String] representation of the result to at least `precOffset[0]` digits
      */
     fun stringGet(
-            index: Long,
-            precOffset: IntArray,
-            maxPrecOffset: Int,
-            maxDigs: Int,
-            truncated: BooleanArray,
-            negative: BooleanArray,
-            listener: EvaluationListener
+        index: Long,
+        precOffset: IntArray,
+        maxPrecOffset: Int,
+        maxDigs: Int,
+        truncated: BooleanArray,
+        negative: BooleanArray,
+        listener: EvaluationListener
     ): String {
         val ei = mExprs[index]
         var currentPrecOffset = precOffset[0]
@@ -1308,11 +1332,11 @@ class Evaluator internal constructor(
      * field to its `mResultStringOffsetReq` (0 recall), and set its `mMsdIndex` field to INVALID_MSD.
      */
     private fun clearMainCache() {
-        mMainExpr!!.mVal.set(null)
-        mMainExpr!!.mResultString = null
-        mMainExpr!!.mResultStringOffsetReq = 0
-        mMainExpr!!.mResultStringOffset = mMainExpr!!.mResultStringOffsetReq
-        mMainExpr!!.mMsdIndex = INVALID_MSD
+        (mMainExpr ?: return).mVal.set(null)
+        (mMainExpr ?: return).mResultString = null
+        (mMainExpr ?: return).mResultStringOffsetReq = 0
+        (mMainExpr ?: return).mResultStringOffset = (mMainExpr ?: return).mResultStringOffsetReq
+        (mMainExpr ?: return).mMsdIndex = INVALID_MSD
     }
 
     /**
@@ -1322,10 +1346,10 @@ class Evaluator internal constructor(
      * `mLongTimeout` field of [mMainExpr] to *false*.
      */
     fun clearMain() {
-        mMainExpr!!.mExpr.clear()
+        (mMainExpr ?: return).mExpr.clear()
         mHasTrigFuncs = false
         clearMainCache()
-        mMainExpr!!.mLongTimeout = false
+        (mMainExpr ?: return).mLongTimeout = false
     }
 
     /**
@@ -1341,7 +1365,7 @@ class Evaluator internal constructor(
      * of [CalculatorExpr] and `dm` as its degree mode.
      */
     fun clearEverything() {
-        val dm = mMainExpr!!.mDegreeMode
+        val dm = (mMainExpr ?: return).mDegreeMode
         cancelAll(true)
         setSavedIndex(0)
         setMemoryIndex(0)
@@ -1371,17 +1395,17 @@ class Evaluator internal constructor(
      * @param required result was explicitly requested by user.
      */
     private fun evaluateResult(
-            index: Long,
-            listener: EvaluationListener?,
-            cmi: CharMetricsInfo,
-            required: Boolean
+        index: Long,
+        listener: EvaluationListener?,
+        cmi: CharMetricsInfo,
+        required: Boolean
     ) {
         val ei = mExprs[index]
         if (index == MAIN_INDEX) {
             clearMainCache()
         }  // Otherwise the expression is immutable.
 
-        val eval = AsyncEvaluator(index, listener, cmi, ei!!.mDegreeMode, required)
+        val eval = AsyncEvaluator(index, listener, cmi, (ei ?: return).mDegreeMode, required)
         ei.mEvaluator = eval
         eval.execute()
         if (index == MAIN_INDEX) {
@@ -1417,16 +1441,17 @@ class Evaluator internal constructor(
      * @param cmi the [CharMetricsInfo] to query for information derived from character widths
      */
     internal fun notifyImmediately(
-            index: Long,
-            ei: ExprInfo?,
-            listener: EvaluationListener?,
-            cmi: CharMetricsInfo
+        index: Long,
+        ei: ExprInfo?,
+        listener: EvaluationListener?,
+        cmi: CharMetricsInfo
     ) {
-        val dotIndex = ei!!.mResultString!!.indexOf('.')
-        val truncatedWholePart = ei.mResultString!!.substring(0, dotIndex)
+        val dotIndex = ((ei ?: return).mResultString ?: return).indexOf('.')
+        val truncatedWholePart = (ei.mResultString ?: return).substring(0, dotIndex)
         val leastDigOffset = lsdOffsetGet(ei.mVal.get(), ei.mResultString, dotIndex)
         val msdIndex = msdIndexGet(index)
-        val preferredPrecOffset = preferredPrecGet(ei.mResultString!!, msdIndex, leastDigOffset, cmi)
+        val preferredPrecOffset = preferredPrecGet(ei.mResultString
+            ?: return, msdIndex, leastDigOffset, cmi)
         listener?.onEvaluate(index, preferredPrecOffset, msdIndex, leastDigOffset, truncatedWholePart)
     }
 
@@ -1454,9 +1479,9 @@ class Evaluator internal constructor(
      * @param cmi the [CharMetricsInfo] to query for information derived from character widths
      */
     fun evaluateAndNotify(
-            index: Long,
-            listener: EvaluationListener?,
-            cmi: CharMetricsInfo
+        index: Long,
+        listener: EvaluationListener?,
+        cmi: CharMetricsInfo
     ) {
         if (cmi.maxCharsGet() == 0) {
             // Probably shouldn't happen. If it does, we didn't promise to do anything anyway.
@@ -1464,7 +1489,7 @@ class Evaluator internal constructor(
         }
         val ei = ensureExprIsCached(index)
         if (ei.mResultString != null && ei.mResultString != ERRONEOUS_RESULT
-                && !(index == MAIN_INDEX && mChangedValue)) {
+            && !(index == MAIN_INDEX && mChangedValue)) {
             // Already done. Just notify.
             notifyImmediately(MAIN_INDEX, mMainExpr, listener, cmi)
             return
@@ -1512,9 +1537,9 @@ class Evaluator internal constructor(
      * @param cmi the [CharMetricsInfo] to query for information derived from character widths
      */
     fun requireResult(
-            index: Long,
-            listener: EvaluationListener?,
-            cmi: CharMetricsInfo
+        index: Long,
+        listener: EvaluationListener?,
+        cmi: CharMetricsInfo
     ) {
         if (cmi.maxCharsGet() == 0) {
             throw AssertionError("requireResult called too early")
@@ -1597,8 +1622,8 @@ class Evaluator internal constructor(
      * @return *true* if we cancelled an initial evaluation
      */
     private fun cancel(
-            expr: ExprInfo,
-            quiet: Boolean
+        expr: ExprInfo,
+        quiet: Boolean
     ): Boolean {
         if (expr.mEvaluator != null) {
             if (quiet && expr.mEvaluator is AsyncEvaluator) {
@@ -1640,8 +1665,8 @@ class Evaluator internal constructor(
      * @return *true* if we cancelled an initial evaluation
      */
     fun cancel(
-            index: Long,
-            quiet: Boolean
+        index: Long,
+        quiet: Boolean
     ): Boolean {
         val ei = mExprs[index]
         return ei?.let { cancel(it, quiet) } ?: false
@@ -1695,9 +1720,9 @@ class Evaluator internal constructor(
     fun restoreInstanceState(dataInput: DataInput) {
         mChangedValue = true
         try {
-            mMainExpr!!.mDegreeMode = dataInput.readBoolean()
-            mMainExpr!!.mLongTimeout = dataInput.readBoolean()
-            mMainExpr!!.mExpr = CalculatorExpr(dataInput)
+            (mMainExpr ?: return).mDegreeMode = dataInput.readBoolean()
+            (mMainExpr ?: return).mLongTimeout = dataInput.readBoolean()
+            (mMainExpr ?: return).mExpr = CalculatorExpr(dataInput)
             mHasTrigFuncs = hasTrigFuncs()
         } catch (e: IOException) {
             Log.v("Calculator", "Exception while restoring:\n$e")
@@ -1716,9 +1741,9 @@ class Evaluator internal constructor(
      */
     fun saveInstanceState(dataOutput: DataOutput) {
         try {
-            dataOutput.writeBoolean(mMainExpr!!.mDegreeMode)
-            dataOutput.writeBoolean(mMainExpr!!.mLongTimeout)
-            mMainExpr!!.mExpr.write(dataOutput)
+            dataOutput.writeBoolean((mMainExpr ?: return).mDegreeMode)
+            dataOutput.writeBoolean((mMainExpr ?: return).mLongTimeout)
+            (mMainExpr ?: return).mExpr.write(dataOutput)
         } catch (e: IOException) {
             Log.v("Calculator", "Exception while saving state:\n$e")
         }
@@ -1770,9 +1795,9 @@ class Evaluator internal constructor(
      */
     fun delete() {
         mChangedValue = true
-        mMainExpr!!.mExpr.delete()
-        if (mMainExpr!!.mExpr.isEmpty) {
-            mMainExpr!!.mLongTimeout = false
+        (mMainExpr ?: return).mExpr.delete()
+        if ((mMainExpr ?: return).mExpr.isEmpty) {
+            (mMainExpr ?: return).mLongTimeout = false
         }
         mHasTrigFuncs = hasTrigFuncs()
     }
@@ -1787,11 +1812,11 @@ class Evaluator internal constructor(
      */
     fun setDegreeMode(degreeMode: Boolean) {
         mChangedValue = true
-        mMainExpr!!.mDegreeMode = degreeMode
+        (mMainExpr ?: return).mDegreeMode = degreeMode
 
         mSharedPrefs.edit()
-                .putBoolean(KEY_PREF_DEGREE_MODE, degreeMode)
-                .apply()
+            .putBoolean(KEY_PREF_DEGREE_MODE, degreeMode)
+            .apply()
     }
 
     /**
@@ -1817,8 +1842,8 @@ class Evaluator internal constructor(
      * in [mExprs]
      */
     private fun copy(
-            index: Long,
-            copyValue: Boolean
+        index: Long,
+        copyValue: Boolean
     ): ExprInfo {
         val fromEi = mExprs[index]
 
@@ -1852,8 +1877,8 @@ class Evaluator internal constructor(
      * [CalculatorExpr] of the [ExprInfo] instances corresponding to our two parameters.
      */
     private fun sum(
-            index1: Long,
-            index2: Long
+        index1: Long,
+        index2: Long
     ): ExprInfo? {
         return generalizedSum(index1, index2, R.id.op_add)
     }
@@ -1871,8 +1896,8 @@ class Evaluator internal constructor(
      * the [CalculatorExpr] of the [ExprInfo] of our two parameters.
      */
     private fun difference(
-            minuendIndex: Long,
-            subtrahendIndex: Long
+        minuendIndex: Long,
+        subtrahendIndex: Long
     ): ExprInfo? {
         return generalizedSum(minuendIndex, subtrahendIndex, R.id.op_sub)
     }
@@ -1901,9 +1926,9 @@ class Evaluator internal constructor(
      * of the [ExprInfo] of our parameters [index1] and [index2].
      */
     private fun generalizedSum(
-            index1: Long,
-            index2: Long,
-            op: Int
+        index1: Long,
+        index2: Long,
+        op: Int
     ): ExprInfo? {
         // TODO: Consider not collapsing expr2, to save database space.
         // Note that this is a bit tricky, since our expressions can contain unbalanced lparens.
@@ -1918,7 +1943,8 @@ class Evaluator internal constructor(
         result.append(collapsed2)
         val resultEi = ExprInfo(result, false /* dont care about degrees/radians */)
 
-        resultEi.mLongTimeout = mExprs[index1]!!.mLongTimeout || mExprs[index2]!!.mLongTimeout
+        resultEi.mLongTimeout = (mExprs[index1] ?: return null).mLongTimeout || (mExprs[index2]
+            ?: return null).mLongTimeout
         return resultEi
     }
 
@@ -1945,8 +1971,8 @@ class Evaluator internal constructor(
      * @return the index of the [ExprInfo] in our [mExprs] cache.
      */
     private fun addToDB(
-            inHistory: Boolean,
-            ei: ExprInfo
+        inHistory: Boolean,
+        ei: ExprInfo
     ): Long {
         val serializedExpr = ei.mExpr.toBytes()
         val rd = ExpressionDB.RowData(serializedExpr, ei.mDegreeMode, ei.mLongTimeout, 0)
@@ -1979,8 +2005,8 @@ class Evaluator internal constructor(
      * @return the new index
      */
     fun preserve(
-            oldIndex: Long,
-            inHistory: Boolean
+        oldIndex: Long,
+        inHistory: Boolean
     ): Long {
         val ei = copy(oldIndex, true)
         if (ei.mResultString == null || ei.mResultString == ERRONEOUS_RESULT) {
@@ -2050,12 +2076,12 @@ class Evaluator internal constructor(
      * @return the [CalculatorExpr] representation of the result of the given expression.
      */
     private fun collapsedExprGet(
-            index: Long
+        index: Long
     ): CalculatorExpr? {
-        val realIndex = if (isMutableIndex(index)) preserve(index,false) else index
+        val realIndex = if (isMutableIndex(index)) preserve(index, false) else index
         val ei = mExprs[realIndex]
 
-        val rs = ei!!.mResultString
+        val rs = (ei ?: return null).mResultString
         // An error can occur here only under extremely unlikely conditions.
         // Check anyway, and just refuse.
         // rs *should* never be null, but it happens. Check as a workaround to protect against
@@ -2089,14 +2115,14 @@ class Evaluator internal constructor(
      */
     fun collapse(index: Long) {
 
-        val longTimeout = mExprs[index]!!.mLongTimeout
+        val longTimeout = (mExprs[index] ?: return).mLongTimeout
         val abbrvExpr = collapsedExprGet(index)
         clearMain()
         if (BuildConfig.DEBUG && abbrvExpr == null) {
             error("Assertion failed")
         }
-        mMainExpr!!.mExpr.append(abbrvExpr!!)
-        mMainExpr!!.mLongTimeout = longTimeout
+        (mMainExpr ?: return).mExpr.append(abbrvExpr ?: return)
+        (mMainExpr ?: return).mLongTimeout = longTimeout
         mChangedValue = true
         mHasTrigFuncs = false  // Degree mode no longer affects expression value.
     }
@@ -2114,7 +2140,7 @@ class Evaluator internal constructor(
      * our [SetSavedWhenDoneListener] class which overrides our [setNow] method to set the index of
      * the "saved" expression mirroring the clipboard when our [onEvaluate] override is called.
      */
-    private abstract inner class SetWhenDoneListener : EvaluationListener {
+    private abstract class SetWhenDoneListener : EvaluationListener {
         /**
          * This method exists solely to be called to throw an [AssertionError] if anyone calls our
          * [onReevaluate] override.
@@ -2155,11 +2181,11 @@ class Evaluator internal constructor(
          * @param truncatedWholePart the integer part of the result
          */
         override fun onEvaluate(
-                index: Long,
-                initPrecOffset: Int,
-                msdIndex: Int,
-                lsdOffset: Int,
-                truncatedWholePart: String) {
+            index: Long,
+            initPrecOffset: Int,
+            msdIndex: Int,
+            lsdOffset: Int,
+            truncatedWholePart: String) {
             setNow()
         }
 
@@ -2183,8 +2209,8 @@ class Evaluator internal constructor(
      * construction parameter [mPersist] is *true* [mIndex] is stored to our preference file too.
      */
     private inner class SetMemoryWhenDoneListener(
-            val mIndex: Long,
-            val mPersist: Boolean
+        val mIndex: Long,
+        val mPersist: Boolean
     ) : SetWhenDoneListener() {
         /**
          * This override of [SetWhenDoneListener.setNow] is used when the result of the evaluation
@@ -2217,7 +2243,7 @@ class Evaluator internal constructor(
      * to that which was stored in our shared preferences file.
      */
     private inner class SetSavedWhenDoneListener(
-            val mIndex: Long
+        val mIndex: Long
     ) : SetWhenDoneListener() {
         /**
          * This override of [SetWhenDoneListener.setNow] is used when the result of the evaluation
@@ -2241,11 +2267,11 @@ class Evaluator internal constructor(
     private fun setMemoryIndex(index: Long) {
         mMemoryIndex = index
         mSharedPrefs.edit()
-                .putLong(KEY_PREF_MEMORY_INDEX, index)
-                .apply()
+            .putLong(KEY_PREF_MEMORY_INDEX, index)
+            .apply()
 
         if (mCallback != null) {
-            mCallback!!.onMemoryStateChanged()
+            (mCallback ?: return).onMemoryStateChanged()
         }
     }
 
@@ -2260,8 +2286,8 @@ class Evaluator internal constructor(
     private fun setSavedIndex(index: Long) {
         mSavedIndex = index
         mSharedPrefs.edit()
-                .putLong(KEY_PREF_SAVED_INDEX, index)
-                .apply()
+            .putLong(KEY_PREF_SAVED_INDEX, index)
+            .apply()
     }
 
     /**
@@ -2401,8 +2427,8 @@ class Evaluator internal constructor(
      */
     private fun uriForSaved(): Uri {
         return Uri.Builder().scheme("tag")
-                .encodedOpaquePart(mSavedName)
-                .build()
+            .encodedOpaquePart(mSavedName)
+            .build()
     }
 
     /**
@@ -2428,15 +2454,16 @@ class Evaluator internal constructor(
         // Generate a new (entirely private) URI for this result.
         // Attempt to conform to RFC4151, though it's unclear it matters.
         val tz = TimeZone.getDefault()
+
         @SuppressLint("SimpleDateFormat")
         val df = SimpleDateFormat("yyyy-MM-dd")
         df.timeZone = tz
         val isoDate = df.format(Date())
         mSavedName = ("calculator2.android.com," + isoDate + ":"
-                + (Random().nextInt() and 0x3fffffff))
+            + (Random().nextInt() and 0x3fffffff))
         mSharedPrefs.edit()
-                .putString(KEY_PREF_SAVED_NAME, mSavedName)
-                .apply()
+            .putString(KEY_PREF_SAVED_NAME, mSavedName)
+            .apply()
         return uriForSaved()
     }
 
@@ -2473,11 +2500,12 @@ class Evaluator internal constructor(
         val ei = mExprs[index]
         mChangedValue = true
 
-        mMainExpr!!.mLongTimeout = mMainExpr!!.mLongTimeout or ei!!.mLongTimeout
+        (mMainExpr ?: return).mLongTimeout = (mMainExpr ?: return).mLongTimeout or (ei
+            ?: return).mLongTimeout
         val collapsed = collapsedExprGet(index)
         if (collapsed != null) {
 
-            mMainExpr!!.mExpr.append(collapsedExprGet(index)!!)
+            (mMainExpr ?: return).mExpr.append(collapsedExprGet(index) ?: return)
         }
     }
 
@@ -2494,8 +2522,8 @@ class Evaluator internal constructor(
         ten.add(R.id.digit_1)
         ten.add(R.id.digit_0)
         mChangedValue = true  // For consistency.  Reevaluation is probably not useful.
-        mMainExpr!!.mExpr.append(ten)
-        mMainExpr!!.mExpr.add(R.id.op_pow)
+        (mMainExpr ?: return).mExpr.append(ten)
+        (mMainExpr ?: return).mExpr.add(R.id.op_pow)
     }
 
     /**
@@ -2539,7 +2567,7 @@ class Evaluator internal constructor(
             throw AssertionError("IO Exception without real IO:$e")
         }
 
-        val newEi = (mExprs as  MutableMap<Long, ExprInfo>).putIfAbsent(index, ei)
+        val newEi = (mExprs as MutableMap<Long, ExprInfo>).putIfAbsent(index, ei)
         return newEi ?: ei
     }
 
@@ -2657,7 +2685,7 @@ class Evaluator internal constructor(
             exp = 10 * exp + Character.digit(s[i], 10)
             ++i
         }
-        mMainExpr!!.mExpr.addExponent(sign * exp)
+        (mMainExpr ?: return).mExpr.addExponent(sign * exp)
         mChangedValue = true
     }
 
@@ -2777,7 +2805,7 @@ class Evaluator internal constructor(
         /**
          * The fragment TAG for our timeout [AlertDialogFragment].
          */
-        const val TIMEOUT_DIALOG_TAG = "timeout"
+        const val TIMEOUT_DIALOG_TAG: String = "timeout"
 
         /**
          * The lazy getter for our singleton [Evaluator] instance. If our [evaluator] field is *null*
@@ -2825,16 +2853,19 @@ class Evaluator internal constructor(
          * The key under which the current `degreeMode` is stored in the shared preferences file.
          */
         private const val KEY_PREF_DEGREE_MODE = "degree_mode"
+
         /**
          * The key under which the index of the expression copied to clipboard is stored in the
          * shared preferences file.
          */
         private const val KEY_PREF_SAVED_INDEX = "saved_index"
+
         /**
          * The key under which the index of the expression in the memory register is stored in the
          * shared preferences file.
          */
         private const val KEY_PREF_MEMORY_INDEX = "memory_index"
+
         /**
          * The key under which the saved name of the expression copied to clipboard is stored in the
          * shared preferences file.
@@ -2861,6 +2892,7 @@ class Evaluator internal constructor(
          * digits, whenever we are forced to reevaluate. The last term is dropped if prec < 0.
          */
         private const val PRECOMPUTE_DIGITS = 30
+
         /**
          * Divisor used to divide current_precision_offset by when calculating how many extra digits
          * we should pre-compute.
@@ -2893,7 +2925,7 @@ class Evaluator internal constructor(
         /**
          * The value returned if we cannot determine the index of the most significant digit.
          */
-        const val INVALID_MSD = Integer.MAX_VALUE
+        const val INVALID_MSD: Int = Integer.MAX_VALUE
 
         /**
          * Used to represent an erroneous result or a required evaluation. Not displayed.
@@ -2951,10 +2983,10 @@ class Evaluator internal constructor(
          */
         @VisibleForTesting
         fun unflipZeroes(
-                oldDigs: String,
-                oldPrecOffset: Int,
-                newDigs: String,
-                newPrecOffset: Int
+            oldDigs: String,
+            oldPrecOffset: Int,
+            newDigs: String,
+            newPrecOffset: Int
         ): String {
             val oldLen = oldDigs.length
             if (oldDigs[oldLen - 1] != '9') {
@@ -2997,9 +3029,9 @@ class Evaluator internal constructor(
          * or we cannot determine it.
          */
         internal fun lsdOffsetGet(
-                value: UnifiedReal,
-                cache: String?,
-                decIndex: Int
+            value: UnifiedReal,
+            cache: String?,
+            decIndex: Int
         ): Int {
             if (value.definitelyZero()) return Integer.MIN_VALUE
             var result = value.digitsRequired()
@@ -3068,10 +3100,10 @@ class Evaluator internal constructor(
          * @return precision that the result in [cache] should be displayed at.
          */
         private fun preferredPrecGet(
-                cache: String,
-                msd: Int,
-                lastDigitOffset: Int,
-                cm: CharMetricsInfo
+            cache: String,
+            msd: Int,
+            lastDigitOffset: Int,
+            cm: CharMetricsInfo
         ): Int {
             var msdLocal = msd
             var lastDigitOffsetLocal = lastDigitOffset
@@ -3129,6 +3161,7 @@ class Evaluator internal constructor(
          * Target length of the short representation generated by our [shortStringGet] method.
          */
         private const val SHORT_TARGET_LENGTH = 8
+
         /**
          * String to be returned by our [shortStringGet] method if value "might" be 0.00000...
          */
@@ -3194,9 +3227,9 @@ class Evaluator internal constructor(
          * SHORT_TARGET_LENGTH (8) characters) suitable for display in an abbreviated expression.
          */
         private fun shortStringGet(
-                cache: String,
-                msdIndex: Int,
-                lsdOffset: Int
+            cache: String,
+            msdIndex: Int,
+            lsdOffset: Int
         ): String {
             var msdIndexLocal = msdIndex
             var lsdOffsetLocal = lsdOffset
@@ -3223,7 +3256,7 @@ class Evaluator internal constructor(
             // Avoid scientific notation for small numbers of zeros.
             // Instead stretch significant digits to include decimal point.
             if (lsdOffsetLocal < -1 && dotIndex - msdIndexLocal + negative <= SHORT_TARGET_LENGTH
-                    && lsdOffsetLocal >= -CalculatorResult.MAX_TRAILING_ZEROES - 1) {
+                && lsdOffsetLocal >= -CalculatorResult.MAX_TRAILING_ZEROES - 1) {
                 // Whole number that fits in allotted space.
                 // CalculatorResult would not use scientific notation either.
                 lsdOffsetLocal = -1
@@ -3235,7 +3268,7 @@ class Evaluator internal constructor(
                     msdIndexLocal = dotIndex - 1
                 } else
                     if (lsdOffsetLocal <= SHORT_TARGET_LENGTH - negative - 2
-                            && lsdOffsetLocal <= CalculatorResult.MAX_LEADING_ZEROES + 1) {
+                        && lsdOffsetLocal <= CalculatorResult.MAX_LEADING_ZEROES + 1) {
                         // Fraction that fits entirely in allotted space.
                         // CalculatorResult would not use scientific notation either.
                         msdIndexLocal = dotIndex - 1
@@ -3252,24 +3285,24 @@ class Evaluator internal constructor(
                 if (totalDigits <= SHORT_TARGET_LENGTH && dotIndex > msdIndexLocal && lsdOffsetLocal >= -1) {
                     // Fits, no exponent needed.
                     val wholeWithCommas = StringUtils.addCommas(cache, msdIndexLocal, dotIndex)
-                        return negativeSign + wholeWithCommas + cache.substring(dotIndex, lsdIndex + 1)
+                    return negativeSign + wholeWithCommas + cache.substring(dotIndex, lsdIndex + 1)
                 }
                 if (totalDigits <= SHORT_TARGET_LENGTH - 3) {
                     return (negativeSign + cache[msdIndexLocal] + "."
-                            + cache.substring(msdIndexLocal + 1, lsdIndex + 1) + "E" + exponent)
+                        + cache.substring(msdIndexLocal + 1, lsdIndex + 1) + "E" + exponent)
                 }
             }
             // We need to abbreviate.
             if (dotIndex > msdIndexLocal && dotIndex < msdIndexLocal + SHORT_TARGET_LENGTH - negative - 1) {
                 val wholeWithCommas = StringUtils.addCommas(cache, msdIndexLocal, dotIndex)
                 return (negativeSign + wholeWithCommas
-                        + cache.substring(dotIndex, msdIndexLocal + SHORT_TARGET_LENGTH - negative - 1)
-                        + KeyMaps.ELLIPSIS)
+                    + cache.substring(dotIndex, msdIndexLocal + SHORT_TARGET_LENGTH - negative - 1)
+                    + KeyMaps.ELLIPSIS)
             }
             // Need abbreviation + exponent
             return (negativeSign + cache[msdIndexLocal] + "."
-                    + cache.substring(msdIndexLocal + 1, msdIndexLocal + SHORT_TARGET_LENGTH - negative - 4)
-                    + KeyMaps.ELLIPSIS + "E" + exponent)
+                + cache.substring(msdIndexLocal + 1, msdIndexLocal + SHORT_TARGET_LENGTH - negative - 4)
+                + KeyMaps.ELLIPSIS + "E" + exponent)
         }
 
         /**
@@ -3334,8 +3367,8 @@ class Evaluator internal constructor(
          * @return Index of the character after the exponent to start looking.
          */
         fun exponentEnd(
-                s: String,
-                offset: Int
+            s: String,
+            offset: Int
         ): Int {
             var i = offset
             val len = s.length
