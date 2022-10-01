@@ -933,9 +933,11 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * is not *null* and its *currentItem* is not 0 we decrement its *currentItem*. Otherwise
      * we just call our super's implementation of [onBackPressed].
      */
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (!stopActionModeOrContextMenu()) {
             val historyFragment = historyFragment
+            @Suppress("DEPRECATION")
             when {
                 mDragLayout.isOpen && historyFragment != null -> {
                     if (!historyFragment.stopActionModeOrContextMenu()) {
@@ -2001,6 +2003,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                     // May want to make onClearAnimationEnd() private if/when we fix this.
                     onClearAnimationEnd()
                     mEvaluatorCallback.onMemoryStateChanged()
+                    @Suppress("DEPRECATION")
                     onBackPressed()
                 }
                 Evaluator.TIMEOUT_DIALOG_TAG // Timeout extension request.

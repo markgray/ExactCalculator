@@ -162,7 +162,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
      * The `SimpleOnPageChangeListener` for our [ViewPager], its `onPageSelected` override will be
      * called whenever a new page is selected.
      */
-    private val mOnPageChangeListener = object : ViewPager.SimpleOnPageChangeListener() {
+    private val mOnPageChangeListener = object : SimpleOnPageChangeListener() {
         /**
          * This method will be invoked when a new page becomes selected. Animation is not
          * necessarily complete. We loop over `i` from our last child down to our first (zeroth):
