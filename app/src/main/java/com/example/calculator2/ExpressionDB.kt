@@ -658,6 +658,7 @@ class ExpressionDB(context: Context) {
                 mMaxAccessible = 10000000L
                 mMinIndex = MAXIMUM_MIN_INDEX
                 mAllCursorBase = 0
+                @Suppress("KotlinConstantConditions") // TODO: fix "always 0" warning.
                 mMaxIndex = mAllCursorBase.toLong()
                 mDBInitialized = true
                 mLock.notifyAll()

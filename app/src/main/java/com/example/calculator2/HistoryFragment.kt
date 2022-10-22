@@ -174,7 +174,10 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
             }
             onOptionsItemSelected(item)
         })
-        toolbar.setNavigationOnClickListener { requireActivity().onBackPressed() }
+        toolbar.setNavigationOnClickListener {
+            @Suppress("DEPRECATION") // TODO: fix onBackPressed deprecation
+            requireActivity().onBackPressed()
+        }
         return view
     }
 

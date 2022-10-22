@@ -192,7 +192,7 @@ object KeyMaps {
             R.id.op_sqr -> result = '2'
             else -> throw AssertionError("Unexpected key id")
         }
-        return result.toByte()
+        return result.code.toByte()
     }
 
     /**
@@ -204,7 +204,7 @@ object KeyMaps {
      * @return the resource id of the key that our parameter [b] represents.
      */
     fun fromByte(b: Byte): Int {
-        when (b.toChar()) {
+        when (b.toInt().toChar()) {
             'p' -> return R.id.const_pi
             'e' -> return R.id.const_e
             'r' -> return R.id.op_sqrt
@@ -543,7 +543,7 @@ object KeyMaps {
         addButtonToOutputMap('-', R.id.op_sub)
         addButtonToOutputMap('.', R.id.dec_point)
         for (i in 0..9) {
-            addButtonToOutputMap(('0'.toInt() + i).toChar(), keyForDigVal(i))
+            addButtonToOutputMap(('0'.code + i).toChar(), keyForDigVal(i))
         }
 
         sLocaleForMaps = locale

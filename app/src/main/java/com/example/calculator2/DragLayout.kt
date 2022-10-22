@@ -235,6 +235,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
                 c.onInstanceStateRestored(isOpen)
             }
 
+            @Suppress("DEPRECATION") // TODO: fix SDK 33+ deprecation
             stateLocal = (bundle.getParcelable(KEY_SUPER_STATE) ?: return)
         }
         super.onRestoreInstanceState(stateLocal)

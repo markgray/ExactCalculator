@@ -1690,6 +1690,7 @@ class CalculatorExpr {
     fun hasInterestingOps(): Boolean {
         val last = trailingBinaryOpsStart()
         var first = 0
+        @Suppress("KotlinConstantConditions") // TODO: fix "always 0" warning.
         if (last > first && isOperatorUnchecked(first, R.id.op_sub)) {
             // Leading minus is not by itself interesting.
             first++

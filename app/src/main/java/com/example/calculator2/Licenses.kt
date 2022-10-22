@@ -40,6 +40,7 @@ class Licenses : Activity() {
      */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
+            @Suppress("DEPRECATION") // TODO fix onBackPressed deprecation
             onBackPressed()
             return true
         }
