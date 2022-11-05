@@ -421,7 +421,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
             private var mInitialDownX: Float = 0.toFloat()
             private var mInitialDownY: Float = 0.toFloat()
 
-            @SuppressLint("ClickableViewAccessibility")
+            @SuppressLint("ClickableViewAccessibility") // Accessibility is a joke with Android
             override fun onTouch(v: View, event: MotionEvent): Boolean {
                 val action = event.actionMasked
 
@@ -1592,7 +1592,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * Finally we set our `OnLongClickListener` to a lambda which calls the [showContextMenu] method
      * to show our context menu (returning the [Boolean] it returns) or returns *false*.
      */
-    @Suppress("UNUSED_ANONYMOUS_PARAMETER")
+    @Suppress("UNUSED_ANONYMOUS_PARAMETER") // Suggested change would make class less reusable
     private fun setupContextMenu() {
         setOnCreateContextMenuListener { contextMenu, view, contextMenuInfo ->
             val inflater = MenuInflater(context)
@@ -1686,7 +1686,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * involved in normal cut and paste operations). We initialize our variable `clipboard` to the
      * system level service [ClipboardManager], then set its `primaryClip` property to [clip].
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     private fun setPrimaryClip(clip: ClipData) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(clip)

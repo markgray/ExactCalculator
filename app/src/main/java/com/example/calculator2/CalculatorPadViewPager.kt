@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-@file:Suppress("JoinDeclarationAndAssignment")
-
 package com.example.calculator2
 
 import android.annotation.SuppressLint
@@ -74,7 +72,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
          * @return Returns an Object representing the new page. This does not need to be a View, but
          * can be some other container of the page.
          */
-        @SuppressLint("ClickableViewAccessibility")
+        @SuppressLint("ClickableViewAccessibility") // Accessibility is a joke with Android
         override fun instantiateItem(container: ViewGroup, position: Int): View {
             val child = getChildAt(position)
 
@@ -442,7 +440,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
      * @param ev The motion event.
      * @return True if the event was handled, false otherwise.
      */
-    @SuppressLint("ClickableViewAccessibility")
+    @SuppressLint("ClickableViewAccessibility") // Accessibility is a joke with Android
     override fun onTouchEvent(ev: MotionEvent): Boolean {
         return try {
             // Allow both the gesture detector and super to handle the touch event so they both see

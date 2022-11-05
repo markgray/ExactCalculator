@@ -39,8 +39,6 @@
 // 5/2014 Added Strings to ArithmeticExceptions.
 // 5/2015 Added support for direct asin() implementation in CR.
 
-@file:Suppress("MemberVisibilityCanBePrivate")
-
 package com.example.calculator2
 
 // import android.util.Log;
@@ -83,7 +81,7 @@ abstract class UnaryCRFunction {
      * @param high higher end of the range we are defined on.
      * @return an [InverseMonotoneUnaryCRFunction] of *this* [UnaryCRFunction].
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     fun inverseMonotone(low: CR, high: CR): UnaryCRFunction {
         return InverseMonotoneUnaryCRFunction(this, low, high)
     }
@@ -97,7 +95,7 @@ abstract class UnaryCRFunction {
      * @param high higher end of the range we are defined on.
      * @return an [MonotoneDerivativeUnaryCRFunction] of *this* [UnaryCRFunction].
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     fun monotoneDerivative(low: CR, high: CR): UnaryCRFunction {
         return MonotoneDerivativeUnaryCRFunction(this, low, high)
     }
@@ -110,7 +108,7 @@ abstract class UnaryCRFunction {
         /**
          * The function object corresponding to the identity function.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val identityFunction: UnaryCRFunction = IdentityUnaryCRFunction()
 
         /**
@@ -121,37 +119,37 @@ abstract class UnaryCRFunction {
         /**
          * The function object corresponding to the <TT>inverse</TT> method of CR.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val inverseFunction: UnaryCRFunction = InverseUnaryCRFunction()
 
         /**
          * The function object corresponding to the <TT>abs</TT> method of CR.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val absFunction: UnaryCRFunction = AbsUnaryCRFunction()
 
         /**
          * The function object corresponding to the <TT>exp</TT> method of CR.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val expFunction: UnaryCRFunction = ExpUnaryCRFunction()
 
         /**
          * The function object corresponding to the <TT>cos</TT> method of CR.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val cosFunction: UnaryCRFunction = CosUnaryCRFunction()
 
         /**
          * The function object corresponding to the <TT>sin</TT> method of CR.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val sinFunction: UnaryCRFunction = SinUnaryCRFunction()
 
         /**
          * The function object corresponding to the tangent function.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val tanFunction: UnaryCRFunction = TanUnaryCRFunction()
 
         /**
@@ -159,7 +157,7 @@ abstract class UnaryCRFunction {
          * The argument must be between -1 and 1 inclusive.  The result is between
          * -PI/2 and PI/2.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val asinFunction: UnaryCRFunction = AsinUnaryCRFunction()
         // The following also works, but is slower:
         // CR halfPi = CR.PI.divide(CR.valueOf(2));
@@ -171,7 +169,7 @@ abstract class UnaryCRFunction {
          * The argument must be between -1 and 1 inclusive.  The result is between
          * 0 and PI.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val acosFunction: UnaryCRFunction = AcosUnaryCRFunction()
 
         /**
@@ -183,13 +181,13 @@ abstract class UnaryCRFunction {
         /**
          * The function object corresponding to the <TT>ln</TT> method of CR.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val lnFunction: UnaryCRFunction = LnUnaryCRFunction()
 
         /**
          * The function object corresponding to the <TT>sqrt</TT> method of CR.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val sqrtFunction: UnaryCRFunction = SqrtUnaryCRFunction()
     }
 
@@ -325,6 +323,7 @@ internal class SqrtUnaryCRFunction : UnaryCRFunction() {
  * [UnaryCRFunction] whose `execute` method calls the `execute` method of its [f1] parameter and the
  * value returned by the `execute` method of its [f2] parameter.
  */
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class ComposeUnaryCRFunction(
     var f1: UnaryCRFunction,
     var f2: UnaryCRFunction
@@ -370,7 +369,7 @@ internal class InverseMonotoneUnaryCRFunction(
         val tmpFHigh = func.execute(h)
         // Since func is monotone and low < high, the following test
         // converges.
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         if (tmpFLow.compareTo(tmpFHigh) > 0) {
             f[0] = negateFunction.compose(func)
             fNegated[0] = true
@@ -400,16 +399,18 @@ internal class InverseMonotoneUnaryCRFunction(
         }
 */
 
+        @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
         val arg: CR = if (fNegated[0]) x.negate() else x
 
         // Comparison with a difference of one treated as equality.
+        @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
         fun sloppyCompare(x: BigInteger, y: BigInteger): Int {
             val difference = x.subtract(y)
-            @Suppress("ReplaceCallWithBinaryOperator")
+            @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
             if (difference.compareTo(big1) > 0) {
                 return 1
             }
-            @Suppress("ReplaceCallWithBinaryOperator")
+            @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
             return if (difference.compareTo(bigm1) < 0) {
                 -1
             } else 0
@@ -467,7 +468,7 @@ internal class InverseMonotoneUnaryCRFunction(
                 fL = fLow[0]!!.approxGet(workingEvalPrec)
                 // Check for clear out-of-bounds case.
                 // Close cases may fail in other ways.
-                @Suppress("ReplaceCallWithBinaryOperator")
+                @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
                 if (fH.compareTo(argAppr.subtract(big1)) < 0 || fL.compareTo(argAppr.add(big1)) > 0) {
                     throw ArithmeticException("inverse(out-of-bounds)")
                 }
@@ -487,7 +488,7 @@ internal class InverseMonotoneUnaryCRFunction(
                     .shiftLeft(roughPrec - workingArgPrec)
                 l = roughAppr.subtract(big1)
                     .shiftLeft(roughPrec - workingArgPrec)
-                @Suppress("ReplaceCallWithBinaryOperator")
+                @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
                 if (h.compareTo(highAppr) > 0) {
                     h = highAppr
                     fH = fHigh[0]!!.approxGet(workingEvalPrec)
@@ -497,7 +498,7 @@ internal class InverseMonotoneUnaryCRFunction(
                     fH = fn!!.execute(hCR).approxGet(workingEvalPrec)
                     atRight = false
                 }
-                @Suppress("ReplaceCallWithBinaryOperator")
+                @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
                 if (l.compareTo(lowAppr) < 0) {
                     l = lowAppr
                     fL = fLow[0]!!.approxGet(workingEvalPrec)
@@ -521,7 +522,7 @@ internal class InverseMonotoneUnaryCRFunction(
                 trace("h = $h")
                 trace("f(l) = $fL")
                 trace("f(h) = $fH")
-                @Suppress("ReplaceCallWithBinaryOperator")
+                @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
                 if (difference.compareTo(big6) < 0) {
                     // Answer is less than 1/2 ulp away from h.
                     return scale(h, -extraArgPrec)
@@ -551,7 +552,7 @@ internal class InverseMonotoneUnaryCRFunction(
                         // the answer within the smaller interval.
                         // Note that interpolation will often get us
                         // MUCH closer than this.
-                        @Suppress("ReplaceCallWithBinaryOperator")
+                        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
                         if (adj.compareTo(difference.shiftRight(10)) < 0) {
                             adj = adj.shiftLeft(8)
                             trace("adjusting left")
@@ -563,7 +564,7 @@ internal class InverseMonotoneUnaryCRFunction(
                         }
                         if (adj.signum() <= 0)
                             adj = big2
-                        @Suppress("ReplaceCallWithBinaryOperator")
+                        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
                         if (adj.compareTo(difference) >= 0)
                             adj = difference.subtract(big2)
                         guess = if (adj.signum() <= 0) l.add(big2) else l.add(adj)
@@ -614,7 +615,7 @@ internal class InverseMonotoneUnaryCRFunction(
                             // slightly.
                             trace("tweaking guess")
                             val newGuess = guess.add(tweak)
-                            @Suppress("ReplaceCallWithBinaryOperator")
+                            @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
                             guess = if (newGuess.compareTo(h) >= 0) {
                                 guess.subtract(tweak)
                             } else {
@@ -638,7 +639,7 @@ internal class InverseMonotoneUnaryCRFunction(
                     }
                     val newDifference = h.subtract(l)
                     if (!binaryStep) {
-                        @Suppress("ReplaceCallWithBinaryOperator")
+                        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
                         if (newDifference.compareTo(difference
                                 .shiftRight(1)) >= 0) {
                             ++smallStepDeficit
@@ -661,10 +662,12 @@ internal class InverseMonotoneUnaryCRFunction(
         // Rough approx. of msd of first
         // derivative.
         val BIG1023: BigInteger = BigInteger.valueOf(1023)
+
+        @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
         const val ENABLE_TRACE = false  // Change to generate trace
 
         fun trace(s: String) {
-            @Suppress("ConstantConditionIf")
+            @Suppress("ConstantConditionIf") // Suggested change would make class less reusable
             if (ENABLE_TRACE) {
                 println(s)
                 // Change to Log.v("UnaryCRFunction", s); for Android use.
@@ -692,11 +695,21 @@ internal class MonotoneDerivativeUnaryCRFunction
     // If it was monotone decreasing, we
     // negate it.
     val low = arrayOfNulls<CR>(1) // endpoints and midpoint of interval
+
+    @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
     val mid = arrayOfNulls<CR>(1)
     val high = arrayOfNulls<CR>(1)
+
+    @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
     val fLow = arrayOfNulls<CR>(1) // Corresponding function values.
+
+    @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
     val fMid = arrayOfNulls<CR>(1)
+
+    @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
     val fHigh = arrayOfNulls<CR>(1)
+
+    @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
     val differenceMsd = IntArray(1)  // msd of interval len.
     val deriv2Msd = IntArray(1)
 
@@ -719,6 +732,7 @@ internal class MonotoneDerivativeUnaryCRFunction
         deriv2Msd[0] = apprDiff2.msd() - differenceMsd[0] + 4
     }
 
+    @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
     internal inner class MonotoneDerivativeCR(var arg: CR) : CR() {
 /*
         override fun toShort(): Short {
@@ -767,7 +781,7 @@ internal class MonotoneDerivativeUnaryCRFunction
             val apprLeftDeriv = leftDeriv.approxGet(evalPrec)
             val apprRightDeriv = rightDeriv.approxGet(evalPrec)
             val derivDifference = apprRightDeriv.subtract(apprLeftDeriv).abs()
-            @Suppress("ReplaceCallWithBinaryOperator")
+            @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
             return if (derivDifference.compareTo(big8) < 0) {
                 scale(apprLeftDeriv, -extraPrec)
             } else {

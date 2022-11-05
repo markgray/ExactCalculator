@@ -239,8 +239,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
         // In rare cases, the display state can change after our adapter is initialized.
         val mainExpr = (mEvaluator ?: return).exprGet(Evaluator.MAIN_INDEX)
 
-        @Suppress("SENSELESS_COMPARISON")
-        mIsDisplayEmpty = mainExpr == null || mainExpr.isEmpty
+        mIsDisplayEmpty = mainExpr.isEmpty
 
         initializeController(isResultLayout, isOneLine, mIsDisplayEmpty)
 
@@ -304,7 +303,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
      *                 0 if it was not called. The value will depend on the current operation.
      * @return an [Animator] with an `AnimatorListenerAdapter` attached to it.
      */
-    @Suppress("RedundantNullableReturnType")
+    @Suppress("RedundantNullableReturnType") // The method we override returns nullable
     override fun onCreateAnimator(transit: Int, enter: Boolean, nextAnim: Int): Animator? {
         return (mDragLayout ?: return null).createAnimator(enter)
     }
@@ -385,8 +384,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
         for (i in 0 until mRecyclerView!!.childCount) {
             val view = mRecyclerView!!.getChildAt(i)
             val viewHolder = mRecyclerView!!.getChildViewHolder(view) as HistoryAdapter.ViewHolder
-            @Suppress("NullChecksToSafeCall", "SENSELESS_COMPARISON")
-            if (viewHolder != null && viewHolder.result != null
+            if (viewHolder.result != null
                 && viewHolder.result.stopActionModeOrContextMenu()) {
                 return true
             }

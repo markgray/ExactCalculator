@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-@file:Suppress("KotlinDeprecation", "KotlinDeprecation", "KotlinDeprecation")
-
 package com.example.calculator2
 
 import android.annotation.SuppressLint
@@ -36,8 +34,8 @@ import java.util.Locale
  * KeyMap instances are not meaningful; everything here is static.
  * All functions are either pure, or are assumed to be called only from a single UI thread.
  */
-@SuppressLint("StaticFieldLeak")
-@Suppress("MemberVisibilityCanBePrivate")
+@SuppressLint("StaticFieldLeak") // TODO: Fix static field leak
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 object KeyMaps {
 
     /**

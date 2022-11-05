@@ -147,7 +147,7 @@ abstract class CoroutinesAsyncTask<Params, Progress, Result> {
      * interrupted; otherwise, in-progress tasks are allowed to complete.
      */
     @OptIn(DelicateCoroutinesApi::class)
-    @Suppress("MemberVisibilityCanBePrivate")
+    @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
     fun cancel(mayInterruptIfRunning: Boolean): Boolean {
         if (!mayInterruptIfRunning) Log.d("cancel", "cancel called with mayInterruptIfRunning false")
         isCancelled = true
@@ -169,7 +169,7 @@ abstract class CoroutinesAsyncTask<Params, Progress, Result> {
      * @param progress The progress values to update the UI with.
      */
     @OptIn(DelicateCoroutinesApi::class)
-    @Suppress("MemberVisibilityCanBePrivate")
+    @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
     fun publishProgress(vararg progress: Progress) {
         //need to update main thread
         GlobalScope.launch(Dispatchers.Main) {

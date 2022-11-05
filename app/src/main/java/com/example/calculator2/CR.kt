@@ -119,10 +119,6 @@
  * hboehm@google.com 3/3/2019.
 */
 
-@file:Suppress("JoinDeclarationAndAssignment", "JoinDeclarationAndAssignment",
-    "JoinDeclarationAndAssignment"
-)
-
 package com.example.calculator2
 
 import java.math.BigInteger
@@ -185,7 +181,7 @@ import kotlin.math.sqrt
  * a 28-bit integer.  (This should be extremely unlikely, except as an
  * outcome of a division by zero, or other erroneous computation.)
  */
-@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN", "MemberVisibilityCanBePrivate")
+@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN", "MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 abstract class CR : java.lang.Number() {
 
     /**
@@ -221,7 +217,7 @@ abstract class CR : java.lang.Number() {
     class AbortedException : RuntimeException {
         constructor() : super()
 
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         constructor(s: String) : super(s)
     }
 
@@ -235,7 +231,7 @@ abstract class CR : java.lang.Number() {
     class PrecisionOverflowException : RuntimeException {
         constructor() : super()
 
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         constructor(s: String) : super(s)
     }
 
@@ -328,7 +324,7 @@ abstract class CR : java.lang.Number() {
      * @return the position of the most significant digit.
      */
     internal fun msd(n: Int): Int {
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         if (!apprValid || maxAppr!!.compareTo(big1) <= 0 && maxAppr!!.compareTo(bigm1) >= 0) {
             approxGet(n - 1)
             if (maxAppr!!.abs().compareTo(big1) <= 0) {
@@ -583,6 +579,7 @@ abstract class CR : java.lang.Number() {
      */
     @JvmOverloads
     fun toString(n: Int, radix: Int = 10): String {
+        @Suppress("JoinDeclarationAndAssignment") // Easier to breakpoint if separated
         val scaledCR: CR
         scaledCR = if (16 == radix) {
             shiftLeft(4 * n)
@@ -684,6 +681,8 @@ abstract class CR : java.lang.Number() {
         var exponent = ceil(msd.toDouble() / log2Radix).toInt()
         // Guess for the exponent.  Try to get it usually right.
         val scaleExp = exponent - n
+
+        @Suppress("JoinDeclarationAndAssignment") // Easier to breakpoint if separated
         val scale: CR
         scale = if (scaleExp > 0) {
             valueOf(bigRadix.pow(scaleExp)).inverse()
@@ -1003,7 +1002,7 @@ abstract class CR : java.lang.Number() {
         val roughAppr = approxGet(lowPrec)
         // Handle negative arguments directly; negating and computing inverse
         // can be very expensive.
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         return if (roughAppr.compareTo(big2) > 0 || roughAppr.compareTo(bigm2) < 0) {
             val squareRoot = shiftRight(1).exp()
             squareRoot.multiply(squareRoot)
@@ -1038,7 +1037,7 @@ abstract class CR : java.lang.Number() {
     fun cos(): CR {
         val halfpiMultiples = divide(PI).approxGet(-1)
         val absHalfpiMultiples = halfpiMultiples.abs()
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         when {
             absHalfpiMultiples.compareTo(big2) >= 0 -> {
                 // Subtract multiples of PI
@@ -1085,7 +1084,7 @@ abstract class CR : java.lang.Number() {
      */
     fun asin(): CR {
         val roughAppr = approxGet(-10)
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         return when {
             roughAppr.compareTo(big750) /* 1/sqrt(2) + a bit */ > 0 -> {
                 val newArg = ONE.subtract(multiply(this)).sqrt()
@@ -1129,7 +1128,7 @@ abstract class CR : java.lang.Number() {
      *
      * @return a [CR] which is the natural logarithm of *this*.
      */
-    @Suppress("ReplaceCallWithBinaryOperator")
+    @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
     fun ln(): CR {
         val lowPrec = -4
         val roughAppr = approxGet(lowPrec) /* In sixteenths */
@@ -1194,7 +1193,7 @@ abstract class CR : java.lang.Number() {
         /**
          * The [BigInteger] constant 3
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         internal val big3 = BigInteger.valueOf(3)
 
         /**
@@ -1210,7 +1209,7 @@ abstract class CR : java.lang.Number() {
         /**
          * The [BigInteger] constant 10
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         internal val big10 = BigInteger.TEN
 
         /**
@@ -1353,7 +1352,7 @@ abstract class CR : java.lang.Number() {
          * @param n the [Float] we are to construct a [CR] from.
          * @return a new instance of [IntCR] constructed from [n].
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         fun valueOf(n: Float): CR {
             return valueOf(n.toDouble())
         }
@@ -1361,7 +1360,7 @@ abstract class CR : java.lang.Number() {
         /**
          * A [CR] constant for the [Int] 0
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         var ZERO: CR = valueOf(0)
 
         /**
@@ -1500,7 +1499,7 @@ abstract class CR : java.lang.Number() {
          * @return a [CR] constructed to hold the conversion of [s] interpreted using the radix
          * [radix] to a number.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         @Throws(NumberFormatException::class)
         fun valueOf(s: String, radix: Int): CR {
             var len = s.length
@@ -1544,7 +1543,7 @@ abstract class CR : java.lang.Number() {
          *
          *  - pi/4 = 4*atan(1/5) - atan(1/239)
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         var atanPI: CR = four
             .multiply(four.multiply(atanReciprocal(5)).subtract(atanReciprocal(239)))
 
@@ -1679,7 +1678,7 @@ internal class AssumedIntCR(var value: CR) : CR() {
 /**
  * Representation of the sum of 2 constructive reals. Private.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class AddCR(var op1: CR, var op2: CR) : CR() {
 
     /**
@@ -1705,7 +1704,7 @@ internal class AddCR(var op1: CR, var op2: CR) : CR() {
 /**
  * Representation of a [CR] multiplied by 2^[count].
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class ShiftedCR(var op: CR, var count: Int) : CR() {
 
     /**
@@ -1724,7 +1723,7 @@ internal class ShiftedCR(var op: CR, var count: Int) : CR() {
 /**
  * Representation of the negation of a constructive real. Private.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class NegCR(var op: CR) : CR() {
 
     /**
@@ -1743,7 +1742,7 @@ internal class NegCR(var op: CR) : CR() {
 /**
  * Representation of: [op1] if [selector] < 0, [op2] if [selector] >= 0. Assumes x = y if s = 0 (?)
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class SelectCR(var selector: CR, var op1: CR, var op2: CR) : CR() {
     /**
      * The sign value of our [selector] field that is returned by its `signum` method.
@@ -1780,7 +1779,7 @@ internal class SelectCR(var selector: CR, var op1: CR, var op2: CR) : CR() {
         val op1Appr = op1.approxGet(precision - 1)
         val op2Appr = op2.approxGet(precision - 1)
         val diff = op1Appr.subtract(op2Appr).abs()
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         if (diff.compareTo(big1) <= 0) {
             // close enough; use either
             return scale(op1Appr, -1)
@@ -1800,7 +1799,7 @@ internal class SelectCR(var selector: CR, var op1: CR, var op2: CR) : CR() {
 /**
  * Representation of the product of 2 constructive reals. Private.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class MultCR(var op1: CR, var op2: CR) : CR() {
 
     /**
@@ -1871,7 +1870,7 @@ internal class MultCR(var op1: CR, var op2: CR) : CR() {
  * Representation of the multiplicative inverse of a constructive real. Private.
  * Should use Newton iteration to refine estimates.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class InvCR(var op: CR) : CR() {
 
     /**
@@ -1935,7 +1934,7 @@ internal class InvCR(var op: CR) : CR() {
  * Note: this is known to be a bad algorithm for floating point. Unfortunately, other alternatives
  * appear to require precomputed information.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class PrescaledExpCR(var op: CR) : CR() {
 
     /**
@@ -1988,7 +1987,7 @@ internal class PrescaledExpCR(var op: CR) : CR() {
         var currentSum = scaled1
         var n = 0
         val maxTruncError = big1.shiftLeft(precision - 4 - calcPrecision)
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         while (currentTerm.abs().compareTo(maxTruncError) >= 0) {
             if (Thread.interrupted() || pleaseStop) throw AbortedException()
             n += 1
@@ -2005,7 +2004,7 @@ internal class PrescaledExpCR(var op: CR) : CR() {
  * Representation of the cosine of *this* constructive real. Private. Uses a Taylor series expansion.
  * Assumes |x| < 1.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class PrescaledCosCR(var op: CR) : SlowCR() {
 
     /**
@@ -2062,7 +2061,7 @@ internal class PrescaledCosCR(var op: CR) : SlowCR() {
         val maxTruncError = big1.shiftLeft(precision - 4 - calcPrecision)
         currentTerm = big1.shiftLeft(-calcPrecision)
         var currentSum = currentTerm
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         while (currentTerm.abs().compareTo(maxTruncError) >= 0) {
             if (Thread.interrupted() || pleaseStop) throw AbortedException()
             n += 2
@@ -2082,7 +2081,7 @@ internal class PrescaledCosCR(var op: CR) : SlowCR() {
  * The constructive real atan(1/n), where n is a small integer > base.
  * This gives a simple and moderately fast way to compute PI.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class IntegralAtanCR(var op: Int) : SlowCR() {
 
     /**
@@ -2139,7 +2138,7 @@ internal class IntegralAtanCR(var op: Int) : SlowCR() {
         var currentSign = 1
         var n = 1
         val maxTruncError = big1.shiftLeft(precision - 2 - calcPrecision)
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         while (currentTerm.abs().compareTo(maxTruncError) >= 0) {
             if (Thread.interrupted() || pleaseStop) throw AbortedException()
             n += 2
@@ -2155,7 +2154,7 @@ internal class IntegralAtanCR(var op: Int) : SlowCR() {
 /**
  * Representation for ln(1 + op)
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class PrescaledLnCR(var op: CR) : SlowCR() {
 
     /**
@@ -2206,7 +2205,7 @@ internal class PrescaledLnCR(var op: CR) : SlowCR() {
         var n = 1
         var currentSign = 1   // (-1)^(n-1)
         val maxTruncError = big1.shiftLeft(precision - 4 - calcPrecision)
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         while (currentTerm.abs().compareTo(maxTruncError) >= 0) {
             if (Thread.interrupted() || pleaseStop) throw AbortedException()
             n += 1
@@ -2224,7 +2223,7 @@ internal class PrescaledLnCR(var op: CR) : SlowCR() {
  * Representation of the arcsine of a constructive real. Private. Uses a Taylor series expansion.
  * Assumes |x| < (1/2)^(1/3).
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class PrescaledAsinCR(var op: CR) : SlowCR() {
 
     /**
@@ -2304,7 +2303,7 @@ internal class PrescaledAsinCR(var op: CR) : SlowCR() {
         // Current scaled Taylor series term
         // before division by the exponent.
         // Accurate to 3 ulp at calcPrecision.
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         while (currentTerm.abs().compareTo(maxLastTerm) >= 0) {
             if (Thread.interrupted() || pleaseStop) throw AbortedException()
             exp += 2
@@ -2339,7 +2338,7 @@ internal class PrescaledAsinCR(var op: CR) : SlowCR() {
 /**
  * Representation of the square root of a constructive real.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class SqrtCR : CR {
     var op: CR
 
@@ -2451,7 +2450,7 @@ internal class SqrtCR : CR {
  *
  * pi is then approximated as `(a[n+1]+b[n+1])^2 / 4*t[n+1]`.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 internal class GlPiCR : SlowCR() {
     // In addition to the best approximation kept by the CR base class, we keep
     // the entire sequence b[n], to the extent we've needed it so far.  Each

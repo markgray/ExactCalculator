@@ -42,7 +42,7 @@ import kotlin.math.round
  * exceptions produced by the underlying [CR] and [BoundedRational] packages, including
  * [CR.PrecisionOverflowException] and [CR.AbortedException].
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 class UnifiedReal private constructor(
     private val mRatFactor: BoundedRational,
     private val mCrFactor: CR) {
@@ -138,7 +138,7 @@ class UnifiedReal private constructor(
      * number) and our [isNamed] method determines that our [mCrFactor] field is one of our named
      * well-known constructive reals.
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     fun definitelyTranscendental(): Boolean {
         return !definitelyAlgebraic() && isNamed(mCrFactor)
     }
@@ -150,7 +150,7 @@ class UnifiedReal private constructor(
      * by the "*" multiply character followed by the string value of our [mCrFactor] field.
      */
     override fun toString(): String {
-        @Suppress("ConvertToStringTemplate")
+        @Suppress("ConvertToStringTemplate") // Suggested change would make class less reusable
         return mRatFactor.toString() + "*" + mCrFactor.toString()
     }
 
@@ -246,11 +246,11 @@ class UnifiedReal private constructor(
                 negative = true
                 intScaled = intScaled.negate()
             }
-            @Suppress("ReplaceCallWithBinaryOperator")
+            @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
             if (CR.valueOf(intScaled).compareTo(scaled.abs()) > 0) {
                 intScaled = intScaled.subtract(BigInteger.ONE)
             }
-            @Suppress("ReplaceCallWithBinaryOperator")
+            @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
             check(CR.valueOf(intScaled).compareTo(scaled.abs()) < 0)
         } else {
             // Approximate case.  Exact comparisons are impossible.
@@ -296,7 +296,7 @@ class UnifiedReal private constructor(
      *
      * @return Our value converted to a [Double].
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     fun doubleValue(): Double {
         return if (mCrFactor === CR_ONE) {
             mRatFactor.doubleValue() // Hopefully correctly rounded
@@ -504,7 +504,7 @@ class UnifiedReal private constructor(
      * @param u the other [UnifiedReal] we are comparing *this* to.
      * @return *true* it [u] is definitely not equal to *this*.
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     fun definitelyNotEquals(u: UnifiedReal): Boolean {
         val isNamed = isNamed(mCrFactor)
         val uIsNamed = isNamed(u.mCrFactor)
@@ -543,7 +543,7 @@ class UnifiedReal private constructor(
      * @return *true* if our [mCrFactor] field points to a well known [CR] and the `signum` method
      * of our [mRatFactor] field determines that it is not 0.
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     fun definitelyNonZero(): Boolean {
         return isNamed(mCrFactor) && mRatFactor.signum() != 0
     }
@@ -554,7 +554,7 @@ class UnifiedReal private constructor(
      * @return *true* is our [mCrFactor] field points to the constant [CR_ONE] and our [mRatFactor]
      * field is equal to the constant [BoundedRational.ONE].
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     fun definitelyOne(): Boolean {
         return mCrFactor === CR_ONE && mRatFactor == BoundedRational.ONE
     }
@@ -858,7 +858,7 @@ class UnifiedReal private constructor(
      *
      * @return The trigonometric tangent of *this*
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     fun tan(): UnifiedReal {
         val piTwelfths = piTwelfths
         if (piTwelfths != null) {
@@ -966,7 +966,7 @@ class UnifiedReal private constructor(
             return negate().atan().negate()
         }
         val asBI = bigIntegerValue()
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         if (asBI != null && asBI.compareTo(BigInteger.ONE) <= 0) {
             // These seem to be all rational cases:
             return when (asBI.toInt()) {
@@ -1068,7 +1068,7 @@ class UnifiedReal private constructor(
             return ONE
         }
         val absExp = exp.abs()
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         if (mCrFactor === CR_ONE && absExp.compareTo(HARD_RECURSIVE_POW_LIMIT) <= 0) {
             val ratPow = mRatFactor.pow(exp)
             // We count on this to fail, e.g. for very large exponents, when it would
@@ -1077,7 +1077,7 @@ class UnifiedReal private constructor(
                 return UnifiedReal(ratPow)
             }
         }
-        @Suppress("ReplaceCallWithBinaryOperator")
+        @Suppress("ReplaceCallWithBinaryOperator") // Suggested change would make class less reusable
         if (absExp.compareTo(RECURSIVE_POW_LIMIT) > 0) {
             return expLnPow(exp)
         }
@@ -1419,7 +1419,7 @@ class UnifiedReal private constructor(
         /**
          * Perform some nontrivial consistency checks.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         var enableChecks: Boolean = true
 
         /**
@@ -1442,7 +1442,7 @@ class UnifiedReal private constructor(
          * @param x the [Double] whose value the [UnifiedReal] we return will hold.
          * @return a [UnifiedReal] which is equal to our [Double] argument [x].
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         fun valueOf(x: Double): UnifiedReal {
             return if (x == 0.0 || x == 1.0) {
                 valueOf(x.toLong())
@@ -1540,7 +1540,7 @@ class UnifiedReal private constructor(
          * collection, since the sqrt() function needs to identify numbers of the form:
          * SQRT[ i ]*n^2, and we don't otherwise know of a good algorithm for that.
          */
-        @Suppress("RemoveExplicitTypeArguments")
+        @Suppress("RemoveExplicitTypeArguments") // Suggested change would make class less reusable
         private val sSqrts = arrayOf<CR?>(
             null, CR.ONE, CR_SQRT2, CR_SQRT3, null, CR.valueOf(5).sqrt(),
             CR.valueOf(6).sqrt(), CR.valueOf(7).sqrt(), null, null,
@@ -1550,7 +1550,7 @@ class UnifiedReal private constructor(
         /**
          * Natural logs of small integers that we try to recognize.
          */
-        @Suppress("RemoveExplicitTypeArguments")
+        @Suppress("RemoveExplicitTypeArguments") // Suggested change would make class less reusable
         private val sLogs = arrayOf<CR?>(
             null, null, CR_LN2, CR_LN3, null, CR_LN5,
             CR_LN6, CR_LN7, null, null, CR_LN10
@@ -1591,7 +1591,7 @@ class UnifiedReal private constructor(
         /**
          * The [UnifiedReal] for the integer constant -2
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val MINUS_TWO: UnifiedReal = UnifiedReal(BoundedRational.MINUS_TWO)
 
         /**
@@ -1602,7 +1602,7 @@ class UnifiedReal private constructor(
         /**
          * The [UnifiedReal] for the rational constant -1/2
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val MINUS_HALF: UnifiedReal = UnifiedReal(BoundedRational.MINUS_HALF)
 
         /**
@@ -1619,7 +1619,7 @@ class UnifiedReal private constructor(
         /**
          * The [UnifiedReal] for the integer constant 6
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         private val SIX = UnifiedReal(6)
 
         /**
@@ -1808,7 +1808,7 @@ class UnifiedReal private constructor(
                 return false
             }
 
-            @Suppress("UNUSED_VARIABLE")
+            @Suppress("UNUSED_VARIABLE") // Suggested change would make class less reusable
             val other: CR
             if (r1 === CR_E || r1 === CR_PI) {
                 return definitelyAlgebraic(r2)
@@ -1907,7 +1907,7 @@ class UnifiedReal private constructor(
         /**
          * A constant [BigInteger] holding the `long` value 2.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         private val BIG_TWO = BigInteger.valueOf(2)
 
         /**
@@ -2008,7 +2008,7 @@ class UnifiedReal private constructor(
             }
             var result: Long = 0
 
-            @Suppress("UNUSED_VARIABLE")
+            @Suppress("UNUSED_VARIABLE") // Suggested change would make class less reusable
             val remaining = nLocal
             val bigBase = BigInteger.valueOf(base.toLong())
             var base16th: BigInteger? = null  // base^16, computed lazily

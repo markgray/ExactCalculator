@@ -1131,7 +1131,7 @@ class DragController {
         /**
          * The TAG to use for logging (just in case).
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         private const val TAG = "DragController"
 
         /**

@@ -132,7 +132,7 @@ class CalculatorFormula
      * is null or if its `shouldDisplayMemory` method returns *false*, otherwise it returns *true*.
      */
     private val isMemoryEnabled: Boolean
-        @SuppressLint("NewApi")
+        @SuppressLint("NewApi") // TODO: add code for older versions of Android
         get() = mOnDisplayMemoryOperationsListener != null
             && mOnDisplayMemoryOperationsListener!!.shouldDisplayMemory()
 
@@ -577,7 +577,7 @@ class CalculatorFormula
      * sets our `OnLongClickListener` to a lambda which calls the [showContextMenu] method to display
      * the context menu.
      */
-    @Suppress("UNUSED_ANONYMOUS_PARAMETER")
+    @Suppress("UNUSED_ANONYMOUS_PARAMETER") // Suggested change would make class less reusable
     private fun setupContextMenu() {
         setOnCreateContextMenuListener { contextMenu, view, contextMenuInfo ->
             val inflater = MenuInflater(context)

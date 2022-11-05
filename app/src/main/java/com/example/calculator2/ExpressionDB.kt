@@ -36,9 +36,7 @@
 // such property, since expressions may be read by one thread while the main thread is updating
 // another expression.
 
-@file:Suppress("RedundantNullableReturnType", "JoinDeclarationAndAssignment", "DEPRECATION",
-    "DeprecatedCallableAddReplaceWith"
-)
+@file:Suppress("DEPRECATION") // TODO: Replace AsyncTask with coroutine
 
 package com.example.calculator2
 
@@ -58,7 +56,7 @@ import kotlin.math.min
 /**
  * Manages the database that we store previous calculations in.
  */
-@Suppress("UNUSED_VARIABLE", "PLATFORM_CLASS_MAPPED_TO_KOTLIN", "MemberVisibilityCanBePrivate")
+@Suppress("UNUSED_VARIABLE", "PLATFORM_CLASS_MAPPED_TO_KOTLIN", "MemberVisibilityCanBePrivate") // picky, picky
 class ExpressionDB(context: Context) {
     /**
      * The custom [SQLiteOpenHelper] we use to create, open, and/or manage our expression database.
@@ -121,7 +119,7 @@ class ExpressionDB(context: Context) {
      *
      * @return *true if [mMinAccessible] is greater than [mMaxAccessible]
      */
-    @Suppress("ConstantConditionIf")
+    @Suppress("ConstantConditionIf") // Suggested change would make class less reusable
     private val isDBBad: Boolean
         get() {
             if (!CONTINUE_WITH_BAD_DB) {
@@ -305,7 +303,7 @@ class ExpressionDB(context: Context) {
             /**
              * The number of milliseconds in 15 minutes. UNUSED
              */
-            @Suppress("unused")
+            @Suppress("unused") // Suggested change would make class less reusable
             private const val MILLIS_IN_15_MINS = 15 * 60 * 1000
         }
     }
@@ -397,7 +395,7 @@ class ExpressionDB(context: Context) {
      * @return *true* if [index] is in the range [mMinAccessible] to [mMaxAccessible].
      */
     private fun inAccessibleRange(index: Long): Boolean {
-        @Suppress("ConstantConditionIf")
+        @Suppress("ConstantConditionIf") // Suggested change would make class less reusable
         if (!CONTINUE_WITH_BAD_DB) {
             return true
         }
@@ -416,7 +414,7 @@ class ExpressionDB(context: Context) {
      * [mMinAccessible] to 1L and [mMaxAccessible] to -1L.
      */
     private fun badDBset() {
-        @Suppress("ConstantConditionIf")
+        @Suppress("ConstantConditionIf") // Suggested change would make class less reusable
         if (!CONTINUE_WITH_BAD_DB) {
             Log.e("Calculator", "Database access failed")
             throw RuntimeException("Database access failed")
@@ -431,7 +429,7 @@ class ExpressionDB(context: Context) {
     /**
      * Initialize the database in the background.
      */
-    @SuppressLint("StaticFieldLeak")
+    @SuppressLint("StaticFieldLeak") // TODO: Fix static field leak
     private inner class AsyncInitializer : AsyncTask<ExpressionDBHelper, Void, SQLiteDatabase>() {
 
         /**
@@ -542,7 +540,8 @@ class ExpressionDB(context: Context) {
          *
          * @param result The [SQLiteDatabase] opened or created by [doInBackground].
          */
-        @Deprecated("Deprecated in Java")
+        @Suppress("DeprecatedCallableAddReplaceWith") // TODO: Replace AsyncTask with coroutine
+        @Deprecated("Deprecated in Java") // TODO: Replace AsyncTask with coroutine
         override fun onPostExecute(result: SQLiteDatabase?) {
             if (result == null) {
                 displayDatabaseWarning()
@@ -599,7 +598,7 @@ class ExpressionDB(context: Context) {
      * are currently in progress. These tasks must be executed on a serial executor to avoid
      * reordering writes.
      */
-    @SuppressLint("StaticFieldLeak")
+    @SuppressLint("StaticFieldLeak") // TODO: Fix static field leak
     private inner class AsyncEraser : AsyncTask<Void, Void, Void>() {
         /**
          * We override this method to erase the database on a background thread. First we call the
@@ -752,7 +751,7 @@ class ExpressionDB(context: Context) {
      * Insert the given row in the database without blocking the UI thread.
      * These tasks must be executed on a serial executor to avoid reordering writes.
      */
-    @SuppressLint("StaticFieldLeak")
+    @SuppressLint("StaticFieldLeak") // TODO: Fix static field leak
     private inner class AsyncWriter : AsyncTask<ContentValues, Void, Long>() {
         /**
          * We override this method in order to insert a row into the database on a background thread.
@@ -849,7 +848,7 @@ class ExpressionDB(context: Context) {
      */
     fun addRow(negativeIndex: Boolean, data: RowData): Long {
 
-        @Suppress("UNUSED_VARIABLE")
+        @Suppress("UNUSED_VARIABLE") // Suggested change would make class less reusable
         val result: Long
         val newIndex: Long
         waitForDBInitialized()

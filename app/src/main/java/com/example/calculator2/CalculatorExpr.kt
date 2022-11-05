@@ -43,7 +43,7 @@ import kotlin.math.abs
  * computed values by writing out the expression that was used to compute them, and reevaluate
  * when reading it back in.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 class CalculatorExpr {
 
     /**
@@ -66,7 +66,7 @@ class CalculatorExpr {
      *
      * @return true if [mExpr] holds only a single constant.
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     val isConstant: Boolean
         get() = if (mExpr.size != 1) {
             false
@@ -670,7 +670,7 @@ class CalculatorExpr {
      *
      * @param expr an [ArrayList] holding an expression formed from [Token] instances.
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     private constructor(expr: ArrayList<Token>) {
         mExpr = expr
     }
@@ -1048,7 +1048,7 @@ class CalculatorExpr {
          * @param len [Int] to set our [mPrefixLength] to, it is the length of prefix to evaluate.
          * @param er [ExprResolver] to use for our [mExprResolver] field.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         @Throws(IOException::class)
         constructor(dataInput: DataInput, len: Int, er: ExprResolver) {
             mDegreeMode = dataInput.readBoolean()
@@ -1061,7 +1061,7 @@ class CalculatorExpr {
          *
          * @param dataOutput the [DataOutput] we are to write our [mDegreeMode] field to.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         @Throws(IOException::class)
         fun write(dataOutput: DataOutput) {
             dataOutput.writeBoolean(mDegreeMode)
@@ -1895,13 +1895,13 @@ class CalculatorExpr {
         /**
          * A constant [BigInteger] 1,000,000
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         private val BIG_MILLION = BigInteger.valueOf(1_000_000)
 
         /**
          * A constant [BigInteger] 1,000,000,000
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         private val BIG_BILLION = BigInteger.valueOf(1_000_000_000)
 
         /**

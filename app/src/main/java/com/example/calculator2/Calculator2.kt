@@ -67,7 +67,7 @@ import kotlin.math.sqrt
  * This is the main activity or our app.
  */
 @RequiresApi(Build.VERSION_CODES.N)
-@Suppress("MemberVisibilityCanBePrivate", "LocalVariableName")
+@Suppress("MemberVisibilityCanBePrivate", "LocalVariableName") // I like to use kdoc [] references
 class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickListener,
     AlertDialogFragment.OnClickListener, Evaluator.EvaluationListener /* for main result */,
     DragLayout.CloseCallback, DragLayout.DragCallback {
@@ -855,7 +855,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * Destroy the evaluator and close the underlying database. Just calls the *destroyEvaluator*
      * method of [mEvaluator]. Never used though.
      */
-    @Suppress("unused")
+    @Suppress("unused") // Suggested change would make class less reusable
     fun destroyEvaluator() {
         mEvaluator.destroyEvaluator()
     }
@@ -933,11 +933,11 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * is not *null* and its *currentItem* is not 0 we decrement its *currentItem*. Otherwise
      * we just call our super's implementation of [onBackPressed].
      */
-    @Deprecated("Deprecated in Java")
+    @Deprecated("Deprecated in Java") // TODO: Fix onBackPressed deprecation
     override fun onBackPressed() {
         if (!stopActionModeOrContextMenu()) {
             val historyFragment = historyFragment
-            @Suppress("DEPRECATION")
+            @Suppress("DEPRECATION") // TODO: Fix onBackPressed deprecation
             when {
                 mDragLayout.isOpen && historyFragment != null -> {
                     if (!historyFragment.stopActionModeOrContextMenu()) {
@@ -1176,7 +1176,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
             else -> {}
         }
 
-        @Suppress("ControlFlowWithEmptyBody")
+        @Suppress("ControlFlowWithEmptyBody") // TODO: Some user visible feedback?
         if (!mEvaluator.append(id)) {
             // TODO: Some user visible feedback?
         }
@@ -2003,7 +2003,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                     // May want to make onClearAnimationEnd() private if/when we fix this.
                     onClearAnimationEnd()
                     mEvaluatorCallback.onMemoryStateChanged()
-                    @Suppress("DEPRECATION")
+                    @Suppress("DEPRECATION") // TODO: Fix onBackPressed deprecation
                     onBackPressed()
                 }
                 Evaluator.TIMEOUT_DIALOG_TAG // Timeout extension request.

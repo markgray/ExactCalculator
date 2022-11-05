@@ -407,7 +407,7 @@ class HistoryAdapter(dataSet: ArrayList<HistoryItem?>)
         /**
          * TAG useful for logging.
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         private const val TAG = "HistoryAdapter"
 
         /**

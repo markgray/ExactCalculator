@@ -250,7 +250,7 @@ class CalculatorDisplay
      * @param event The motion event.
      * @return True if the event was handled, false otherwise.
      */
-    @SuppressLint("ClickableViewAccessibility")
+    @SuppressLint("ClickableViewAccessibility") // Accessibility is a joke in Android
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return mTapDetector.onTouchEvent(event) || super.onTouchEvent(event)
     }

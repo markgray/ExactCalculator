@@ -76,7 +76,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
     /**
      * XY coordinates of touch events we have received indexed by the pointer ID of that touch event.
      */
-    @SuppressLint("UseSparseArrays")
+    @SuppressLint("UseSparseArrays") // Suggested change would make class less reusable
     private val mLastMotionPoints = HashMap<Int, PointF>()
 
     /**
@@ -202,7 +202,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
      * @return Returns a [Parcelable] object containing the view's current dynamic state, or null if
      * there is nothing interesting to save.
      */
-    @Suppress("RedundantNullableReturnType")
+    @Suppress("RedundantNullableReturnType") // The method we override returns nullable
     override fun onSaveInstanceState(): Parcelable? {
         val bundle = Bundle()
         bundle.putParcelable(KEY_SUPER_STATE, super.onSaveInstanceState())
@@ -226,7 +226,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
      * @param state The frozen state that had previously been returned by [onSaveInstanceState].
      */
     override fun onRestoreInstanceState(state: Parcelable) {
-        var stateLocal = state
+        var stateLocal: Parcelable = state
         if (stateLocal is Bundle) {
             val bundle = stateLocal as Bundle?
             isOpen = (bundle ?: return).getBoolean(KEY_IS_OPEN)
@@ -326,7 +326,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
      * @param event The motion event.
      * @return *true* if the event was handled, *false* otherwise.
      */
-    @SuppressLint("ClickableViewAccessibility")
+    @SuppressLint("ClickableViewAccessibility") // Accessibility is a joke with Android
     override fun onTouchEvent(event: MotionEvent): Boolean {
         // Workaround: do not process the error case where multi-touch would cause a crash.
         if (event.actionMasked == MotionEvent.ACTION_MOVE

@@ -38,6 +38,7 @@ import java.io.DataOutput
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 import java.util.Random
 import java.util.TimeZone
 import java.util.concurrent.ConcurrentHashMap
@@ -99,7 +100,7 @@ import kotlin.math.min
  * We ensure that only one evaluation of either kind (AsyncEvaluator or AsyncReevaluator) is
  * running at a time.
  */
-@Suppress("MemberVisibilityCanBePrivate")
+@Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
 @RequiresApi(Build.VERSION_CODES.N)
 class Evaluator internal constructor(
     private val mContext: Context // Context for database helper.
@@ -652,7 +653,7 @@ class Evaluator internal constructor(
      * @param mDm degree mode, if *true* trig functions should use degree mode.
      * @param mRequired If *true* result was requested by user.
      */
-    @SuppressLint("StaticFieldLeak")
+    @SuppressLint("StaticFieldLeak") // TODO: Fix static field leak
     internal inner class AsyncEvaluator(
         private val mIndex: Long, // Expression index.
         private val mListener: EvaluationListener?, // Completion callback.
@@ -839,7 +840,7 @@ class Evaluator internal constructor(
          * expression in our [mExprInfo], a string representation of this value and precision
          * "offset" information.
          */
-        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "RedundantNullableReturnType")
+        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "RedundantNullableReturnType") // The method we override returns nullable
         override fun doInBackground(vararg nothing: Void?): InitialResult? {
             try {
                 // mExpr does not change while we are evaluating; thus it's OK to read here.
@@ -1032,7 +1033,7 @@ class Evaluator internal constructor(
      * This assumes that initial evaluation of the expression has been successfully
      * completed.
      */
-    @SuppressLint("StaticFieldLeak")
+    @SuppressLint("StaticFieldLeak") // TODO: Fix static field leak
     private inner class AsyncReevaluator(
         private val mIndex: Long, // Index of expression to evaluate.
         private val mListener: EvaluationListener
@@ -1056,7 +1057,7 @@ class Evaluator internal constructor(
          * @param prec precision of the result string (digits to the right of the decimal place
          * @return a [ReevalResult] containing the new result string and its precision.
          */
-        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+        @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE") // A rose is a rose is a rose
         override fun doInBackground(vararg prec: Int?): ReevalResult? {
             return try {
                 val precOffset = prec[0]
@@ -2455,8 +2456,7 @@ class Evaluator internal constructor(
         // Attempt to conform to RFC4151, though it's unclear it matters.
         val tz = TimeZone.getDefault()
 
-        @SuppressLint("SimpleDateFormat")
-        val df = SimpleDateFormat("yyyy-MM-dd")
+        val df = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         df.timeZone = tz
         val isoDate = df.format(Date())
         mSavedName = ("calculator2.android.com," + isoDate + ":"
@@ -2723,7 +2723,7 @@ class Evaluator internal constructor(
      * @return a [String] which contains the [String] representation of all the expressions in the
      * database
      */
-    @Suppress("unused", "UNUSED_VARIABLE")
+    @Suppress("unused", "UNUSED_VARIABLE") // Suggested change would make class less reusable
     fun historyAsString(): String {
         val startIndex = minIndexGet()
         val endIndex = maxIndexGet()
@@ -2799,7 +2799,7 @@ class Evaluator internal constructor(
         /**
          * Our singleton [Evaluator] instance.
          */
-        @SuppressLint("StaticFieldLeak")
+        @SuppressLint("StaticFieldLeak") // TODO: Fix static field leak
         private var evaluator: Evaluator? = null
 
         /**

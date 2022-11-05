@@ -667,7 +667,7 @@ class BoundedRational {
          * @param r2 the subtrahend of our subtraction
          * @return the difference between [r1] and [r2].
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         fun subtract(r1: BoundedRational, r2: BoundedRational): BoundedRational? {
             return add(r1, negate(r2))
         }
@@ -845,43 +845,43 @@ class BoundedRational {
         /**
          * A constant 30 [BoundedRational]
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val THIRTY: BoundedRational = BoundedRational(30)
 
         /**
          * A constant -30 [BoundedRational]
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val MINUS_THIRTY: BoundedRational = BoundedRational(-30)
 
         /**
          * A constant 45 [BoundedRational]
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val FORTY_FIVE: BoundedRational = BoundedRational(45)
 
         /**
          * A constant -45 [BoundedRational]
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val MINUS_FORTY_FIVE: BoundedRational = BoundedRational(-45)
 
         /**
          * A constant 90 [BoundedRational]
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val NINETY: BoundedRational = BoundedRational(90)
 
         /**
          * A constant -90 [BoundedRational]
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         val MINUS_NINETY: BoundedRational = BoundedRational(-90)
 
         /**
          * A constant 2 [BigInteger]
          */
-        @Suppress("unused")
+        @Suppress("unused") // Suggested change would make class less reusable
         private val BIG_TWO = BigInteger.valueOf(2)
 
         /**
