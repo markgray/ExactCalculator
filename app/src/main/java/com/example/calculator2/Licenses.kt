@@ -30,8 +30,8 @@ class Licenses : Activity() {
 
     /**
      * This hook is called whenever an item in your options menu is selected. If the identifier of
-     * the [item] selected is android.R.id.home we call the [onBackPressed] method to have the
-     * system finish this activity, and then return *true* to consume the event. If the identifier
+     * the [item] selected is android.R.id.home we call the [finish] method to have the system
+     * finish this activity, and then return *true* to consume the event. If the identifier
      * is not android.R.id.home we return the value returned by our super's implementation of
      * `onOptionsItemSelected` to the caller.
      *
@@ -40,8 +40,7 @@ class Licenses : Activity() {
      */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
-            @Suppress("DEPRECATION") // TODO fix onBackPressed deprecation
-            onBackPressed()
+            finish()
             return true
         }
         return super.onOptionsItemSelected(item)

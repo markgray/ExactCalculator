@@ -47,6 +47,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.HorizontalScrollView
 import android.widget.TextView
 import android.widget.Toolbar
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
@@ -596,9 +597,11 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * have it initialize itself, call our [showAndMaybeHideToolbar] method to instruct [mDisplayView]
      * to show the tool bar when it is relevant, and call our [onInverseToggled] method with *false*
      * so that it starts out showing the views in [mInvertibleButtons] (instead of the inverse functions
-     * in [mInverseButtons]. Finally we call our [restoreDisplay] method to update [mEvaluator],
-     * [mCurrentState], [mFormulaText] and [mResultText] to reflect the initializations we have just
-     * completed.
+     * in [mInverseButtons]. We call our [restoreDisplay] method to update [mEvaluator], [mCurrentState],
+     * [mFormulaText] and [mResultText] to reflect the initializations we have just completed. And
+     * finally we add an anonymous [OnBackPressedCallback] which handles the user clicking the back
+     * button while the [HistoryFragment] or the [CalculatorPadViewPager] is on screen, and if one
+     * of them are is it does what needs to be done for these cases (see code).
      *
      * @param savedInstanceState If the activity is being re-initialized after previously being shut
      * down then this Bundle contains the data it most recently supplied in [onSaveInstanceState].
@@ -678,6 +681,37 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
             onInverseToggled(false)
         }
         restoreDisplay()
+        val callback = object : OnBackPressedCallback(true) {
+            /**
+             * Called when the activity has detected the user's press of the back key. If our method
+             * [stopActionModeOrContextMenu] returns *false* (no [ActionMode] or [ContextMenu] were in
+             * progress) we set our variable *historyFragment* to [historyFragment], then when [mDragLayout]
+             * is open and *historyFragment* is not null if the *stopActionModeOrContextMenu* method of
+             * *historyFragment* returns *false* we call our method [removeHistoryFragment] to have the
+             * [FragmentManager] pop the [HistoryFragment] off the stack, we then return. If [mPadViewPager]
+             * is not *null* and its *currentItem* is not 0 we decrement its *currentItem*. Otherwise
+             * we just call [finish] to end the activity.
+             */
+            override fun handleOnBackPressed() {
+                if (!stopActionModeOrContextMenu()) {
+                    val historyFragment = historyFragment
+                    when {
+                        mDragLayout.isOpen && historyFragment != null -> {
+                            if (!historyFragment.stopActionModeOrContextMenu()) {
+                                removeHistoryFragment()
+                            }
+                            return
+                        }
+                        mPadViewPager != null && (mPadViewPager ?: return).currentItem != 0 -> {
+                            (mPadViewPager ?: return).currentItem = (mPadViewPager
+                                ?: return).currentItem - 1
+                        }
+                        else -> finish()
+                    }
+                }
+            }
+        }
+        onBackPressedDispatcher.addCallback(this, callback)
     }
 
     /**
@@ -921,37 +955,6 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
             }
         }
         return super.dispatchTouchEvent(e)
-    }
-
-    /**
-     * Called when the activity has detected the user's press of the back key. If our method
-     * [stopActionModeOrContextMenu] returns *false* (no [ActionMode] or [ContextMenu] were in
-     * progress) we set our variable *historyFragment* to [historyFragment], then when [mDragLayout]
-     * is open and *historyFragment* is not null if the *stopActionModeOrContextMenu* method of
-     * *historyFragment* returns *false* we call our method [removeHistoryFragment] to have the
-     * [FragmentManager] pop the [HistoryFragment] off the stack, we then return. If [mPadViewPager]
-     * is not *null* and its *currentItem* is not 0 we decrement its *currentItem*. Otherwise
-     * we just call our super's implementation of [onBackPressed].
-     */
-    @Deprecated("Deprecated in Java") // TODO: Fix onBackPressed deprecation
-    override fun onBackPressed() {
-        if (!stopActionModeOrContextMenu()) {
-            val historyFragment = historyFragment
-            @Suppress("DEPRECATION") // TODO: Fix onBackPressed deprecation
-            when {
-                mDragLayout.isOpen && historyFragment != null -> {
-                    if (!historyFragment.stopActionModeOrContextMenu()) {
-                        removeHistoryFragment()
-                    }
-                    return
-                }
-                mPadViewPager != null && (mPadViewPager ?: return).currentItem != 0 -> {
-                    (mPadViewPager ?: return).currentItem = (mPadViewPager
-                        ?: return).currentItem - 1
-                }
-                else -> super.onBackPressed()
-            }
-        }
     }
 
     /**
