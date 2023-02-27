@@ -27,6 +27,7 @@ import android.widget.Toolbar
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
 import java.util.*
@@ -112,10 +113,10 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
      * `onMenuItemClick(MenuItem item)` method in order to launch an [AlertDialogFragment] that
      * allows the user to clear the history and memory if the item ID clicked is the one with the
      * ID R.id.menu_clear_history ("Clear"). Finally we set the navigation on click listener of
-     * `toolbar` to a lambda which calls the `onBackPressed` method of the `FragmentActivity` this
-     * fragment is currently associated with to have it "navigate back" to the calculator display by
-     * finishing this [Fragment] when the back button is pressed. We then return `view` to the
-     * caller.
+     * `toolbar` to a lambda which calls the [FragmentManager.popBackStack] method of the
+     * `FragmentActivity` this fragment is currently associated with to have it "navigate back"
+     * to the calculator display by popping the backstack when the back button is pressed. We then
+     * return `view` to the caller.
      *
      * @param inflater The LayoutInflater object that can be used to inflate any views.
      * @param container Parent view that our fragment's UI will be attached to.
