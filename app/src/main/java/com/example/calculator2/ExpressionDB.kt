@@ -599,7 +599,7 @@ class ExpressionDB(context: Context) {
      * reordering writes.
      */
     @SuppressLint("StaticFieldLeak") // TODO: Fix static field leak
-    private inner class AsyncEraser : AsyncTask<Void, Void, Void>() {
+    private inner class AsyncEraser : AsyncTask<Void?, Void?, Void?>() {
         /**
          * We override this method to erase the database on a background thread. First we call the
          * `execSQL` method of our [SQLiteDatabase] field [mExpressionDB] to execute the SQL command
@@ -623,7 +623,7 @@ class ExpressionDB(context: Context) {
          * @return A *null* result always.
          */
         @Deprecated("Deprecated in Java")
-        override fun doInBackground(vararg nothings: Void): Void? {
+        override fun doInBackground(vararg nothings: Void?): Void? {
             (mExpressionDB ?: return null).execSQL(SQL_DROP_TIMESTAMP_INDEX)
             (mExpressionDB ?: return null).execSQL(SQL_DROP_TABLE)
             try {
@@ -650,7 +650,7 @@ class ExpressionDB(context: Context) {
          * @param nothing Always *null* result of the operation computed by [doInBackground].
          */
         @Deprecated("Deprecated in Java")
-        override fun onPostExecute(nothing: Void) {
+        override fun onPostExecute(nothing: Void?) {
             synchronized(mLock) {
                 // Reinitialize everything to an empty and fully functional database.
                 mMinAccessible = -10000000L

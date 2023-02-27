@@ -1983,8 +1983,8 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * of [mEvaluator] to erase the database and reinitialize its memory state to an empty one. We
      * call our [onClearAnimationEnd] method to clean up our own state to a starting state. Then we
      * call the *onMemoryStateChanged* method of [mEvaluatorCallback] to notify [mFormulaText] that
-     * the memory state has changed. Finally we call our [onBackPressed] method to have it remove the
-     * the [HistoryFragment].
+     * the memory state has changed. Finally we call our [FragmentManager.popBackStack] method to
+     * have it remove the [AlertDialogFragment].
      *
      * TIMEOUT_DIALOG_TAG: The [Evaluator] has timed out and asked the user if he wanted to use a
      * longer timeout, and the user clicked the "Use longer timeouts" button of the dialog. We call
@@ -2006,8 +2006,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                     // May want to make onClearAnimationEnd() private if/when we fix this.
                     onClearAnimationEnd()
                     mEvaluatorCallback.onMemoryStateChanged()
-                    @Suppress("DEPRECATION") // TODO: Fix onBackPressed deprecation
-                    onBackPressed()
+                    supportFragmentManager.popBackStack()
                 }
                 Evaluator.TIMEOUT_DIALOG_TAG // Timeout extension request.
                 -> mEvaluator.setLongTimeout()
