@@ -667,7 +667,6 @@ internal class InverseMonotoneUnaryCRFunction(
         const val ENABLE_TRACE = false  // Change to generate trace
 
         fun trace(s: String) {
-            @Suppress("ConstantConditionIf") // Suggested change would make class less reusable
             if (ENABLE_TRACE) {
                 println(s)
                 // Change to Log.v("UnaryCRFunction", s); for Android use.

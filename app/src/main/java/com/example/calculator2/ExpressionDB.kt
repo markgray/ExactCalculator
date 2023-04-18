@@ -56,7 +56,7 @@ import kotlin.math.min
 /**
  * Manages the database that we store previous calculations in.
  */
-@Suppress("UNUSED_VARIABLE", "PLATFORM_CLASS_MAPPED_TO_KOTLIN", "MemberVisibilityCanBePrivate") // picky, picky
+@Suppress("UNUSED_VARIABLE", "MemberVisibilityCanBePrivate") // picky, picky
 class ExpressionDB(context: Context) {
     /**
      * The custom [SQLiteOpenHelper] we use to create, open, and/or manage our expression database.
@@ -119,7 +119,7 @@ class ExpressionDB(context: Context) {
      *
      * @return *true if [mMinAccessible] is greater than [mMaxAccessible]
      */
-    @Suppress("ConstantConditionIf") // Suggested change would make class less reusable
+    // Suggested change would make class less reusable
     private val isDBBad: Boolean
         get() {
             if (!CONTINUE_WITH_BAD_DB) {
@@ -395,7 +395,6 @@ class ExpressionDB(context: Context) {
      * @return *true* if [index] is in the range [mMinAccessible] to [mMaxAccessible].
      */
     private fun inAccessibleRange(index: Long): Boolean {
-        @Suppress("ConstantConditionIf") // Suggested change would make class less reusable
         if (!CONTINUE_WITH_BAD_DB) {
             return true
         }
@@ -414,7 +413,6 @@ class ExpressionDB(context: Context) {
      * [mMinAccessible] to 1L and [mMaxAccessible] to -1L.
      */
     private fun badDBset() {
-        @Suppress("ConstantConditionIf") // Suggested change would make class less reusable
         if (!CONTINUE_WITH_BAD_DB) {
             Log.e("Calculator", "Database access failed")
             throw RuntimeException("Database access failed")

@@ -1061,7 +1061,7 @@ class CalculatorExpr {
          *
          * @param dataOutput the [DataOutput] we are to write our [mDegreeMode] field to.
          */
-        @Suppress("unused") // Suggested change would make class less reusable
+        // Suggested change would make class less reusable
         @Throws(IOException::class)
         fun write(dataOutput: DataOutput) {
             dataOutput.writeBoolean(mDegreeMode)

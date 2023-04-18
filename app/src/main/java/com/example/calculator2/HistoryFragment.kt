@@ -303,7 +303,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
      *                 0 if it was not called. The value will depend on the current operation.
      * @return an [Animator] with an `AnimatorListenerAdapter` attached to it.
      */
-    @Suppress("RedundantNullableReturnType") // The method we override returns nullable
+    // The method we override returns nullable
     override fun onCreateAnimator(transit: Int, enter: Boolean, nextAnim: Int): Animator? {
         return (mDragLayout ?: return null).createAnimator(enter)
     }

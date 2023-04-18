@@ -1352,7 +1352,7 @@ abstract class CR : java.lang.Number() {
          * @param n the [Float] we are to construct a [CR] from.
          * @return a new instance of [IntCR] constructed from [n].
          */
-        @Suppress("unused") // Suggested change would make class less reusable
+        // Suggested change would make class less reusable
         fun valueOf(n: Float): CR {
             return valueOf(n.toDouble())
         }
@@ -1499,7 +1499,7 @@ abstract class CR : java.lang.Number() {
          * @return a [CR] constructed to hold the conversion of [s] interpreted using the radix
          * [radix] to a number.
          */
-        @Suppress("unused") // Suggested change would make class less reusable
+        // Suggested change would make class less reusable
         @Throws(NumberFormatException::class)
         fun valueOf(s: String, radix: Int): CR {
             var len = s.length
@@ -1543,7 +1543,7 @@ abstract class CR : java.lang.Number() {
          *
          *  - pi/4 = 4*atan(1/5) - atan(1/239)
          */
-        @Suppress("unused") // Suggested change would make class less reusable
+        // Suggested change would make class less reusable
         var atanPI: CR = four
             .multiply(four.multiply(atanReciprocal(5)).subtract(atanReciprocal(239)))
 

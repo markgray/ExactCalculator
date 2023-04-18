@@ -667,7 +667,7 @@ class BoundedRational {
          * @param r2 the subtrahend of our subtraction
          * @return the difference between [r1] and [r2].
          */
-        @Suppress("unused") // Suggested change would make class less reusable
+        // Suggested change would make class less reusable
         fun subtract(r1: BoundedRational, r2: BoundedRational): BoundedRational? {
             return add(r1, negate(r2))
         }
