@@ -330,8 +330,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
                  *              along the y axis.
                  * @return *true* if the event is consumed, else *false*
                  */
-                override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float,
-                                     velocityY: Float): Boolean {
+                override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
                     if (!mScroller.isFinished) {
                         mCurrentPos = mScroller.finalX
                     }
@@ -378,8 +377,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
                  * the last call to [onScroll]. This is NOT the distance between [e1] and [e2].
                  * @return *true* if the event is consumed, else *false*
                  */
-                override fun onScroll(e1: MotionEvent, e2: MotionEvent, distanceX: Float,
-                                      distanceY: Float): Boolean {
+                override fun onScroll(e1: MotionEvent?, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
                     var distance = distanceX.toInt()
                     if (!mScroller.isFinished) {
                         mCurrentPos = mScroller.finalX
@@ -393,7 +391,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
                     } else if (mCurrentPos + distance > mMaxPos) {
                         distance = mMaxPos - mCurrentPos
                     }
-                    var duration = (e2.eventTime - e1.eventTime).toInt()
+                    var duration = (e2.eventTime - e1!!.eventTime).toInt()
                     if (duration < 1 || duration > 100) duration = 10
                     mScroller.startScroll(mCurrentPos, 0, distance, 0, duration)
                     postInvalidateOnAnimation()
