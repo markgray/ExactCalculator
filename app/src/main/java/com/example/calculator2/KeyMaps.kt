@@ -449,27 +449,27 @@ object KeyMaps {
     /**
      * Add information corresponding to the given button id to [sKeyValForFun], to be used when
      * mapping keyboard input to button ids. We initialize our `val button` by finding the button
-     * in our UI's [Activity] with the resource ID [button_id]. We then store [button_id] in
+     * in our UI's [Activity] with the resource ID [buttonId]. We then store [buttonId] in
      * [sKeyValForFun] under the key of the string which is the text of `button`.
      *
-     * @param button_id the resource ID of the button whose information we want to add.
+     * @param buttonId the resource ID of the button whose information we want to add.
      */
-    internal fun addButtonToFunMap(button_id: Int) {
-        val button = (mActivity ?: return).findViewById<Button>(button_id)
-        (sKeyValForFun ?: return)[button.text.toString()] = button_id
+    internal fun addButtonToFunMap(buttonId: Int) {
+        val button = (mActivity ?: return).findViewById<Button>(buttonId)
+        (sKeyValForFun ?: return)[button.text.toString()] = buttonId
     }
 
     /**
      * Add information corresponding to the given button to [sOutputForResultChar], to be used
      * when translating numbers on output. We initialize our `val button` by finding the button
-     * in our UI's [Activity] with the resource ID [button_id]. We then store the text of
+     * in our UI's [Activity] with the resource ID [buttonId]. We then store the text of
      * `button` in [sOutputForResultChar] under the key [c].
      *
-     * @param c Character to use as key to the text string of the button with ID [button_id].
-     * @param button_id The resource ID of the button that produces the character [c].
+     * @param c Character to use as key to the text string of the button with ID [buttonId].
+     * @param buttonId The resource ID of the button that produces the character [c].
      */
-    internal fun addButtonToOutputMap(c: Char, button_id: Int) {
-        val button = (mActivity ?: return).findViewById<Button>(button_id)
+    internal fun addButtonToOutputMap(c: Char, buttonId: Int) {
+        val button = (mActivity ?: return).findViewById<Button>(buttonId)
         (sOutputForResultChar ?: return)[c] = button.text.toString()
     }
 

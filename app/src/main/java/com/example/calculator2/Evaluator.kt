@@ -3262,6 +3262,7 @@ class Evaluator internal constructor(
                 lsdOffsetLocal = -1
             }
             if (msdIndexLocal > dotIndex) {
+                @Suppress("KotlinConstantConditions")
                 if (msdIndexLocal <= dotIndex + EXP_COST + 1) {
                     // Preferred display format in this case is with leading zeroes, even if
                     // it doesn't fit entirely.  Replicate that here.
