@@ -1890,7 +1890,7 @@ class CalculatorExpr {
         /**
          * An array of the constants of the [TokenKind] enum type, in the order they're declared.
          */
-        private val tokenKindValues = TokenKind.values()
+        private val tokenKindValues = TokenKind.entries.toTypedArray()
 
         /**
          * A constant [BigInteger] 1,000,000

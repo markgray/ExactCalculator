@@ -44,6 +44,9 @@ android {
         jvmTarget = '17'
     }
     namespace 'com.example.calculator2'
+    buildFeatures {
+        buildConfig true
+    }
 }
 
 

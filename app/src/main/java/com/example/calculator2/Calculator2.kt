@@ -486,7 +486,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
     private fun restoreInstanceState(savedInstanceState: Bundle) {
         val indexOfEnum = savedInstanceState
             .getInt(KEY_DISPLAY_STATE, CalculatorState.INPUT.ordinal)
-        val savedState = CalculatorState.values()[indexOfEnum]
+        val savedState = CalculatorState.entries[indexOfEnum]
         setState(savedState)
         val unprocessed = savedInstanceState.getCharSequence(KEY_UNPROCESSED_CHARS)
         if (unprocessed != null) {

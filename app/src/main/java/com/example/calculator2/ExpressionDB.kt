@@ -176,7 +176,7 @@ class ExpressionDB(context: Context) {
     }
 
     /** Data to be written to or read from a row in the table */
-    class RowData constructor(
+    class RowData(
         /**
          * The byte encoded [CalculatorExpr] expression to be stored in the row.
          */
