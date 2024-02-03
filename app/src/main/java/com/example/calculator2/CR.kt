@@ -1049,11 +1049,13 @@ abstract class CR : java.lang.Number() {
                     subtract(adjustment).cos()
                 }
             }
+
             approxGet(-1).abs().compareTo(big2) >= 0 -> {
                 // Scale further with double angle formula
                 val cosHalf = shiftRight(1).cos()
                 return cosHalf.multiply(cosHalf).shiftLeft(1).subtract(ONE)
             }
+
             else -> return PrescaledCosCR(this)
         }
     }
@@ -1090,6 +1092,7 @@ abstract class CR : java.lang.Number() {
                 val newArg = ONE.subtract(multiply(this)).sqrt()
                 newArg.acos()
             }
+
             roughAppr.compareTo(bigm750) < 0 -> negate().asin().negate()
             else -> PrescaledAsinCR(this)
         }

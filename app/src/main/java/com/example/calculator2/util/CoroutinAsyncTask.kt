@@ -102,11 +102,13 @@ abstract class CoroutinesAsyncTask<Params, Progress, Result> {
                 "Cannot execute task:"
                     + " the task is already running."
             )
+
             Status.FINISHED -> throw IllegalStateException(
                 "Cannot execute task:"
                     + " the task has already been executed "
                     + "(a task can be executed only once)"
             )
+
             Status.PENDING -> Unit
         }
 

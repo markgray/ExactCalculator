@@ -657,10 +657,12 @@ class CalculatorFormula
                 mOnContextMenuClickListener?.onMemoryRecall()
                 true
             }
+
             R.id.menu_paste -> {
                 paste()
                 true
             }
+
             else -> false
         }
     }

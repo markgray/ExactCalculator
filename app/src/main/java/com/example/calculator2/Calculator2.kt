@@ -456,6 +456,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
             CalculatorState.RESULT, CalculatorState.INIT_FOR_RESULT ->
                 // Evaluation is expected to terminate normally.
                 CalculatorState.INIT_FOR_RESULT
+
             CalculatorState.ERROR, CalculatorState.INIT -> CalculatorState.INIT
             CalculatorState.EVALUATE, CalculatorState.INPUT -> savedState
             else  // Includes ANIMATE state.
@@ -702,10 +703,12 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                             }
                             return
                         }
+
                         mPadViewPager != null && (mPadViewPager ?: return).currentItem != 0 -> {
                             (mPadViewPager ?: return).currentItem = (mPadViewPager
                                 ?: return).currentItem - 1
                         }
+
                         else -> finish()
                     }
                 }
@@ -844,10 +847,12 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                         mFormulaText.visibility = View.VISIBLE
                         mResultText.visibility = View.VISIBLE
                     }
+
                     CalculatorState.ERROR -> {
                         mFormulaText.visibility = View.INVISIBLE
                         mResultText.visibility = View.VISIBLE
                     }
+
                     else -> {
                         mFormulaText.visibility = View.VISIBLE
                         mResultText.visibility = View.INVISIBLE
@@ -862,6 +867,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                     mResultText.setTextColor(errorColor)
                     window.statusBarColor = errorColor
                 }
+
                 mCurrentState != CalculatorState.RESULT -> {
                     mFormulaText.setTextColor(
                         ContextCompat.getColor(this, R.color.display_formula_text_color))
@@ -1014,16 +1020,19 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                 onEquals()
                 return true
             }
+
             KeyEvent.KEYCODE_DEL -> {
                 mCurrentButton = mDeleteButton
                 onDelete()
                 return true
             }
+
             KeyEvent.KEYCODE_CLEAR -> {
                 mCurrentButton = mClearButton
                 onClear()
                 return true
             }
+
             else -> {
                 cancelIfEvaluating(false)
                 val raw = event.keyCharacterMap.get(keyCode, event.metaState)
@@ -1342,6 +1351,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                 onClear()
                 return   // Toolbar visibility adjusted at end of animation.
             }
+
             R.id.toggle_inv -> {
                 val selected = !mInverseToggle.isSelected
                 mInverseToggle.isSelected = selected
@@ -1350,6 +1360,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                     mResultText.redisplay()   // In case we cancelled reevaluation.
                 }
             }
+
             R.id.toggle_mode -> {
                 cancelIfEvaluating(false)
                 val mode = !mEvaluator.degreeModeGet(Evaluator.MAIN_INDEX)
@@ -1371,6 +1382,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                 }
                 return
             }
+
             else -> {
                 cancelIfEvaluating(false)
                 if (haveUnprocessed()) {
@@ -1820,10 +1832,12 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                         }
                     })
             }
+
             CalculatorState.INIT, CalculatorState.INIT_FOR_RESULT -> {  /* very unlikely */
                 setState(CalculatorState.ERROR)
                 mResultText.onError(index, errorId)
             }
+
             else -> mResultText.clear()
         }
     }
@@ -2008,8 +2022,10 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                     mEvaluatorCallback.onMemoryStateChanged()
                     supportFragmentManager.popBackStack()
                 }
+
                 Evaluator.TIMEOUT_DIALOG_TAG // Timeout extension request.
                 -> mEvaluator.setLongTimeout()
+
                 else -> Log.e(TAG, "Unknown AlertDialogFragment click:" + fragment.tag)
             }
         }
@@ -2092,18 +2108,22 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                 showHistoryFragment()
                 return true
             }
+
             R.id.menu_leading -> {
                 displayFull()
                 return true
             }
+
             R.id.menu_fraction -> {
                 displayFraction()
                 return true
             }
+
             R.id.menu_licenses -> {
                 startActivity(Intent(this, Licenses::class.java))
                 return true
             }
+
             else -> return super.onOptionsItemSelected(item)
         }
     }
@@ -2201,12 +2221,14 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                 mCurrentAnimator?.end()
                 return false
             }
+
             CalculatorState.EVALUATE -> {
                 // Cancel current evaluation
                 cancelIfEvaluating(true /* quiet */)
                 setState(CalculatorState.INPUT)
                 return true
             }
+
             else -> return mCurrentState != CalculatorState.INIT
             // We just return *true* in INPUT, INIT_FOR_RESULT, RESULT, or ERROR state.
             // For INIT we return *false* because it is easiest to just refuse. Otherwise we can

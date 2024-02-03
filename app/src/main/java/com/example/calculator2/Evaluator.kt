@@ -1554,20 +1554,24 @@ class Evaluator internal constructor(
                         // not already computed for the main expression. Pretend we timed out.
                         // The error case doesn't get here.
                         listener?.onCancelled(index)
+
                     ei.mEvaluator is AsyncEvaluator && (ei.mEvaluator as AsyncEvaluator).mRequired -> {
                         // Duplicate request; ignore.
                     }
+
                     else -> {
                         // (Re)start evaluator in requested mode, i.e. with longer timeout.
                         cancel(ei, true)
                         evaluateResult(index, listener, cmi, true)
                     }
                 }
+
             ei.mResultString == ERRONEOUS_RESULT -> {
                 // Just re-evaluate to generate a new notification.
                 cancel(ei, true)
                 evaluateResult(index, listener, cmi, true)
             }
+
             else -> notifyImmediately(index, ei, listener, cmi)
         }
     }

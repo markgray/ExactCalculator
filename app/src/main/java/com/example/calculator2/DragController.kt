@@ -164,8 +164,10 @@ class DragController {
         mAnimationController = when {
             mIsDisplayEmpty -> // Empty display
                 EmptyAnimationController()
+
             isResult -> // Result
                 ResultAnimationController()
+
             else -> // There is something in the formula field. There may or may not be
                 // a quick result.
                 AnimationController()

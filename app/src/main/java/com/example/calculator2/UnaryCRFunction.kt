@@ -389,15 +389,15 @@ internal class InverseMonotoneUnaryCRFunction(
     }
 
     internal inner class InverseIncreasingCR(x: CR) : CR() {
-/*
-        override fun toShort(): Short {
-            return 0
-        }
+        /*
+                override fun toShort(): Short {
+                    return 0
+                }
 
-        override fun toChar(): Char {
-            return ' '
-        }
-*/
+                override fun toChar(): Char {
+                    return ' '
+                }
+        */
 
         @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
         val arg: CR = if (fNegated[0]) x.negate() else x
@@ -733,15 +733,15 @@ internal class MonotoneDerivativeUnaryCRFunction
 
     @Suppress("MemberVisibilityCanBePrivate") // I like to use kdoc [] references
     internal inner class MonotoneDerivativeCR(var arg: CR) : CR() {
-/*
-        override fun toShort(): Short {
-            return 0
-        }
+        /*
+                override fun toShort(): Short {
+                    return 0
+                }
 
-        override fun toChar(): Char {
-            return ' '
-        }
-*/
+                override fun toChar(): Char {
+                    return ' '
+                }
+        */
 
         var fArg: CR = f[0]!!.execute(arg)
         var maxDeltaMsd: Int = 0

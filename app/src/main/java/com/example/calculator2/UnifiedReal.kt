@@ -61,13 +61,13 @@ class UnifiedReal private constructor(
             return null
         }
 
-/*
-    init {
-        if (mRatFactor == null) {
-            throw ArithmeticException("Building UnifiedReal from null")
-        }
-    }// We don't normally traffic in null CRs, and hence don't test explicitly.
-*/
+    /*
+        init {
+            if (mRatFactor == null) {
+                throw ArithmeticException("Building UnifiedReal from null")
+            }
+        }// We don't normally traffic in null CRs, and hence don't test explicitly.
+    */
 
     constructor(cr: CR) : this(BoundedRational.ONE, cr)
 
@@ -1013,6 +1013,7 @@ class UnifiedReal private constructor(
             sign > 0 -> // Safe to take the log. This avoids deep recursion for huge exponents, which
                 // may actually make sense here.
                 return UnifiedReal(crValue().ln().multiply(CR.valueOf(exp)).exp())
+
             sign < 0 -> {
                 var result = crValue().negate().ln().multiply(CR.valueOf(exp)).exp()
                 if (exp.testBit(0) /* odd exponent */) {
@@ -1020,6 +1021,7 @@ class UnifiedReal private constructor(
                 }
                 return UnifiedReal(result)
             }
+
             else -> // Base of unknown sign with integer exponent. Use a recursive computation.
                 // (Another possible option would be to use the absolute value of the base, and then
                 // adjust the sign at the end.  But that would have to be done in the CR
@@ -1852,10 +1854,13 @@ class UnifiedReal private constructor(
                 0 -> ZERO
                 2 // 30 degrees
                 -> HALF
+
                 3 // 45 degrees
                 -> HALF_SQRT2
+
                 4 // 60 degrees
                 -> HALF_SQRT3
+
                 6 -> ONE
                 8 -> HALF_SQRT3
                 9 -> HALF_SQRT2

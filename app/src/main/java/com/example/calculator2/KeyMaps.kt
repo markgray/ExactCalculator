@@ -128,6 +128,7 @@ object KeyMaps {
             R.id.fun_exp ->
                 // Button label doesn't work.
                 return context.getString(R.string.exponential) + context.getString(R.string.lparen)
+
             R.id.lparen -> return context.getString(R.string.lparen)
             R.id.rparen -> return context.getString(R.string.rparen)
             R.id.op_pow -> return context.getString(R.string.op_pow)
@@ -138,6 +139,7 @@ object KeyMaps {
             R.id.op_sqr ->
                 // Button label doesn't work.
                 return context.getString(R.string.squared)
+
             R.id.dec_point -> return context.getString(R.string.dec_point)
             R.id.digit_0 -> return context.getString(R.string.digit_0)
             R.id.digit_1 -> return context.getString(R.string.digit_1)
@@ -245,22 +247,31 @@ object KeyMaps {
             R.id.op_fact -> return context.getString(R.string.desc_op_fact)
             R.id.fun_sin -> return (context.getString(R.string.desc_fun_sin)
                 + " " + context.getString(R.string.desc_lparen))
+
             R.id.fun_cos -> return (context.getString(R.string.desc_fun_cos)
                 + " " + context.getString(R.string.desc_lparen))
+
             R.id.fun_tan -> return (context.getString(R.string.desc_fun_tan)
                 + " " + context.getString(R.string.desc_lparen))
+
             R.id.fun_arcsin -> return (context.getString(R.string.desc_fun_arcsin)
                 + " " + context.getString(R.string.desc_lparen))
+
             R.id.fun_arccos -> return (context.getString(R.string.desc_fun_arccos)
                 + " " + context.getString(R.string.desc_lparen))
+
             R.id.fun_arctan -> return (context.getString(R.string.desc_fun_arctan)
                 + " " + context.getString(R.string.desc_lparen))
+
             R.id.fun_ln -> return (context.getString(R.string.desc_fun_ln)
                 + " " + context.getString(R.string.desc_lparen))
+
             R.id.fun_log -> return (context.getString(R.string.desc_fun_log)
                 + " " + context.getString(R.string.desc_lparen))
+
             R.id.fun_exp -> return (context.getString(R.string.desc_fun_exp)
                 + " " + context.getString(R.string.desc_lparen))
+
             R.id.lparen -> return context.getString(R.string.desc_lparen)
             R.id.rparen -> return context.getString(R.string.desc_rparen)
             R.id.op_pow -> return context.getString(R.string.desc_op_pow)
@@ -296,6 +307,7 @@ object KeyMaps {
         return when (id) {
             R.id.fun_sin, R.id.fun_cos, R.id.fun_tan, R.id.fun_arcsin,
             R.id.fun_arccos, R.id.fun_arctan -> true
+
             else -> false
         }
     }
@@ -427,6 +439,7 @@ object KeyMaps {
             '+' -> return R.id.op_add
             '*', '\u00D7' // MULTIPLICATION SIGN
             -> return R.id.op_mul
+
             '/', '\u00F7' // DIVISION SIGN
             -> return R.id.op_div
             // We no longer localize function names, so they can't start with an 'e' or 'p'.

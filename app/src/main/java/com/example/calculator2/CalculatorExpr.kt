@@ -1276,6 +1276,7 @@ class CalculatorExpr {
                     argVal = evalUnary(i + 1, ec)
                     EvalRet(argVal.nextPos, argVal.valueUR.sqrt())
                 }
+
             R.id.lparen -> {
                 argVal = evalExpr(i + 1, ec)
                 if (isOperator(argVal.nextPos, R.id.rparen, ec)) {
@@ -1283,6 +1284,7 @@ class CalculatorExpr {
                 }
                 return EvalRet(argVal.nextPos, argVal.valueUR)
             }
+
             R.id.fun_sin -> {
                 argVal = evalExpr(i + 1, ec)
                 if (isOperator(argVal.nextPos, R.id.rparen, ec)) {
@@ -1290,6 +1292,7 @@ class CalculatorExpr {
                 }
                 return EvalRet(argVal.nextPos, toRadians(argVal.valueUR, ec).sin())
             }
+
             R.id.fun_cos -> {
                 argVal = evalExpr(i + 1, ec)
                 if (isOperator(argVal.nextPos, R.id.rparen, ec)) {
@@ -1297,6 +1300,7 @@ class CalculatorExpr {
                 }
                 return EvalRet(argVal.nextPos, toRadians(argVal.valueUR, ec).cos())
             }
+
             R.id.fun_tan -> {
                 argVal = evalExpr(i + 1, ec)
                 if (isOperator(argVal.nextPos, R.id.rparen, ec)) {
@@ -1305,6 +1309,7 @@ class CalculatorExpr {
                 val arg = toRadians(argVal.valueUR, ec)
                 return EvalRet(argVal.nextPos, arg.sin().divide(arg.cos()))
             }
+
             R.id.fun_ln -> {
                 argVal = evalExpr(i + 1, ec)
                 if (isOperator(argVal.nextPos, R.id.rparen, ec)) {
@@ -1312,6 +1317,7 @@ class CalculatorExpr {
                 }
                 return EvalRet(argVal.nextPos, argVal.valueUR.ln())
             }
+
             R.id.fun_exp -> {
                 argVal = evalExpr(i + 1, ec)
                 if (isOperator(argVal.nextPos, R.id.rparen, ec)) {
@@ -1319,6 +1325,7 @@ class CalculatorExpr {
                 }
                 return EvalRet(argVal.nextPos, argVal.valueUR.exp())
             }
+
             R.id.fun_log -> {
                 argVal = evalExpr(i + 1, ec)
                 if (isOperator(argVal.nextPos, R.id.rparen, ec)) {
@@ -1326,6 +1333,7 @@ class CalculatorExpr {
                 }
                 return EvalRet(argVal.nextPos, argVal.valueUR.ln().divide(UnifiedReal.TEN.ln()))
             }
+
             R.id.fun_arcsin -> {
                 argVal = evalExpr(i + 1, ec)
                 if (isOperator(argVal.nextPos, R.id.rparen, ec)) {
@@ -1333,6 +1341,7 @@ class CalculatorExpr {
                 }
                 return EvalRet(argVal.nextPos, fromRadians(argVal.valueUR.asin(), ec))
             }
+
             R.id.fun_arccos -> {
                 argVal = evalExpr(i + 1, ec)
                 if (isOperator(argVal.nextPos, R.id.rparen, ec)) {
@@ -1340,6 +1349,7 @@ class CalculatorExpr {
                 }
                 return EvalRet(argVal.nextPos, fromRadians(argVal.valueUR.acos(), ec))
             }
+
             R.id.fun_arctan -> {
                 argVal = evalExpr(i + 1, ec)
                 if (isOperator(argVal.nextPos, R.id.rparen, ec)) {
@@ -1347,6 +1357,7 @@ class CalculatorExpr {
                 }
                 return EvalRet(argVal.nextPos, fromRadians(argVal.valueUR.atan(), ec))
             }
+
             else -> throw SyntaxException("Unrecognized token in expression")
         }
     }
@@ -1946,6 +1957,7 @@ class CalculatorExpr {
                             pe
                         }
                     }
+
                     else -> throw IOException("Bad save file format")
                 }
             } else {

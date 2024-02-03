@@ -430,6 +430,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
                         mInitialDownX = x
                         mInitialDownY = y
                     }
+
                     MotionEvent.ACTION_MOVE -> {
                         val deltaX = abs(x - mInitialDownX)
                         val deltaY = abs(y - mInitialDownY)
@@ -1741,14 +1742,17 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
                 onMemoryAdd()
                 return true
             }
+
             R.id.memory_subtract -> {
                 onMemorySubtract()
                 return true
             }
+
             R.id.memory_store -> {
                 onMemoryStore()
                 return true
             }
+
             R.id.menu_copy -> return if (mEvaluator!!.evaluationInProgress(mIndex)) {
                 // Refuse to copy placeholder characters.
                 false
@@ -1757,6 +1761,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
                 unhighlightResult()
                 true
             }
+
             else -> return false
         }
     }

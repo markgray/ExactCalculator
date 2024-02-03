@@ -274,6 +274,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
                 val point = PointF(event.getX(actionIndex), event.getY(actionIndex))
                 mLastMotionPoints[pointerId] = point
             }
+
             MotionEvent.ACTION_MOVE -> {
                 for (i in event.pointerCount - 1 downTo 0) {
                     val pointerId = event.getPointerId(i)
@@ -281,11 +282,13 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
                     point?.set(event.getX(i), event.getY(i))
                 }
             }
+
             MotionEvent.ACTION_POINTER_UP -> {
                 val actionIndex = event.actionIndex
                 val pointerId = event.getPointerId(actionIndex)
                 mLastMotionPoints.remove(pointerId)
             }
+
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 mLastMotionPoints.clear()
             }
@@ -676,6 +679,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
             val settleToOpen: Boolean = when {
                 yvel > AUTO_OPEN_SPEED_LIMIT -> // Speed has priority over position.
                     true
+
                 yvel < -AUTO_OPEN_SPEED_LIMIT -> false
                 else -> releasedChild.top > -(mVerticalRange / 2)
             }
