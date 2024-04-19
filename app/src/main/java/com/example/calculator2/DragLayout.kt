@@ -355,7 +355,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
      */
     override fun computeScroll() {
         if (mDragHelper.continueSettling(true)) {
-            ViewCompat.postInvalidateOnAnimation(this)
+            postInvalidateOnAnimation()
         }
     }
 
@@ -687,7 +687,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
             // If the view is not visible, then settle it closed, not open.
             if (mDragHelper.settleCapturedViewAt(0,
                     if (settleToOpen && isOpen) 0 else -mVerticalRange)) {
-                ViewCompat.postInvalidateOnAnimation(this@DragLayout)
+                postInvalidateOnAnimation()
             }
         }
     }
