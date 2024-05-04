@@ -61,6 +61,7 @@ class ExpressionDB(context: Context) {
     /**
      * The custom [SQLiteOpenHelper] we use to create, open, and/or manage our expression database.
      */
+    @Suppress("JoinDeclarationAndAssignment") // Separate assignment better for deugging
     private val mExpressionDBHelper: ExpressionDBHelper
 
     /**

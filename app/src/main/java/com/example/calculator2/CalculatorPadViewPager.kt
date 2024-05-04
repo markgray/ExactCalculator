@@ -270,6 +270,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
      * The [GestureDetector] whose `onTouchEvent` method is called by our [onTouchEvent] override.
      * It is used to selectively pass touch events to our children (or not).
      */
+    @Suppress("JoinDeclarationAndAssignment") // Separate assignment better for deugging
     private val mGestureDetector: GestureDetector
 
     /**
