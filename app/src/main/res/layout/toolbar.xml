@@ -15,7 +15,7 @@
   limitations under the License.
   -->
 
-<Toolbar
+<android.widget.Toolbar
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/toolbar"
     android:layout_width="match_parent"
@@ -30,4 +30,4 @@
         android:textAllCaps="true"
         android:textSize="16sp" />
 
-</Toolbar>
+</android.widget.Toolbar>
