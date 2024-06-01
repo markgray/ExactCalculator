@@ -78,7 +78,7 @@ class AlertDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
         val args = arguments ?: Bundle.EMPTY
         val builder = AlertDialog.Builder(activity)
 
-        val inflater = LayoutInflater.from(builder.context)
+        val inflater = layoutInflater
         val messageView = inflater.inflate(R.layout.dialog_message, null) as TextView
         messageView.text = args.getCharSequence(KEY_MESSAGE)
         builder.setView(messageView)

@@ -173,6 +173,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
                     CLEAR_DIALOG_TAG)
                 return@OnMenuItemClickListener true
             }
+            @Suppress("DEPRECATION") // TODO: Replace withl MenuProvider
             onOptionsItemSelected(item)
         })
         toolbar.setNavigationOnClickListener {
