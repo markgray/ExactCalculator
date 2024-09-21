@@ -25,8 +25,13 @@
 
 package com.example.calculator2
 
-import android.animation.*
+import android.animation.Animator
 import android.animation.Animator.AnimatorListener
+import android.animation.AnimatorListenerAdapter
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.animation.PropertyValuesHolder
+import android.animation.TimeInterpolator
 import android.content.ClipData
 import android.content.DialogInterface
 import android.content.Intent
@@ -41,13 +46,27 @@ import android.text.TextWatcher
 import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.util.Property
-import android.view.*
+import android.view.ActionMode
+import android.view.ContextMenu
+import android.view.KeyCharacterMap
+import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.View
 import android.view.View.OnLongClickListener
+import android.view.ViewAnimationUtils
+import android.view.ViewGroup
+import android.view.ViewGroupOverlay
+import android.view.ViewTreeObserver
+import android.view.Window
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.HorizontalScrollView
 import android.widget.TextView
 import android.widget.Toolbar
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
@@ -58,7 +77,12 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.viewpager.widget.ViewPager
 import com.example.calculator2.CalculatorFormula.OnFormulaContextMenuClickListener
 import com.example.calculator2.CalculatorFormula.OnTextSizeChangeListener
-import java.io.*
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.DataOutput
+import java.io.IOException
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 import java.text.DecimalFormatSymbols
 import kotlin.math.max
 import kotlin.math.pow
@@ -610,6 +634,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_calculator_main)
 
         setActionBar(findViewById<View>(R.id.toolbar) as Toolbar)
