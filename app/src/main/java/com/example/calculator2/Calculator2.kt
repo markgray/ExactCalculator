@@ -633,8 +633,8 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * Note: Otherwise it is null.
      */
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_calculator_main)
 
         setActionBar(findViewById<View>(R.id.toolbar) as Toolbar)
