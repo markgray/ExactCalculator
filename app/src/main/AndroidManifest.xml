@@ -32,7 +32,8 @@
             android:name="com.example.calculator2.Calculator2"
             android:launchMode="singleTask"
             android:theme="@style/Theme.Calculator"
-            android:exported="true">
+            android:exported="true"
+            tools:ignore="NewApi">
             <!--suppress AndroidElementNotAllowed -->
             <layout
                 android:minHeight="220dp"

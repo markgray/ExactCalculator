@@ -65,7 +65,8 @@
             android:bufferType="spannable"
             android:singleLine="true"
             android:textColor="@color/display_result_text_color"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            tools:ignore="NewApi" />
 
     </FrameLayout>
 

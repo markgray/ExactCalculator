@@ -53,6 +53,7 @@
         android:layout_height="wrap_content"
         android:bufferType="spannable"
         android:singleLine="true"
-        android:textColor="@color/display_result_text_color" />
+        android:textColor="@color/display_result_text_color"
+        tools:ignore="NewApi" />
 
 </com.example.calculator2.CalculatorDisplay>
