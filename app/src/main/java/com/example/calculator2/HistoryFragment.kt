@@ -261,7 +261,7 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
         for (i in 0 until maxIndex) {
             newDataSet.add(null)
         }
-        val isEmpty = newDataSet.isEmpty()
+        val isEmpty = newDataSet.isEmpty
         (mRecyclerView ?: return).setBackgroundColor(ContextCompat.getColor(activity,
             if (isEmpty) R.color.empty_history_color else R.color.display_background_color))
         if (isEmpty) {

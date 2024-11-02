@@ -57,7 +57,7 @@ class CalculatorExpr {
      * @return true if our field [mExpr] contains no elements.
      */
     val isEmpty: Boolean
-        get() = mExpr.isEmpty()
+        get() = mExpr.isEmpty
 
     /**
      * Am I just a constant? If the *size* of [mExpr] is not 1 it contains several [Token] objects

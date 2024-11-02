@@ -291,7 +291,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
     init {
 
         mGestureDetector = GestureDetector(context, mGestureWatcher)
-        mGestureDetector.setIsLongpressEnabled(false)
+        mGestureDetector.isLongpressEnabled = false
 
         adapter = mStaticPagerAdapter
         setBackgroundColor(Color.BLACK)

@@ -181,7 +181,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
             if (child === mHistoryFrame) {
                 top = if ((mDragHelper.capturedView === mHistoryFrame)
                     && (mDragHelper.viewDragState != ViewDragHelper.STATE_IDLE)) {
-                    child.getTop()
+                    child.top
                 } else {
                     if (isOpen) 0 else -mVerticalRange
                 }
