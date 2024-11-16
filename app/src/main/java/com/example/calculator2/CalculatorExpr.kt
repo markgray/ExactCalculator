@@ -56,8 +56,9 @@ class CalculatorExpr {
      *
      * @return true if our field [mExpr] contains no elements.
      */
+    @Suppress("UsePropertyAccessSyntax") // TODO: Property access syntax is bad for K2
     val isEmpty: Boolean
-        get() = mExpr.isEmpty
+        get() = mExpr.isEmpty()
 
     /**
      * Am I just a constant? If the *size* of [mExpr] is not 1 it contains several [Token] objects
@@ -230,7 +231,7 @@ class CalculatorExpr {
          * generated our operator, as well as a verbose [TtsSpan] describing our operator for the
          * accessibility system to speak.
          */
-        public override fun toCharSequence(context: Context): CharSequence {
+        override fun toCharSequence(context: Context): CharSequence {
             val desc = KeyMaps.toDescriptiveString(context, id)
             return if (desc != null) {
                 val result = SpannableString(KeyMaps.toString(context, id))
@@ -332,7 +333,7 @@ class CalculatorExpr {
          * is then readable by our [DataInput] constructor. We initialize our variable *flags* by
          * setting its SAW_DECIMAL bit if our field [mSawDecimal] is *true*, and its HAS_EXPONENT
          * bit if our field [mExponent] is not 0. We then write the *ordinal* of our [TokenKind]
-         * ([TokenKind.CONSTANT.ordinal]) to [dataOutput]. We write our field [mWhole] as a Modified
+         * (`TokenKind.CONSTANT.ordinal`) to [dataOutput]. We write our field [mWhole] as a Modified
          * UTF-8 string to [dataOutput], followed by a byte containing *flags*. If [mSawDecimal] is
          * *true* we write our field [mFraction] as a Modified UTF-8 string to [dataOutput], and if
          * [mExponent] is not 0 we write an [Int] containing [mExponent] to [dataOutput].
@@ -501,7 +502,7 @@ class CalculatorExpr {
          * @param context context used for converting button ids to strings. Unused.
          * @return a [CharSequence] representing this [Constant] for display use.
          */
-        public override fun toCharSequence(context: Context): CharSequence {
+        override fun toCharSequence(context: Context): CharSequence {
             return toString()
         }
 
@@ -510,7 +511,7 @@ class CalculatorExpr {
          *
          * @return the kind of [TokenKind] that this [Token] holds, we return [TokenKind.CONSTANT]
          */
-        public override fun kind(): TokenKind {
+        override fun kind(): TokenKind {
             return TokenKind.CONSTANT
         }
 
@@ -522,6 +523,7 @@ class CalculatorExpr {
          *
          * @return a deep copy of this [Constant].
          */
+        @Suppress("RedundantVisibilityModifier") // Needed for k2
         public override fun clone(): Any {
             val result = Constant()
             result.mWhole = mWhole
@@ -616,7 +618,7 @@ class CalculatorExpr {
          * @param dataOutput the [DataOutput] we are to write to.
          */
         @Throws(IOException::class)
-        public override fun write(dataOutput: DataOutput) {
+        override fun write(dataOutput: DataOutput) {
             dataOutput.writeByte(TokenKind.PRE_EVAL.ordinal)
             if (mIndex > Integer.MAX_VALUE || mIndex < Integer.MIN_VALUE) {
                 // This would be millions of expressions per day for the life of the device.
@@ -632,6 +634,7 @@ class CalculatorExpr {
          * @param context application [Context] to use to access resources.
          * @return a [CharSequence] representation of our [mShortRep] string.
          */
+        @Suppress("RedundantVisibilityModifier")
         public override fun toCharSequence(context: Context): CharSequence {
             return KeyMaps.translateResult(mShortRep)
         }
@@ -641,6 +644,7 @@ class CalculatorExpr {
          *
          * @return the kind of [TokenKind] that this [Token] holds, [TokenKind.PRE_EVAL] in our case.
          */
+        @Suppress("RedundantVisibilityModifier")
         public override fun kind(): TokenKind {
             return TokenKind.PRE_EVAL
         }
@@ -686,8 +690,9 @@ class CalculatorExpr {
     @Throws(IOException::class)
     constructor(dataInput: DataInput) {
         mExpr = ArrayList()
-        val size = dataInput.readInt()
-        for (i in 0 until size) {
+        val size: Int = dataInput.readInt()
+        @Suppress("Unused")
+        for (i: Int in 0 until size) {
             mExpr.add(newToken(dataInput))
         }
     }
@@ -965,7 +970,7 @@ class CalculatorExpr {
      */
     fun clone(): Any {
         val result = CalculatorExpr()
-        for (t in mExpr) {
+        for (t: Token in mExpr) {
             if (t is Constant) {
                 result.mExpr.add(t.clone() as Token)
             } else {
@@ -1870,7 +1875,7 @@ class CalculatorExpr {
                 throw SyntaxException("Failed to parse full expression")
             }
             return res.valueUR
-        } catch (e: IndexOutOfBoundsException) {
+        } catch (_: IndexOutOfBoundsException) {
             throw SyntaxException("Unexpected expression end")
         }
 

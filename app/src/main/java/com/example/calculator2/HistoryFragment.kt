@@ -258,10 +258,12 @@ class HistoryFragment : Fragment(), DragLayout.DragCallback {
             newDataSet.add(HistoryItem(Evaluator.HISTORY_MAIN_INDEX,
                 System.currentTimeMillis(), (mEvaluator ?: return).exprAsSpannableGet(0)))
         }
+        @Suppress("Unused") // TODO: Think about this
         for (i in 0 until maxIndex) {
             newDataSet.add(null)
         }
-        val isEmpty = newDataSet.isEmpty
+        @Suppress("UsePropertyAccessSyntax") // TODO: Gradle K2 does not like property access syntax
+        val isEmpty = newDataSet.isEmpty()
         (mRecyclerView ?: return).setBackgroundColor(ContextCompat.getColor(activity,
             if (isEmpty) R.color.empty_history_color else R.color.display_background_color))
         if (isEmpty) {

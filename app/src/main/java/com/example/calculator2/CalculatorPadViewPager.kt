@@ -185,6 +185,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
                 // other pages which are covered by the current page.
                 if (child is ViewGroup) {
                     for (j in child.childCount - 1 downTo 0) {
+                        @Suppress("RemoveRedundantQualifierName")
                         child.getChildAt(j).importantForAccessibility = if (i == position)
                             View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
                         else
@@ -291,7 +292,8 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
     init {
 
         mGestureDetector = GestureDetector(context, mGestureWatcher)
-        mGestureDetector.isLongpressEnabled = false
+        @Suppress("UsePropertyAccessSyntax") // This is _not_ a property
+        mGestureDetector.setIsLongpressEnabled(false)
 
         adapter = mStaticPagerAdapter
         setBackgroundColor(Color.BLACK)
@@ -412,6 +414,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
                 for (i in childCount - 1 downTo 0) {
                     val childIndex = getChildDrawingOrder(childCount, i)
                     val child = getChildAt(childIndex)
+                    @Suppress("RemoveRedundantQualifierName")
                     if (child.visibility == View.VISIBLE
                         && x >= child.left && x < child.right
                         && y >= child.top && y < child.bottom) {

@@ -523,7 +523,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                 ObjectInputStream(ByteArrayInputStream(state)).use { stream ->
                     mEvaluator.restoreInstanceState(stream)
                 }
-            } catch (ignored: Throwable) {
+            } catch (_: Throwable) {
                 // When in doubt, revert to clean state
                 mCurrentState = CalculatorState.INPUT
                 mEvaluator.clearMain()
@@ -890,6 +890,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                     val errorColor = ContextCompat.getColor(this, R.color.calculator_error_color)
                     mFormulaText.setTextColor(errorColor)
                     mResultText.setTextColor(errorColor)
+                    @Suppress("DEPRECATION") // TODO: Think about this
                     window.statusBarColor = errorColor
                 }
 
@@ -898,6 +899,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
                         ContextCompat.getColor(this, R.color.display_formula_text_color))
                     mResultText.setTextColor(
                         ContextCompat.getColor(this, R.color.display_result_text_color))
+                    @Suppress("DEPRECATION") // TODO: Think about this
                     window.statusBarColor = ContextCompat.getColor(this, R.color.calculator_statusbar_color)
                 }
             }
