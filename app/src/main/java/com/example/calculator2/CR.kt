@@ -666,6 +666,7 @@ abstract class CR : java.lang.Number() {
      * @return      A textual scientific notation representation in radix [radix] accurate to [n]
      * places to the right of the decimal point.
      */
+    @Suppress("unused")
     fun toStringFloatRep(n: Int, radix: Int, m: Int): StringFloatRep {
         if (n <= 0) throw ArithmeticException("Bad precision argument")
         val log2Radix = ln(radix.toDouble()) / doubleLog2
@@ -874,6 +875,7 @@ abstract class CR : java.lang.Number() {
      *
      * @return a new instance of [AssumedIntCR] constructed from *this*.
      */
+    @Suppress("unused")
     fun assumeInt(): CR {
         return AssumedIntCR(this)
     }
