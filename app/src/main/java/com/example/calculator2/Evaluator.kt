@@ -47,6 +47,7 @@ import kotlin.math.ceil
 import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
+import androidx.core.content.edit
 
 /**
  * This implements the calculator evaluation logic.
@@ -1819,9 +1820,9 @@ class Evaluator internal constructor(
         mChangedValue = true
         (mMainExpr ?: return).mDegreeMode = degreeMode
 
-        mSharedPrefs.edit()
-            .putBoolean(KEY_PREF_DEGREE_MODE, degreeMode)
-            .apply()
+        mSharedPrefs.edit {
+            putBoolean(KEY_PREF_DEGREE_MODE, degreeMode)
+        }
     }
 
     /**
@@ -2271,9 +2272,9 @@ class Evaluator internal constructor(
      */
     private fun setMemoryIndex(index: Long) {
         mMemoryIndex = index
-        mSharedPrefs.edit()
-            .putLong(KEY_PREF_MEMORY_INDEX, index)
-            .apply()
+        mSharedPrefs.edit {
+            putLong(KEY_PREF_MEMORY_INDEX, index)
+            }
 
         if (mCallback != null) {
             (mCallback ?: return).onMemoryStateChanged()
@@ -2290,9 +2291,9 @@ class Evaluator internal constructor(
      */
     private fun setSavedIndex(index: Long) {
         mSavedIndex = index
-        mSharedPrefs.edit()
-            .putLong(KEY_PREF_SAVED_INDEX, index)
-            .apply()
+        mSharedPrefs.edit {
+            putLong(KEY_PREF_SAVED_INDEX, index)
+            }
     }
 
     /**
@@ -2465,9 +2466,9 @@ class Evaluator internal constructor(
         val isoDate = df.format(Date())
         mSavedName = ("calculator2.android.com," + isoDate + ":"
             + (Random().nextInt() and 0x3fffffff))
-        mSharedPrefs.edit()
-            .putString(KEY_PREF_SAVED_NAME, mSavedName)
-            .apply()
+        mSharedPrefs.edit {
+            putString(KEY_PREF_SAVED_NAME, mSavedName)
+        }
         return uriForSaved()
     }
 

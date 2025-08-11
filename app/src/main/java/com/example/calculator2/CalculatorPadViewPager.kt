@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("RedundantSuppression")
+
 package com.example.calculator2
 
 import android.annotation.SuppressLint
@@ -28,6 +30,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import kotlin.math.max
+import androidx.core.view.isVisible
 
 /**
  * This custom [ViewPager] is used only in portrait mode to allow "swiping" in the advanced keypad
@@ -415,7 +418,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : ViewPager(context, 
                     val childIndex = getChildDrawingOrder(childCount, i)
                     val child = getChildAt(childIndex)
                     @Suppress("RemoveRedundantQualifierName")
-                    if (child.visibility == View.VISIBLE
+                    if (child.isVisible
                         && x >= child.left && x < child.right
                         && y >= child.top && y < child.bottom) {
                         if (action == MotionEvent.ACTION_DOWN) {

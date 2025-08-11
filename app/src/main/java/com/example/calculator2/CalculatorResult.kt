@@ -17,7 +17,6 @@
 package com.example.calculator2
 
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.content.ClipData
 import android.content.ClipDescription
 import android.content.ClipboardManager
@@ -51,6 +50,8 @@ import androidx.core.content.ContextCompat
 
 import kotlin.annotation.Retention
 import kotlin.math.*
+import androidx.core.view.size
+import androidx.core.view.get
 
 /**
  * A text widget that is "infinitely" scrollable to the right, and obtains the text to display via
@@ -1444,7 +1445,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
      * and `onGetContentRect` do what needs to be done for copy/memory actions performed on our
      * contents, then set our `OnLongClickListener` to a lambda which starts the action mode.
      */
-    @TargetApi(Build.VERSION_CODES.N)
+    @RequiresApi(Build.VERSION_CODES.N)
     private fun setupActionMode() {
         mCopyActionModeCallback = object : ActionMode.Callback2() {
 
@@ -1597,8 +1598,8 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
             val inflater = MenuInflater(context)
             createContextMenu(inflater, contextMenu)
             mContextMenu = contextMenu
-            for (i in 0 until contextMenu.size()) {
-                contextMenu.getItem(i).setOnMenuItemClickListener(this@CalculatorResult)
+            for (i in 0 until contextMenu.size) {
+                contextMenu[i].setOnMenuItemClickListener(this@CalculatorResult)
             }
         }
         setOnLongClickListener {

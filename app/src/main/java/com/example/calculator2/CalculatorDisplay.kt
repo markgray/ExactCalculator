@@ -28,6 +28,7 @@ import android.view.View
 import android.view.accessibility.AccessibilityManager
 import android.widget.LinearLayout
 import android.widget.Toolbar
+import androidx.core.view.isVisible
 
 /**
  * This is the [LinearLayout] in our ui which contains the toolbar, formula, and result. Its id in
@@ -106,7 +107,7 @@ class CalculatorDisplay
      * If *true* the tool bar [mToolbar] is currently visible.
      */
     val isToolbarVisible: Boolean
-        get() = mToolbar.visibility == View.VISIBLE
+        get() = mToolbar.isVisible
 
     init {
         /**

@@ -32,6 +32,7 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.animation.TimeInterpolator
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.DialogInterface
 import android.content.Intent
@@ -87,6 +88,7 @@ import java.text.DecimalFormatSymbols
 import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sqrt
+import androidx.core.view.isInvisible
 
 /**
  * This is the main activity or our app.
@@ -677,7 +679,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         mInverseToggle = findViewById(R.id.toggle_inv)
         mModeToggle = findViewById(R.id.toggle_mode)
 
-        isOneLine = mResultText.visibility == View.INVISIBLE
+        isOneLine = mResultText.isInvisible
 
         mInvertibleButtons = arrayOf(findViewById(R.id.fun_sin), findViewById(R.id.fun_cos),
             findViewById(R.id.fun_tan), findViewById(R.id.fun_ln), findViewById(R.id.fun_log),
@@ -1025,6 +1027,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * @param event Description of the key event.
      * @return true to consume the event here
      */
+    @SuppressLint("GestureBackNavigation")
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
         // Allow the system to handle special key codes (e.g. "BACK" or "DPAD").
         when (keyCode) {

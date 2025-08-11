@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("RedundantSuppression")
+
 package com.example.calculator2
 
 import java.math.BigInteger
