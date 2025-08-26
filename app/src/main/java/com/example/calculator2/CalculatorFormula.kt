@@ -36,6 +36,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import kotlin.math.min
 
 /**
@@ -471,7 +472,7 @@ class CalculatorFormula
      * as the [ActionMode.Callback] and the type [ActionMode.TYPE_FLOATING] (the action mode is treated
      * as a Floating Toolbar), and returns *true* to consume the long click.
      */
-    @TargetApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun setupActionMode() {
         mPasteActionModeCallback = object : ActionMode.Callback2() {
 
