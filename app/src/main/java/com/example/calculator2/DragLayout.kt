@@ -230,7 +230,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
         if (stateLocal is Bundle) {
             val bundle = stateLocal as Bundle?
             isOpen = (bundle ?: return).getBoolean(KEY_IS_OPEN)
-            mHistoryFrame.visibility = if (isOpen) View.VISIBLE else View.INVISIBLE
+            mHistoryFrame.visibility = if (isOpen) VISIBLE else INVISIBLE
             for (c in mDragCallbacks) {
                 c.onInstanceStateRestored(isOpen)
             }
@@ -369,7 +369,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
         for (c in mDragCallbacks) {
             c.onStartDraggingOpen()
         }
-        mHistoryFrame.visibility = View.VISIBLE
+        mHistoryFrame.visibility = VISIBLE
     }
 
     /**
@@ -398,7 +398,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
      */
     fun setClosed() {
         isOpen = false
-        mHistoryFrame.visibility = View.INVISIBLE
+        mHistoryFrame.visibility = INVISIBLE
         if (mCloseCallback != null) {
             mCloseCallback?.onClose()
         }
@@ -428,7 +428,7 @@ class DragLayout(context: Context, attrs: AttributeSet) : ViewGroup(context, att
         }
 
         isOpen = toOpen
-        mHistoryFrame.visibility = View.VISIBLE
+        mHistoryFrame.visibility = VISIBLE
 
         val animator = ValueAnimator.ofFloat(0f, 1f)
         animator.addListener(object : AnimatorListenerAdapter() {

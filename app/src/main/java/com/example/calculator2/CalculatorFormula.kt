@@ -17,7 +17,6 @@
 package com.example.calculator2
 
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -38,6 +37,8 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import kotlin.math.min
+import androidx.core.view.size
+import androidx.core.view.get
 
 /**
  * [TextView] adapted for displaying the formula and allowing pasting.The JvmOverloads annotation
@@ -178,6 +179,7 @@ class CalculatorFormula
      */
     init {
 
+        @SuppressLint("UseKtx") // TODO: Val properties cannot be initialized from init block using Context.withStyledAttributes
         val a = context.obtainStyledAttributes(
             attrs, R.styleable.CalculatorFormula, defStyleAttr, 0)
         maximumTextSize = a.getDimension(
@@ -401,14 +403,18 @@ class CalculatorFormula
                 val id = KeyMaps.keyForChar(c)
                 val descr = KeyMaps.toDescriptiveString(context, id)
                 if (descr != null) {
+                    @Suppress("DEPRECATION") // TODO: Replace announceForAccessibility
                     announceForAccessibility(descr)
                 } else {
+                    @Suppress("DEPRECATION") // TODO: Replace announceForAccessibility
                     announceForAccessibility(c.toString())
                 }
             } else if (added.isNotEmpty()) {
+                @Suppress("DEPRECATION") // TODO: Replace announceForAccessibility
                 announceForAccessibility(added)
             }
         } else {
+            @Suppress("DEPRECATION") // TODO: Replace announceForAccessibility
             announceForAccessibility(newText)
         }
         setText(newText, BufferType.SPANNABLE)
@@ -584,8 +590,8 @@ class CalculatorFormula
             val inflater = MenuInflater(context)
             createContextMenu(inflater, contextMenu)
             mContextMenu = contextMenu
-            for (i in 0 until contextMenu.size()) {
-                contextMenu.getItem(i).setOnMenuItemClickListener(this@CalculatorFormula)
+            for (i in 0 until contextMenu.size) {
+                contextMenu[i].setOnMenuItemClickListener(this@CalculatorFormula)
             }
         }
         setOnLongClickListener { showContextMenu() }

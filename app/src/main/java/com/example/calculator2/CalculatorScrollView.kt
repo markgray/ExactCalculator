@@ -19,12 +19,10 @@ package com.example.calculator2
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
-import android.view.ViewGroup
-import android.widget.HorizontalScrollView
-
 import android.view.View.MeasureSpec.UNSPECIFIED
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.HorizontalScrollView
 import kotlin.math.max
 
 /**
@@ -68,7 +66,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
             val size = max(0, MeasureSpec.getSize(spec) - padding)
             return MeasureSpec.makeMeasureSpec(size, UNSPECIFIED)
         }
-        return ViewGroup.getChildMeasureSpec(spec, padding, childDimension)
+        return getChildMeasureSpec(spec, padding, childDimension)
     }
 
     /**

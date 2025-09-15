@@ -1344,7 +1344,7 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
             return
         }
         if (mScroller.isFinished && length() > 0) {
-            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            accessibilityLiveRegion = ACCESSIBILITY_LIVE_REGION_POLITE
         }
         val currentCharOffset = getCharOffset(mCurrentPos)
         val lastDisplayedOffset = IntArray(1)
@@ -1392,10 +1392,10 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
 
         if (!isScrollable || mScroller.isFinished) {
             if (lengthBefore == 0 && lengthAfter > 0) {
-                accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+                accessibilityLiveRegion = ACCESSIBILITY_LIVE_REGION_POLITE
                 contentDescription = null
             } else if (lengthBefore > 0 && lengthAfter == 0) {
-                accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_NONE
+                accessibilityLiveRegion = ACCESSIBILITY_LIVE_REGION_NONE
                 contentDescription = context.getString(R.string.desc_result)
             }
         }
@@ -1431,9 +1431,9 @@ class CalculatorResult(context: Context, attrs: AttributeSet)
 
         if (!mScroller.isFinished) {
             postInvalidateOnAnimation()
-            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_NONE
+            accessibilityLiveRegion = ACCESSIBILITY_LIVE_REGION_NONE
         } else if (length() > 0) {
-            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            accessibilityLiveRegion = ACCESSIBILITY_LIVE_REGION_POLITE
         }
     }
 

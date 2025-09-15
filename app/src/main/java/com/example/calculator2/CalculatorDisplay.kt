@@ -59,7 +59,7 @@ class CalculatorDisplay
             if (isLaidOut) {
                 TransitionManager.beginDelayedTransition(this@CalculatorDisplay, mTransition)
             }
-            mToolbar.visibility = View.INVISIBLE
+            mToolbar.visibility = INVISIBLE
         }
     }
 
@@ -142,7 +142,7 @@ class CalculatorDisplay
              * @return true if the event is consumed, else false
              */
             override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                if (mToolbar.visibility != View.VISIBLE) {
+                if (mToolbar.visibility != VISIBLE) {
                     showToolbar(true)
                 } else {
                     hideToolbar()
@@ -273,7 +273,7 @@ class CalculatorDisplay
         if (isLaidOut) {
             TransitionManager.beginDelayedTransition(this, mTransition)
         }
-        mToolbar.visibility = View.VISIBLE
+        mToolbar.visibility = VISIBLE
 
         // Remove callbacks to hide the toolbar.
         removeCallbacks(mHideToolbarRunnable)
