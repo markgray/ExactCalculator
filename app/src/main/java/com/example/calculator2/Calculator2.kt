@@ -1771,6 +1771,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
      * Called to have [mResultText] announce "cleared" to the accessibility system service.
      */
     private fun announceClearedForAccessibility() {
+        @Suppress("DEPRECATION") // The suggested change would not be correct in this case
         mResultText.announceForAccessibility(resources.getString(R.string.cleared))
     }
 
@@ -1853,6 +1854,7 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         when (mCurrentState) {
             CalculatorState.EVALUATE -> {
                 setState(CalculatorState.ANIMATE)
+                @Suppress("DEPRECATION") // The suggested change would not be correct in this case
                 mResultText.announceForAccessibility(resources.getString(errorId))
                 reveal(mCurrentButton, R.color.calculator_error_color,
                     object : AnimatorListenerAdapter() {
@@ -1965,7 +1967,9 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
         }
 
         if (animate) {
+            @Suppress("DEPRECATION") // The suggested change would not be correct in this case
             mResultText.announceForAccessibility(resources.getString(R.string.desc_eq))
+            @Suppress("DEPRECATION") // The suggested change would not be correct in this case
             mResultText.announceForAccessibility(mResultText.text)
             setState(CalculatorState.ANIMATE)
             val animatorSet = AnimatorSet()
