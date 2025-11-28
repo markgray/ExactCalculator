@@ -573,11 +573,12 @@ class Calculator2 : FragmentActivity(), OnTextSizeChangeListener, OnLongClickLis
     }
 
     /**
-     * Called when our [FragmentActivity] is starting. First we call our super's implementation of
-     * [onCreate], then we set our content view to our layout file R.layout.activity_calculator_main.
-     * We set the action bar to the [Toolbar] with id R.id.toolbar (it is included by the display
-     * layouts, both 'display_one_line.xml' and 'display_two_line.xml'). We set the *displayOptions*
-     * property of the *actionBar* to 0 to hide all the default options, and add a lambda as an
+     * Called when our [FragmentActivity] is starting. First we call [enableEdgeToEdge] to enable
+     * edge to edge display, then we call our super's implementation of `onCreate`, and set our
+     * content view to our layout file R.layout.activity_calculator_main. We set the action bar to
+     * the [Toolbar] with id R.id.toolbar (it is included by the display layouts, both
+     * 'display_one_line.xml' and 'display_two_line.xml'). We set the *displayOptions* property of
+     * the *actionBar* to 0 to hide all the default options, and add a lambda as an
      * *OnMenuVisibilityListener* that will respond to menu visibility change events by forcing
      * [mDisplayView] to have the tool bar visible while the options menu is displayed. We initialize
      * [mMainCalculator] by finding the view with id R.id.main_calculator (it is the *LinearLayout*
